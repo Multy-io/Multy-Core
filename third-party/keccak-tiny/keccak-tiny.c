@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define memset_s(W,WL,V,OL) memset(W,V,OL)
+
 /******** The Keccak-f[1600] permutation ********/
 
 /*** Constants. ***/
