@@ -12,6 +12,8 @@
 #include "multy_core/keys.h"
 #include "multy_core/mnemonic.h"
 
+#include "multy_core/internal/key.h"
+
 namespace wallet_core
 {
 namespace internal
@@ -32,6 +34,16 @@ void UniversalDeleter::operator()(BinaryData* binary_data) const
 }
 
 void UniversalDeleter::operator()(Key* key) const
+{
+    free_key(key);
+}
+
+void UniversalDeleter::operator()(PublicKey* key) const
+{
+    free_key(key);
+}
+
+void UniversalDeleter::operator()(PrivateKey* key) const
 {
     free_key(key);
 }

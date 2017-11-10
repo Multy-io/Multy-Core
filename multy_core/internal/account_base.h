@@ -27,8 +27,6 @@ namespace wallet_core
 {
 namespace internal
 {
-typedef UPtr<ExtendedKey> ExtendedKeyPtr;
-
 class AccountBase : public Account
 {
 public:

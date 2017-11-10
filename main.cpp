@@ -19,7 +19,7 @@
 namespace
 {
 
-size_t entropySource(size_t size, void* dest)
+size_t feed_silly_entropy(void*, size_t size, void* dest)
 {
     /** Poor man's entropy, using uninitialized data from stack, which is:
      * - Fast;
@@ -50,19 +50,21 @@ int main(int argc, char** argv)
 #else
     try
     {
-        auto mnemonic = null_unique_ptr<const char>(free_mnemonic);
-        throw_if_error(make_mnemonic(&entropySource, reset_sp(mnemonic)));
+        const EntropySource entropy{nullptr, &feed_silly_entropy};
+
+        ConstCharPtr mnemonic;
+        throw_if_error(make_mnemonic(entropy, reset_sp(mnemonic)));
         std::cout << "Generated mnemonic: " << mnemonic.get() << std::endl;
 
         std::cout << "Enter password: ";
         std::string password;
         std::getline(std::cin, password);
 
-        auto seed = null_unique_ptr<BinaryData>(free_binarydata);
+        BinaryDataPtr seed;
         throw_if_error(
                 make_seed(mnemonic.get(), password.c_str(), reset_sp(seed)));
 
-        auto seed_string = null_unique_ptr<const char>(free_string);
+        ConstCharPtr seed_string;
         throw_if_error(seed_to_string(seed.get(), reset_sp(seed_string)));
         std::cout << "Seed: " << seed_string.get() << std::endl;
     }

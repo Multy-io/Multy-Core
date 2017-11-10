@@ -4,6 +4,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(multy_core
     SHARED
 
+    account.h
+    common.h
+    error.h
+    keys.h
+    mnemonic.h
+
     src/account.cpp
     src/common.cpp
     src/error.cpp

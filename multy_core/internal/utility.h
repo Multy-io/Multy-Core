@@ -11,7 +11,9 @@
  * Not part of the interface, and should not be used by clients.
  */
 
+#include "multy_core/api.h"
 #include "multy_core/error.h"
+#include "multy_core/common.h"
 #include "multy_core/internal/u_ptr.h"
 
 #include <memory>
@@ -38,6 +40,12 @@ struct Error;
         }                                                                      \
     } while (false)
 
+#define CATCH_EXCEPTION_RETURN_ERROR()                                         \
+    catch (...)                                                                \
+    {                                                                          \
+        return wallet_core::internal::exception_to_error();                    \
+    }
+
 namespace wallet_core
 {
 
@@ -51,7 +59,7 @@ inline void throw_if_error(Error* err)
     }
 }
 
-void throw_if_wally_error(int err_code, const char* message);
+MULTY_CORE_API void throw_if_wally_error(int err_code, const char* message);
 
 template <typename T, size_t N>
 constexpr size_t array_size(T (&)[N])
@@ -66,16 +74,16 @@ constexpr size_t array_size(const std::array<T, N>&)
 }
 
 /// Converts exception to a Error*, to be used inside a catch(...) block.
-Error* exception_to_error();
+MULTY_CORE_API Error* exception_to_error();
 
 /** Convenience function to copy a string.
  * @param str - string to copy, must not be null.
  * @return - copy of a string, must be freed with free_string(), can be null on
  * error.
  */
-char* copy_string(const char* str);
+MULTY_CORE_API char* copy_string(const char* str);
 
-char* copy_string(const std::string& str);
+MULTY_CORE_API char* copy_string(const std::string& str);
 
 /** Convenience to simplify passing C++ smart_pointers (like std::unique_ptr<T>)
  * to C-like functions than take T** and store address of new object there.
@@ -121,6 +129,13 @@ template <typename T>
 UPtr<T> make_clone(const T& original)
 {
     return UPtr<T>(new T(original));
+}
+
+inline BinaryDataPtr make_clone(const BinaryData& other)
+{
+    BinaryDataPtr result;
+    throw_if_error(binary_data_clone(&other, reset_sp(result)));
+    return result;
 }
 
 } // namespace internal
