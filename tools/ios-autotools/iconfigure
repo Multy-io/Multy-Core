@@ -73,7 +73,7 @@ fi
 if [ ! -z "$SDKVERSION" ]; then
   SDKNAME=$(basename $(xcrun --sdk $SDK --show-sdk-platform-path) .platform)
   export SDKVERSION
-  export SDKROOT=$(xcrun --sdk $SDK --show-sdk-platform-path)"/Developer/SDKs/$SDKNAME.$SDKVERSION.sdk"
+  export SDKROOT=$(xcrun --sdk $SDK --show-sdk-platform-path)"/Developer/SDKs/${SDKNAME}${SDKVERSION}.sdk"
 else
   export SDKVERSION=$(xcrun --sdk $SDK --show-sdk-version) # current version
   export SDKROOT=$(xcrun --sdk $SDK --show-sdk-path) # current version
