@@ -21,9 +21,9 @@ target_include_directories(multy PRIVATE .)
 add_subdirectory(multy_core)
 add_subdirectory(third-party)
 
+
 if(WITH_TESTS)
     target_compile_definitions(multy PRIVATE WITH_TESTS)
     add_subdirectory(multy_test)
     target_link_libraries(multy PRIVATE multy_test)
 endif()
-
