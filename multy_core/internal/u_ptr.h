@@ -17,6 +17,8 @@ struct Error;
 struct ExtendedKey;
 struct HDAccount;
 struct Key;
+struct PrivateKey;
+struct PublicKey;
 
 namespace wallet_core
 {
@@ -39,16 +41,20 @@ public:
     void operator()(ExtendedKey*) const;
     void operator()(HDAccount*) const;
     void operator()(Key*) const;
+    void operator()(PublicKey*) const;
+    void operator()(PrivateKey*) const;
 };
 
 typedef UPtr<Account> AccountPtr;
 typedef UPtr<BinaryData> BinaryDataPtr;
+typedef UPtr<char> CharPtr;
+typedef UPtr<const char> ConstCharPtr;
 typedef UPtr<Error> ErrorPtr;
 typedef UPtr<ExtendedKey> ExtendedKeyPtr;
 typedef UPtr<HDAccount> HDAccountPtr;
 typedef UPtr<Key> KeyPtr;
-typedef UPtr<char> CharPtr;
-typedef UPtr<const char> ConstCharPtr;
+typedef UPtr<PrivateKey> PrivateKeyPtr;
+typedef UPtr<PublicKey> PublicKeyPtr;
 
 } // namespace wallet_core
 } // namespace internal

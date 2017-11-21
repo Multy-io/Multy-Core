@@ -16,18 +16,6 @@
 struct PublicKey;
 struct PrivateKey;
 
-namespace wallet_core
-{
-namespace internal
-{
-
-typedef UPtr<PublicKey> PublicKeyPtr;
-typedef UPtr<PrivateKey> PrivateKeyPtr;
-typedef UPtr<Account> AccountPtr;
-
-} // namespace internal
-} // namespace wallet_core
-
 // Declared a struct (and out of wallet_core::internal namespace)
 // for consitency with a C-like interface.
 // Exported only to make testing easier.

@@ -15,6 +15,8 @@
 extern "C" {
 #endif
 
+struct Error;
+
 /** Entropy generator interface.
  * Fill `dest` with `size` random bytes.
  * Caller ensures that `dest` has enough space.
@@ -36,6 +38,10 @@ struct BinaryData
 
 /** Frees BinaryData, can take null. **/
 MULTY_CORE_API void free_binarydata(struct BinaryData*);
+
+/** Copies BinaryData. **/
+MULTY_CORE_API struct Error* binary_data_clone(
+        const struct BinaryData* source, struct BinaryData** new_binary_data);
 
 /** Frees a string, can take null. **/
 MULTY_CORE_API void free_string(const char* str);

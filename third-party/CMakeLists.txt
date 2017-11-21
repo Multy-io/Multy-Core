@@ -3,10 +3,13 @@ add_subdirectory(libwally-core)
 add_library(keccak-tiny STATIC
     ../third-party/keccak-tiny/keccak-tiny.c
 )
-
 set_target_properties(keccak-tiny PROPERTIES
     C_STANDARD 11
     POSITION_INDEPENDENT_CODE ON
+)
+
+add_library(mini-gmp STATIC
+    ./mini-gmp/mini-gmp.c
 )
 
 if(DEFINED WITH_TESTS)
