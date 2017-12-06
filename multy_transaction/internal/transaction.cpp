@@ -6,14 +6,6 @@
 
 #include "transaction.h"
 
-TransactionChange::~TransactionChange()
-{
-}
-
-TransactionFee::~TransactionFee()
-{
-}
-
 Transaction::~Transaction()
 {
 }

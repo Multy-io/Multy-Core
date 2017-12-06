@@ -6,11 +6,12 @@
 
 #include "multy_transaction/transaction.h"
 
+#include "multy_transaction/internal/bitcoin_transaction.h"
 #include "multy_transaction/internal/transaction.h"
 #include "multy_transaction/internal/u_ptr.h"
 
-#include "multy_core/internal/utility.h"
 #include "multy_core/internal/account.h"
+#include "multy_core/internal/utility.h"
 
 namespace
 {
@@ -25,14 +26,17 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
 
     try
     {
-//        switch (account->get_currency())
-//        {
-//            case CURRENCY_BITCOIN:
-//                *new_transaction =
-//        }
+        switch (account->get_currency())
+        {
+            case CURRENCY_BITCOIN:
+                *new_transaction = new BitcoinTransaction(*account);
+                break;
+            default:
+                return make_error(
+                        ERROR_GENERAL_ERROR, "Currency not supported yet");
+        }
     }
     CATCH_EXCEPTION_RETURN_ERROR();
-
     OUT_CHECK(*new_transaction);
 
     return nullptr;
@@ -47,9 +51,7 @@ Error* transaction_has_trait(
     ARG_CHECK(trait == TRANSACTION_REQUIRES_EXPLICIT_SOURCE
             || trait == TRANSACTION_SUPPORTS_MULTIPLE_SOURCES
             || trait == TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS
-            || trait == TRANSACTION_SUPPORTS_CHANGE
             || trait == TRANSACTION_SUPPORTS_FEE);
-
     try
     {
         *out_has_capability = transaction->get_traits() & (1 << trait);
@@ -73,8 +75,7 @@ Error* transaction_get_currency(
     return nullptr;
 }
 
-Error* transaction_add_source(
-        Transaction* transaction, Properties** source)
+Error* transaction_add_source(Transaction* transaction, Properties** source)
 {
     ARG_CHECK(transaction);
     ARG_CHECK(source);
@@ -107,24 +108,7 @@ Error* transaction_add_destination(
     return nullptr;
 }
 
-Error* transaction_get_change(
-        Transaction* transaction, TransactionChange** change)
-{
-    ARG_CHECK(transaction);
-    ARG_CHECK(change);
-
-    try
-    {
-        *change = &transaction->get_change();
-    }
-    CATCH_EXCEPTION_RETURN_ERROR();
-
-    OUT_CHECK(*change);
-
-    return nullptr;
-}
-
-Error* transaction_get_fee(Transaction* transaction, TransactionFee** fee)
+Error* transaction_get_fee(Transaction* transaction, Properties** fee)
 {
     ARG_CHECK(transaction);
     ARG_CHECK(fee);
@@ -140,18 +124,42 @@ Error* transaction_get_fee(Transaction* transaction, TransactionFee** fee)
     return nullptr;
 }
 
-Error* transaction_get_total(Transaction* transaction, Amount** out_total)
+Error* transaction_get_total_fee(Transaction* transaction, Amount* out_total_fee)
 {
     ARG_CHECK(transaction);
-    ARG_CHECK(out_total);
+    ARG_CHECK(out_total_fee);
 
     try
     {
-        *out_total = AmountPtr(new Amount(transaction->get_total())).release();
+        *out_total_fee = transaction->get_total_fee();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*out_total);
+    return nullptr;
+}
+
+Error* transaction_update(Transaction* transaction)
+{
+    ARG_CHECK(transaction);
+
+    try
+    {
+        transaction->update_state();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
+
+Error* transaction_sign(Transaction* transaction)
+{
+    ARG_CHECK(transaction);
+
+    try
+    {
+        transaction->sign();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
 
     return nullptr;
 }
@@ -173,8 +181,9 @@ Error* transaction_serialize(
     return nullptr;
 }
 
-//Error* transaction_serialize_raw(
-//        const Transaction* transaction, const BinaryData** out_raw_transaction)
+// Error* transaction_serialize_raw(
+//        const Transaction* transaction, const BinaryData**
+//        out_raw_transaction)
 //{
 //    ARG_CHECK(transaction);
 //    ARG_CHECK(out_raw_transaction);
@@ -189,23 +198,22 @@ Error* transaction_serialize(
 //    return nullptr;
 //}
 
-Error* transaction_get_hash(
-        Transaction* transaction,
-        struct BinaryData** out_transaction_hash)
-{
-    ARG_CHECK(transaction);
-    ARG_CHECK(out_transaction_hash);
+//Error* transaction_get_hash(
+//        Transaction* transaction, struct BinaryData** out_transaction_hash)
+//{
+//    ARG_CHECK(transaction);
+//    ARG_CHECK(out_transaction_hash);
 
-    try
-    {
-        *out_transaction_hash = transaction->get_hash().release();
-    }
-    CATCH_EXCEPTION_RETURN_ERROR();
+//    try
+//    {
+//        *out_transaction_hash = transaction->get_hash().release();
+//    }
+//    CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*out_transaction_hash);
+//    OUT_CHECK(*out_transaction_hash);
 
-    return nullptr;
-}
+//    return nullptr;
+//}
 
 void free_transaction(Transaction* transaction)
 {

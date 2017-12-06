@@ -87,6 +87,14 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, address);
     ASSERT_LT(0, strlen(address.get()));
+    if (expected_currency == CURRENCY_BITCOIN && *address != '1' && *address != '3')
+    {
+        std::cerr <<
+        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+        "!!!!!        ATTENTION: BITCOIN IS IN THE TESTNET MODE       !!!!!\n"
+        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+        "\nGenerated address: " << address.get() << "\n\n";
+    }
 
     KeyPtr private_key;
     error.reset(

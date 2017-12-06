@@ -19,22 +19,6 @@
 struct Amount;
 struct PublicKey;
 
-struct MULTY_TRANSACTION_API TransactionChange
-{
-    virtual ~TransactionChange();
-
-    virtual Amount get_total() const = 0;
-    virtual Properties& get_properties() = 0;
-};
-
-struct MULTY_TRANSACTION_API TransactionFee
-{
-    virtual ~TransactionFee();
-
-    virtual Amount get_total() const = 0;
-    virtual Properties& get_properties() = 0;
-};
-
 struct MULTY_TRANSACTION_API Transaction
 {
     typedef wallet_core::internal::BinaryDataPtr BinaryDataPtr;
@@ -44,17 +28,18 @@ struct MULTY_TRANSACTION_API Transaction
     virtual Currency get_currency() const = 0;
     virtual uint32_t get_traits() const = 0;
 
-    // Methods that implicitly update state of the transaction.
-    virtual BinaryDataPtr serialize() = 0;
-    virtual BinaryDataPtr get_hash() = 0;
-    virtual Amount get_total() = 0;
+    virtual BinaryDataPtr serialize() const = 0;
+    virtual Amount get_total_fee() const = 0;
 
-    /** Update transaction internal state, recalculate fee, change, sign inputs,
-     * etc.
+    /** Update transaction internal state, recalculate fee, change, sign inputs, etc.
      *
      * Must be called before serialize() or get_hash() to get valid results.
      */
     virtual void update_state() = 0;
+
+    /** Sign transaction, i.e. make it ready to be serialized and send.
+     */
+    virtual void sign() = 0;
 
     /** Add a source to a transaction.
      *
@@ -82,15 +67,7 @@ struct MULTY_TRANSACTION_API Transaction
      * @return transaction fee object, DO NOT DELETE/FREE.
      * @exception may be thrown if transaction doesn't support fee.
      */
-    virtual TransactionFee& get_fee() = 0;
-
-    /** Get transaction change.
-     *
-     * Same object is returned every time.
-     * @return transaction change object, DO NOT DELETE/FREE.
-     * @exception may be thrown if transaction doesn't support change.
-     */
-    virtual TransactionChange& get_change() = 0;
+    virtual Properties& get_fee() = 0;
 
     /** Get transaction own properties.
      *

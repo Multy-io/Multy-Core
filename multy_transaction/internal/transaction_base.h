@@ -17,34 +17,6 @@ namespace multy_transaction
 namespace internal
 {
 
-struct MULTY_TRANSACTION_API TransactionFeeBase : public TransactionFee
-{
-    virtual ~TransactionFeeBase();
-
-    Amount get_total() const override;
-    Properties& get_properties() override;
-
-    void set_total(const Amount& new_total);
-
-protected:
-    Amount m_total;
-    Properties m_properties;
-};
-
-struct MULTY_TRANSACTION_API TransactionChangeBase : public TransactionChange
-{
-    virtual ~TransactionChangeBase();
-
-    Amount get_total() const override;
-    Properties& get_properties() override;
-
-    void set_total(const Amount& new_total);
-
-protected:
-    Amount m_total;
-    Properties m_properties;
-};
-
 class MULTY_TRANSACTION_API TransactionBase : public Transaction
 {
 public:
@@ -55,11 +27,14 @@ public:
     Properties& get_transaction_properties() override;
 
 protected:
+    bool validate_all_properties(std::string* not_set_properties) const;
+    Properties& register_properties(std::string name, Properties&);
     Properties m_properties;
 
 private:
     Currency m_currency;
     uint32_t m_traits;
+    std::vector<std::pair<std::string, Properties*>> m_all_properties;
 };
 
 } // namespace internal

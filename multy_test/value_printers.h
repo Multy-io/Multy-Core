@@ -17,6 +17,7 @@ struct BinaryData;
 struct BIP39TestCase;
 struct Error;
 struct Key;
+struct Transaction;
 
 namespace std
 {
@@ -32,6 +33,7 @@ void PrintTo(const Account& e, std::ostream* out);
 void PrintTo(const HDAccount& e, std::ostream* out);
 void PrintTo(const Currency& e, std::ostream* out);
 void PrintTo(const AddressType& e, std::ostream* out);
+void PrintTo(const Transaction& e, std::ostream* out);
 
 template <typename T, typename D>
 inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)

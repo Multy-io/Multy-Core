@@ -5,15 +5,11 @@ add_library(multy_transaction
     SHARED
     amount.h
     properties.h
-    transaction_change.h
-    transaction_fee.h
     transaction.h
 
     src/amount.cpp
     src/properties.cpp
-    src/transaction_change.cpp
     src/transaction.cpp
-    src/transaction_fee.cpp
 
     internal/amount.cpp
     internal/bitcoin_transaction.cpp
@@ -23,6 +19,7 @@ add_library(multy_transaction
 )
 
 target_compile_definitions(multy_transaction PRIVATE BUILDING_MULTY_TRANSACTION=1)
+
 target_include_directories(multy_transaction PRIVATE
     .
     ..

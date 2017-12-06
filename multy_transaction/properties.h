@@ -45,10 +45,10 @@ MULTY_TRANSACTION_API struct Error* properties_reset_value(
         struct Properties* properties, const char* name);
 
 MULTY_TRANSACTION_API struct Error* properties_validate(
-        struct Properties* properties);
+        const struct Properties* properties);
 
 MULTY_TRANSACTION_API struct Error* properties_get_specification(
-        struct Properties* properties, const char** out_specification);
+        const struct Properties* properties, const char** out_specification);
 
 #ifdef __cplusplus
 } /* extern "C" */

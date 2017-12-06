@@ -5,13 +5,24 @@
  */
 
 #include "multy_core/account.h"
+#include "multy_core/keys.h"
+
+#include "multy_core/internal/account.h"
+#include "multy_core/internal/key.h"
+#include "multy_core/internal/u_ptr.h"
+#include "multy_core/internal/utility.h"
 
 #include "multy_test/serialized_keys_test_base.h"
+#include "multy_test/utility.h"
+#include "multy_test/value_printers.h"
 
 #include "gtest/gtest.h"
 
 namespace
 {
+using namespace wallet_core::internal;
+using namespace test_utility;
+
 SerializedKeyTestCase TEST_CASES[] = {
         {
             "L5GRrPvFZswYD74UdHWsg1yVbZqvMDe9jj6frutVx8Y6Y2mgWtEk",
@@ -84,9 +95,71 @@ SerializedKeyTestCase TEST_CASES[] = {
 };
 
 INSTANTIATE_TEST_CASE_P(
-        Bitcoin, SerializedKeyTestP,
+        Bitcoin,
+        SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(CURRENCY_BITCOIN),
                 ::testing::ValuesIn(TEST_CASES)));
+
+struct SignTestCase
+{
+    const char* private_key;
+    const char* message;
+    const char* expected_signature;
+};
+
+const SignTestCase SIGN_CASES[]  = {
+    {
+        "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
+        "Very deterministic message",
+        "304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d3"
+        "1d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"
+    },
+    { // Same key as above, but in "compact" format
+        "Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw",
+        "Very deterministic message",
+        "304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d3"
+        "1d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"
+    },
+    {
+        "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3",
+        "Very deterministic message",
+        "3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1c"
+        "d5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"
+    },
+    { // Same key as above, but in "compact" format
+        "L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g",
+        "Very deterministic message",
+        "3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1c"
+        "d5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"
+    }
+};
+
+class BitcoinTestSign : public ::testing::TestWithParam<SignTestCase>
+{
+};
+
+TEST_P(BitcoinTestSign, SignWithPrivateKey)
+{
+    const char* private_key_data = GetParam().private_key;
+    const char* signature_data = GetParam().expected_signature;
+    const char* message_data = GetParam().message;
+
+    AccountPtr account;
+    ErrorPtr error;
+    error.reset(
+            make_account(
+                    CURRENCY_BITCOIN, private_key_data, reset_sp(account)));
+    EXPECT_EQ(nullptr, error);
+    ASSERT_NE(nullptr, account);
+
+    PrivateKeyPtr private_key = account->get_private_key();
+    BinaryDataPtr signature = private_key->sign(to_binary_data(message_data));
+
+    EXPECT_EQ(to_binary_data(from_hex(signature_data)), *signature);
+}
+
+INSTANTIATE_TEST_CASE_P(
+        Bitcoin, BitcoinTestSign, ::testing::ValuesIn(SIGN_CASES));
 
 } // namespace

@@ -113,14 +113,14 @@ struct EthereumPrivateKey : public PrivateKey
                 new EthereumPublicKey(std::move(uncompressed)));
     }
 
-    const BinaryData get_content() const override
-    {
-        return BinaryData{m_data.data(), m_data.size()};
-    }
-
     PrivateKeyPtr clone() const override
     {
         return make_clone(*this);
+    }
+
+    BinaryDataPtr sign(const BinaryData& data) const override
+    {
+        throw std::runtime_error("Not implemented yet");
     }
 
     const KeyData& get_data() const

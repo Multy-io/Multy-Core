@@ -61,10 +61,13 @@ TEST_P(SerializedKeyTestP, private_key_to_address)
     EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, public_key);
 
-//    error.reset(key_to_string(public_key.get(), reset_sp(public_key_string)));
-//    EXPECT_EQ(nullptr, error);
-//    ASSERT_NE(nullptr, public_key_string);
-//    ASSERT_STREQ(param.public_key, public_key_string.get());
+    if (test_data.public_key && strlen(test_data.public_key))
+    {
+        error.reset(key_to_string(public_key.get(), reset_sp(public_key_string)));
+        EXPECT_EQ(nullptr, error);
+        ASSERT_NE(nullptr, public_key_string);
+        ASSERT_STREQ(test_data.public_key, public_key_string.get());
+    }
 
     ConstCharPtr address;
     error.reset(get_account_address_string(account.get(), reset_sp(address)));

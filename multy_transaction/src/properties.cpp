@@ -100,7 +100,7 @@ Error* properties_reset_value(Properties* properties, const char* name)
     return nullptr;
 }
 
-Error* properties_validate(Properties* properties)
+Error* properties_validate(const Properties* properties)
 {
     ARG_CHECK(properties);
     try
@@ -125,14 +125,14 @@ Error* properties_validate(Properties* properties)
     return nullptr;
 }
 
-Error* properties_get_specification(Properties* properties, const char** out_specification)
+Error* properties_get_specification(const Properties* properties, const char** out_specification)
 {
     ARG_CHECK(properties);
     ARG_CHECK(out_specification);
     try
     {
         std::stringstream sstr;
-        for (const auto p : properties->get_properties())
+        for (const auto p : properties->get_all_properties())
         {
             sstr << p->get_property_spec() << "\n";
         }
@@ -143,4 +143,3 @@ Error* properties_get_specification(Properties* properties, const char** out_spe
 
     return nullptr;
 }
-

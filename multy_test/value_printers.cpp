@@ -15,6 +15,7 @@
 #include "multy_core/internal/account_base.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/utility.h"
+#include "multy_transaction/internal/transaction.h"
 
 #include "wally_elements.h"
 
@@ -134,4 +135,9 @@ void PrintTo(const AddressType& a, std::ostream* out)
             *out << "unknown address " << a;
             break;
     }
+}
+
+void PrintTo(const Transaction& t, std::ostream* out)
+{
+    *out << "Transaction {" << t.get_currency() << "}";
 }

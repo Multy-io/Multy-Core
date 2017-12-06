@@ -59,11 +59,6 @@ struct TestPrivateKey : public PrivateKey
     {
         return "test_private_key_string";
     }
-    const BinaryData get_content() const override
-    {
-
-        return BinaryData{nullptr, 0};
-    }
 
     PublicKeyPtr make_public_key() const override
     {
@@ -73,6 +68,10 @@ struct TestPrivateKey : public PrivateKey
     PrivateKeyPtr clone() const override
     {
         return make_clone(*this);
+    }
+    BinaryDataPtr sign(const BinaryData& data) const override
+    {
+       throw std::runtime_error("Not implemented");
     }
 };
 

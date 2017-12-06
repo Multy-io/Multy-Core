@@ -10,6 +10,8 @@
 #include "multy_core/internal/key.h"
 #include "wally_core.h"
 
+#include <exception>
+
 #include <memory.h>
 #include <string.h>
 
@@ -73,6 +75,14 @@ BinaryData to_binary_data(const bytes& data)
     return BinaryData{data.data(), data.size()};
 }
 
+BinaryData to_binary_data(const char* data)
+{
+    return BinaryData{
+            reinterpret_cast<const unsigned char*>(data),
+            data ? strlen(data) : 0
+    };
+}
+
 ExtendedKey make_dummy_extended_key()
 {
     ExtendedKey result;
@@ -90,6 +100,11 @@ EntropySource make_dummy_entropy_source()
     return EntropySource{nullptr, dummy_fill_entropy};
 }
 
+void throw_exception(const char* message)
+{
+    throw std::runtime_error(message);
+}
+
 } // namespace test_utility
 
 bool operator==(const BinaryData& lhs, const BinaryData& rhs)
@@ -97,7 +112,7 @@ bool operator==(const BinaryData& lhs, const BinaryData& rhs)
     return lhs.len == rhs.len && memcmp(lhs.data, rhs.data, lhs.len) == 0;
 }
 
-bool operator==(const Key& lhs, const Key& rhs)
+bool operator==(const PublicKey& lhs, const PublicKey& rhs)
 {
     return lhs.get_content() == rhs.get_content();
 }

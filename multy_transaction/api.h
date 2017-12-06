@@ -12,7 +12,7 @@
 #endif
 
 #if defined(_WIN32)
-#    if (BUILDING_MULTY_TRANSACTION)
+#    if (BUILDING_MULTY_CORE)
 #        define MULTY_TRANSACTION_API __declspec(dllexport)
 #    else
 #        define MULTY_TRANSACTION_API

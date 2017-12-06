@@ -16,7 +16,7 @@ add_executable(
     multy
     main.cpp
 )
-target_link_libraries(multy PRIVATE multy_core)
+target_link_libraries(multy PRIVATE multy_core multy_transaction)
 target_include_directories(multy PRIVATE .)
 
 add_subdirectory(multy_core)
