@@ -5,10 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(WITH_TESTS "Build tests shared library (DLL)" NO)
-set(LIBWALLY_BIN "" CACHE FILEPATH "Path to prebuild libwally-core")
-set(LIBWALLY_BIN_PATH "" CACHE PATH "Path to directory with prebuild libwally-core")
-set(LIBSECP256K1_BIN "" CACHE FILEPATH "Path to prebuild libsecp256k1")
-set(LIBSECP256K1_BIN_PATH "" CACHE PATH "Path to directory with prebuild libsecp256k1")
+set(PATH_TO_JNI_WRAPPER "" CACHE PATH "Path to jni wrapper source file.")
 
 project(multy)
 
@@ -23,6 +20,22 @@ add_subdirectory(multy_core)
 add_subdirectory(multy_transaction)
 add_subdirectory(third-party)
 
+if (ANDROID)
+    add_library(core_jni
+       SHARED
+       "${PATH_TO_JNI_WRAPPER}"
+    )
+
+    find_library(log-lib
+                  log )
+
+    target_link_libraries(core_jni PRIVATE multy_core multy_test multy_transaction android ${log-lib})
+    target_include_directories(core_jni PRIVATE .)
+    set_target_properties(core_jni PROPERTIES
+        CXX_STANDARD 11
+        LANGUAGE CXX
+    )
+endif()
 
 if(WITH_TESTS)
     target_compile_definitions(multy PRIVATE WITH_TESTS)
