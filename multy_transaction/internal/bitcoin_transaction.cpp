@@ -540,12 +540,23 @@ size_t BitcoinTransaction::estimate_transaction_size() const
             sources_count * 147 + destinations_count * 34 + 5);
 }
 
+
 Amount BitcoinTransaction::get_total_fee() const
 {
-    return static_cast<int64_t>(estimate_transaction_size())
-            * m_fee->get_amount_per_byte();
+    return m_total_fee;
 }
-
+    
+Amount BitcoinTransaction::estimate_fee() const
+{
+    // Estimate size of the transaction based on number of sources and
+    // destinations
+    // and multiply that by "amount per byte" fee Amount.
+    
+    const size_t sources_count = m_sources.size();
+    const size_t destinations_count = get_non_zero_destinations().size();
+    return static_cast<int64_t>(sources_count * 147 + destinations_count * 34 + 5)
+    * m_fee->get_amount_per_byte();
+}
 void BitcoinTransaction::update_state()
 {
     if (m_sources.empty())
@@ -592,7 +603,7 @@ void BitcoinTransaction::update_state()
                 "available in inputs: "
                 + total_spent.get_value());
     }
-
+    m_total_fee = available;
     m_fee->validate_fee(available, estimate_transaction_size());
 }
 

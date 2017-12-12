@@ -54,5 +54,9 @@ inline bool operator!=(const BinaryData& lhs, const BinaryData& rhs)
 {
     return !(lhs == rhs);
 }
+inline bool operator !=(const PublicKey& lhs, const PublicKey& rhs)
+{
+    return !(lhs == rhs);
+}
 
 #endif // UTILITY_H

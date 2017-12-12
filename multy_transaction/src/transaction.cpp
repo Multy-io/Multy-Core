@@ -52,6 +52,8 @@ Error* transaction_has_trait(
             || trait == TRANSACTION_SUPPORTS_MULTIPLE_SOURCES
             || trait == TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS
             || trait == TRANSACTION_SUPPORTS_FEE);
+    ARG_CHECK(out_has_capability);
+
     try
     {
         *out_has_capability = transaction->get_traits() & (1 << trait);
@@ -65,6 +67,7 @@ Error* transaction_get_currency(
         const Transaction* transaction, Currency* out_currency)
 {
     ARG_CHECK(transaction);
+    ARG_CHECK(out_currency);
 
     try
     {
@@ -123,6 +126,19 @@ Error* transaction_get_fee(Transaction* transaction, Properties** fee)
 
     return nullptr;
 }
+Error* transaction_estimate_fee(Transaction* transaction, Amount* out_fee_estimate)
+{
+    ARG_CHECK(transaction);
+    ARG_CHECK(out_fee_estimate);
+
+    try
+    {
+        *out_fee_estimate = transaction->estimate_fee();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
 
 Error* transaction_get_total_fee(Transaction* transaction, Amount* out_total_fee)
 {
@@ -165,7 +181,8 @@ Error* transaction_sign(Transaction* transaction)
 }
 
 Error* transaction_serialize(
-        Transaction* transaction, BinaryData** out_serialized_transaction)
+        const Transaction* transaction,
+        BinaryData** const out_serialized_transaction)
 {
     ARG_CHECK(transaction);
     ARG_CHECK(out_serialized_transaction);

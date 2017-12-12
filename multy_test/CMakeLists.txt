@@ -9,6 +9,9 @@ add_library(multy_test SHARED
     test_ethereum_account.cpp
     test_keys.cpp
     test_mnemonic.cpp
+    test_transaction.cpp
+    test_amount.cpp
+    test_properties.cpp
     test_utility.cpp
     utility.cpp
     value_printers.cpp

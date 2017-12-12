@@ -86,7 +86,7 @@ MULTY_TRANSACTION_API struct Error* transaction_sign(
 
 MULTY_TRANSACTION_API struct Error* transaction_serialize(
         const struct Transaction* transaction,
-        const BinaryData** out_serialized_transaction);
+        struct BinaryData** out_serialized_transaction);
 
 // MULTY_TRANSACTION_API struct Error* transaction_serialize_raw(
 //        const struct Transaction* transaction,

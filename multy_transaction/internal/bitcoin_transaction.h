@@ -41,6 +41,7 @@ public:
     BitcoinTransaction(const Account& account);
 
     Amount get_total_fee() const override;
+    Amount estimate_fee() const override;
     BinaryDataPtr serialize() const override;
 
     void update_state() override;
@@ -65,6 +66,7 @@ private:
     int32_t m_version;
     int32_t m_is_segwit_transaction;
     uint32_t m_lock_time;
+    Amount m_total_fee;
 
     BitcoinTransactionFeePtr m_fee;
     std::vector<BitcoinTransactionSourcePtr> m_sources;
