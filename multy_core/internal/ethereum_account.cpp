@@ -7,6 +7,7 @@
 #include "multy_core/internal/ethereum_account.h"
 
 #include "multy_core/common.h"
+#include "multy_core/internal/exception.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/utility.h"
 
@@ -28,6 +29,11 @@ namespace
 using namespace wallet_core::internal;
 typedef std::array<unsigned char, 20> EthereumAddressValue;
 
+void throw_exception(const std::string& message)
+{
+    throw Exception("Ethereum:" + message);
+}
+
 struct EthereumPublicKey : public PublicKey
 {
 public:
@@ -39,7 +45,7 @@ public:
     {
         if (m_data.size() != DATA_SIZE)
         {
-            throw std::runtime_error("Ethereum: invalid public key length");
+            throw_exception("invalid public key length");
         }
     }
 
@@ -105,7 +111,7 @@ struct EthereumPrivateKey : public PrivateKey
 
         if (uncompressed[0] != 0x04)
         {
-            throw std::runtime_error("Invalid uncompressed public key prefix");
+            throw_exception("Invalid uncompressed public key prefix");
         }
         uncompressed.erase(uncompressed.begin());
 
@@ -120,7 +126,7 @@ struct EthereumPrivateKey : public PrivateKey
 
     BinaryDataPtr sign(const BinaryData& data) const override
     {
-        throw std::runtime_error("Not implemented yet");
+        throw_exception("Not implemented yet");
     }
 
     const KeyData& get_data() const
@@ -219,7 +225,7 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
     EthereumPrivateKey::KeyData key_data;
     if (private_key_len != key_data.max_size() * 2)
     {
-        throw std::runtime_error("Serialized private key has invalid length");
+        throw_exception("Serialized private key has invalid length");
     }
     size_t resulting_size = 0;
     throw_if_wally_error(
@@ -228,7 +234,7 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
             "Failed to convert private key from hex string.");
     if (resulting_size != key_data.size())
     {
-        throw std::runtime_error("Failed to deserialize private key");
+        throw_exception("Failed to deserialize private key");
     }
     throw_if_wally_error(
             wally_ec_private_key_verify(key_data.data(), key_data.size()),

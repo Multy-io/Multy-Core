@@ -20,6 +20,7 @@ add_library(multy_core
     internal/account.cpp
     internal/bitcoin_account.cpp
     internal/ethereum_account.cpp
+    internal/exception.cpp
     internal/hd_path.cpp
     internal/key.cpp
     internal/u_ptr.cpp

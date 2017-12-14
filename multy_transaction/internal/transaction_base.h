@@ -28,7 +28,7 @@ public:
 
 protected:
     bool validate_all_properties(std::string* not_set_properties) const;
-    Properties& register_properties(std::string name, Properties&);
+    Properties& register_properties(const std::string& name, Properties&);
     Properties m_properties;
 
 private:

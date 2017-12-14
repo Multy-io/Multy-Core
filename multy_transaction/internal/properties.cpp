@@ -9,6 +9,7 @@
 #include "multy_transaction/internal/amount.h"
 
 #include "multy_core/common.h"
+#include "multy_core/internal/exception.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/utility.h"
 
@@ -31,27 +32,37 @@ enum ValueType
     //        VALUE_TYPE_PRIVATE_KEY
 };
 
-ValueType deduce_value_type(const int32_t&)
+// If you find that compilation fails du to this function definition missing,
+// you should add a new template specialization for your type.
+template <typename T>
+constexpr ValueType deduce_value_type();
+
+template <>
+constexpr ValueType deduce_value_type<int32_t>()
 {
     return VALUE_TYPE_INT32;
 }
 
-ValueType deduce_value_type(const std::string&)
+template <>
+constexpr ValueType deduce_value_type<std::string>()
 {
     return VALUE_TYPE_STRING;
 }
 
-ValueType deduce_value_type(const Amount&)
+template <>
+constexpr ValueType deduce_value_type<Amount>()
 {
     return VALUE_TYPE_AMOUNT;
 }
 
-ValueType deduce_value_type(const BinaryData&)
+template <>
+constexpr ValueType deduce_value_type<BinaryData>()
 {
     return VALUE_TYPE_BINARY_DATA;
 }
 
-ValueType deduce_value_type(const PublicKey&)
+template <>
+constexpr ValueType deduce_value_type<PublicKey>()
 {
     return VALUE_TYPE_PUBLIC_KEY;
 }
@@ -60,12 +71,6 @@ ValueType deduce_value_type(const PublicKey&)
 //{
 //    return Property::VALUE_TYPE_PRIVATE_KEY;
 //}
-
-template <typename T, typename D>
-ValueType deduce_value_type(const std::unique_ptr<T, D>& value)
-{
-    return deduce_value_type(*value);
-}
 
 std::string get_value_type_string(ValueType type)
 {
@@ -91,12 +96,12 @@ struct BinderBase : public Binder
 {
     BinderBase(
             const Properties& properties,
-            std::string name,
+            const std::string& name,
             const void* value,
             ValueType value_type,
             Property::Trait trait)
         : m_properties(properties),
-          m_name(std::move(name)),
+          m_name(name),
           m_value(value),
           m_type(value_type),
           m_trait(trait),
@@ -114,7 +119,7 @@ struct BinderBase : public Binder
     {
         m_properties.throw_exception(
                 "Invalid value type \""
-                + ::get_value_type_string(deduce_value_type((value)))
+                + ::get_value_type_string(deduce_value_type<T>())
                 + "\" for property \"" + name + "\" expected "
                 + ::get_value_type_string(expected_type));
     }
@@ -240,17 +245,13 @@ template <typename T, typename ValuePredicate>
 struct BinderT : public BinderBase
 {
     typedef typename Property::PredicateArgTraits<T>::ArgumentType ArgumentType;
+    static const ValueType VAL_TYPE = deduce_value_type<ArgumentType>();
     BinderT(const Properties& properties,
-            std::string name,
+            const std::string& name,
             T* value,
             Property::Trait trait,
             ValuePredicate predicate = ValuePredicate())
-        : BinderBase(
-                  properties,
-                  std::move(name),
-                  value,
-                  deduce_value_type(*value),
-                  trait),
+        : BinderBase(properties, name, value, VAL_TYPE, trait),
           m_value(value),
           m_predicate(std::move(predicate))
     {
@@ -304,7 +305,7 @@ void Property::throw_if_unset(const void* property_var) const
     {
         const Properties::Binder& b
                 = m_properties.get_property_by_value(property_var);
-        throw std::runtime_error(
+        throw Exception(
                 m_properties.get_name() + " property \"" + b.get_name()
                 + "\" is not set.");
     }
@@ -323,7 +324,8 @@ Properties::Binder::~Binder()
 {
 }
 
-Properties::Properties(std::string name) : m_name(std::move(name))
+Properties::Properties(const std::string& name)
+    : m_name(name)
 {
 }
 
@@ -540,5 +542,5 @@ bool Properties::is_set(const void* value) const
 
 void Properties::throw_exception(const std::string& message) const
 {
-    throw std::runtime_error(get_name() + " : " + message);
+    throw Exception(get_name() + " : " + message);
 }

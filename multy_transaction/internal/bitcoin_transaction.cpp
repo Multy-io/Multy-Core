@@ -11,6 +11,7 @@
 #include "multy_core/common.h"
 #include "multy_core/internal/account.h"
 #include "multy_core/internal/bitcoin_account.h"
+#include "multy_core/internal/exception.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/u_ptr.h"
 #include "multy_core/internal/utility.h"
@@ -30,6 +31,11 @@ namespace
 using namespace wallet_core::internal;
 using namespace multy_transaction::internal;
 
+void throw_exception(const std::string& message = std::string())
+{
+    throw Exception("BitcoinTransaction: " + message);
+}
+
 uint32_t bitcoin_traits()
 {
     return 1 << TRANSACTION_REQUIRES_EXPLICIT_SOURCE
@@ -41,7 +47,7 @@ uint32_t bitcoin_traits()
 typedef uint8_t OpCode;
 
 template <typename T>
-std::string make_id(std::string base, const T& suffix)
+std::string make_id(const std::string& base, const T& suffix)
 {
     std::ostringstream ostr;
     ostr << base << suffix;
@@ -52,7 +58,7 @@ void verify_non_negative_amount(const Amount& amount)
 {
     if (amount < Amount(0))
     {
-        throw std::runtime_error("Amount value is negative.");
+        throw_exception("Amount value is negative.");
     }
 }
 
@@ -62,7 +68,6 @@ namespace multy_transaction
 {
 namespace internal
 {
-
 class BitcoinStream
 {
 public:
@@ -356,13 +361,13 @@ struct BitcoinTransactionFee
                 * transaction_size);
         if (leftover < min_fee)
         {
-            throw std::runtime_error(
+            throw_exception(
                     "Current transaction total fee (" + leftover.get_value()
                     + ") is to low ( <" + min_fee.get_value() + " ).");
         }
         if (leftover > max_fee)
         {
-            throw std::runtime_error(
+            throw_exception(
                     "Current transaction total fee (" + leftover.get_value()
                     + ") is to high ( >" + max_fee.get_value() + " ).");
         }
@@ -388,7 +393,7 @@ struct BitcoinTransactionSource
                   [](const BinaryData& new_tx_out_hash) {
                       if (new_tx_out_hash.len != 32)
                       {
-                          throw std::runtime_error(
+                          throw_exception(
                                   "Previous transaction hash should be"
                                   "exactly 32 bytes long");
                       }
@@ -540,41 +545,35 @@ size_t BitcoinTransaction::estimate_transaction_size() const
             sources_count * 147 + destinations_count * 34 + 5);
 }
 
-
 Amount BitcoinTransaction::get_total_fee() const
 {
     return m_total_fee;
 }
-    
+
 Amount BitcoinTransaction::estimate_fee() const
 {
-    // Estimate size of the transaction based on number of sources and
-    // destinations
-    // and multiply that by "amount per byte" fee Amount.
-    
     const size_t sources_count = m_sources.size();
     const size_t destinations_count = get_non_zero_destinations().size();
-    return static_cast<int64_t>(sources_count * 147 + destinations_count * 34 + 5)
-    * m_fee->get_amount_per_byte();
+    const int64_t transaction_size
+            = sources_count * 147 + destinations_count * 34 + 5;
+    return transaction_size * m_fee->get_amount_per_byte();
 }
 void BitcoinTransaction::update_state()
 {
     if (m_sources.empty())
     {
-        throw std::runtime_error(
-                "Transaction should have at least one source.");
+        throw_exception("Transaction should have at least one source.");
     }
 
     if (m_destinations.empty())
     {
-        throw std::runtime_error(
-                "Transaction should have at least one destination.");
+        throw_exception("Transaction should have at least one destination.");
     }
 
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        throw std::runtime_error(
+        throw_exception(
                 "Not all required properties set:\n" + missing_properties);
     }
 
@@ -598,9 +597,8 @@ void BitcoinTransaction::update_state()
 
     if (available < 0)
     {
-        throw std::runtime_error(
-                "Transaction is trying to spend more than "
-                "available in inputs: "
+        throw_exception(
+                "Transaction is trying to spend more than available in inputs: "
                 + total_spent.get_value());
     }
     m_total_fee = available;
@@ -659,8 +657,7 @@ void BitcoinTransaction::sign()
         const auto p = sig_scripts.emplace(source.get(), std::move(sig_script));
         if (!p.second)
         {
-            throw std::runtime_error(
-                    "Failed to save transaction source signature");
+            throw_exception("Failed to save transaction source signature");
         }
     }
 
@@ -670,8 +667,7 @@ void BitcoinTransaction::sign()
         const auto p = sig_scripts.find(source.get());
         if (p == sig_scripts.end())
         {
-            throw std::runtime_error(
-                    "Failed to set transaction source signature");
+            throw_exception("Failed to set transaction source signature");
         }
         source->script_signature.swap(p->second);
     }

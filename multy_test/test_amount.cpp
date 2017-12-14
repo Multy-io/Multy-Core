@@ -6,9 +6,13 @@
 
 #include "multy_transaction/internal/amount.h"
 #include "multy_transaction/amount.h"
+
 #include "multy_core/internal/u_ptr.h"
 #include "multy_core/internal/utility.h"
+
 #include "multy_transaction/internal/u_ptr.h"
+
+#include "multy_test/value_printers.h"
 
 #include "gtest/gtest.h"
 
@@ -20,48 +24,49 @@ namespace
 using namespace wallet_core::internal;
 using namespace multy_transaction::internal;
 
+enum ArithmeticOperation {
+    ADD,
+    SUB,
+    MUL
+};
+
 struct AmountArithmeticTestCase
 {
-    enum op {
-        add,
-        sub,
-        mul
-    };
-    op operat;
+    const ArithmeticOperation op;
     const char* number;
-    Amount amount;
+    const Amount amount;
     const char * answer;
 };
 
 AmountArithmeticTestCase TEST_CASES[] = {
-    { AmountArithmeticTestCase::add, "1", Amount("1"), "2" },
-    { AmountArithmeticTestCase::add, "3", Amount("6"), "9" },
-    { AmountArithmeticTestCase::add, "0", Amount("1"), "1" },
-    { AmountArithmeticTestCase::add, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "19999999999999999999999999999999999999998" },
-    { AmountArithmeticTestCase::add, "0", Amount("0"), "0" },
-    { AmountArithmeticTestCase::add, "1", Amount("-1"), "0" },
-    { AmountArithmeticTestCase::add, "-3", Amount("6"), "3" },
-    { AmountArithmeticTestCase::add, "9999999999999999999999999999999999999999", Amount("-9999999999999999999999999999999999999999"), "0" },
+    { ADD, "1", Amount("1"), "2" },
+    { ADD, "3", Amount("6"), "9" },
+    { ADD, "0", Amount("1"), "1" },
+    { ADD, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "19999999999999999999999999999999999999998" },
+    { ADD, "0", Amount("0"), "0" },
+    { ADD, "1", Amount("-1"), "0" },
+    { ADD, "-3", Amount("6"), "3" },
+    { ADD, "9999999999999999999999999999999999999999", Amount("-9999999999999999999999999999999999999999"), "0" },
 
 
-    { AmountArithmeticTestCase::mul, "1", Amount("1"), "1" },
-    { AmountArithmeticTestCase::mul, "3", Amount("6"), "18" },
-    { AmountArithmeticTestCase::mul, "0", Amount("1"), "0" },
-    { AmountArithmeticTestCase::mul, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
-    { AmountArithmeticTestCase::mul, "0", Amount("0"), "0" },
-    { AmountArithmeticTestCase::mul, "1", Amount("-1"), "-1" },
-    { AmountArithmeticTestCase::mul, "3", Amount("-6"), "-18" },
-    { AmountArithmeticTestCase::mul, "-9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "-99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
+    { MUL, "1", Amount("1"), "1" },
+    { MUL, "3", Amount("6"), "18" },
+    { MUL, "0", Amount("1"), "0" },
+    { MUL, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
+    { MUL, "0", Amount("0"), "0" },
+    { MUL, "1", Amount("-1"), "-1" },
+    { MUL, "3", Amount("-6"), "-18" },
+    { MUL, "-9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "-99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
 
 
-    { AmountArithmeticTestCase::sub, "1", Amount("1"), "0" },
-    { AmountArithmeticTestCase::sub, "6", Amount("3"), "3" },
-    { AmountArithmeticTestCase::sub, "0", Amount("1"), "-1" },
-    { AmountArithmeticTestCase::sub, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "0" },
-    { AmountArithmeticTestCase::sub, "0", Amount("0"), "0" },
-    { AmountArithmeticTestCase::sub, "-5", Amount("1"), "-6" },
-    { AmountArithmeticTestCase::sub, "6", Amount("-3"), "9" },
-    { AmountArithmeticTestCase::sub, "-9999999999999999999999999999999999999999", Amount("-9999999999999999999999999999999999999999"), "0" },
+    { SUB, "1", Amount("1"), "0" },
+    { SUB, "6", Amount("3"), "3" },
+    { SUB, "0", Amount("1"), "-1" },
+    { SUB, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "0" },
+    { SUB, "0", Amount("0"), "0" },
+    { SUB, "-5", Amount("1"), "-6" },
+    { SUB, "6", Amount("-3"), "9" },
+    { SUB, "-9999999999999999999999999999999999999999", Amount("-9999999999999999999999999999999999999999"), "0" },
 };
 
 } // namespace
@@ -79,58 +84,58 @@ GTEST_TEST(AmountClassTest, BasicMethod)
 
 GTEST_TEST(AmountClassTest, get_value)
 {
-    // This test for check Amount::get_value() because get_value return sting with /0 symbols in the end
-
+    // get_value used to return sting with extra '\0' symbols at the end.
     Amount amount("3");
     std::string str = "3";
-    EXPECT_TRUE(amount.get_value()==str);
+    EXPECT_EQ(1, amount.get_value().size());
+    EXPECT_TRUE(amount.get_value() == str);
 }
 
 
 GTEST_TEST(AmountClassTest, BasicArithmetic)
 {
     for (AmountArithmeticTestCase test_case: TEST_CASES) {
-        switch (test_case.operat) {
-        case AmountArithmeticTestCase::add:
+        switch (test_case.op) {
+        case ADD:
         {
             ASSERT_EQ(test_case.answer, (test_case.number + test_case.amount));
             ASSERT_EQ(test_case.answer, (test_case.amount + test_case.number));
 
             {
                 // Testing commutativity, i.e. A + B == B + A
-                Amount temp_add_amount1(test_case.number);
-                temp_add_amount1 += test_case.amount;
-                ASSERT_EQ(test_case.answer, temp_add_amount1);
+                Amount temp_ADD_amount1(test_case.number);
+                temp_ADD_amount1 += test_case.amount;
+                ASSERT_EQ(test_case.answer, temp_ADD_amount1);
 
-                Amount temp_add_amount2(test_case.amount);
-                temp_add_amount2 += test_case.number;
-                ASSERT_EQ(test_case.answer, temp_add_amount2);
+                Amount temp_ADD_amount2(test_case.amount);
+                temp_ADD_amount2 += test_case.number;
+                ASSERT_EQ(test_case.answer, temp_ADD_amount2);
             }
             break;
         }
-        case AmountArithmeticTestCase::mul:
+        case MUL:
         {
             ASSERT_EQ(test_case.answer, (test_case.number * test_case.amount));
             ASSERT_EQ(test_case.answer, (test_case.amount * test_case.number));
             {
                 // Testing commutativity, i.e. A * B == B * A
-                Amount temp_mul_amount1(test_case.number);
-                temp_mul_amount1 *= test_case.amount;
-                ASSERT_EQ(test_case.answer, temp_mul_amount1);
+                Amount temp_MUL_amount1(test_case.number);
+                temp_MUL_amount1 *= test_case.amount;
+                ASSERT_EQ(test_case.answer, temp_MUL_amount1);
 
-                Amount temp_mul_amount2(test_case.amount);
-                temp_mul_amount2 *= test_case.number;
-                ASSERT_EQ(test_case.answer, temp_mul_amount2);
+                Amount temp_MUL_amount2(test_case.amount);
+                temp_MUL_amount2 *= test_case.number;
+                ASSERT_EQ(test_case.answer, temp_MUL_amount2);
             }
             break;
         }
-        case AmountArithmeticTestCase::sub:
+        case SUB:
         {
             ASSERT_EQ(test_case.answer, (test_case.number - test_case.amount));
 
-            Amount temp_sub_amount(test_case.number);
-            temp_sub_amount -= test_case.amount;
-            ASSERT_EQ(test_case.answer, temp_sub_amount);
+            Amount temp_SUB_amount(test_case.number);
+            temp_SUB_amount -= test_case.amount;
+            ASSERT_EQ(test_case.answer, temp_SUB_amount);
 
             break;
         }
@@ -226,8 +231,6 @@ GTEST_TEST(AmountTestInvalidValue, amount_set_value)
     EXPECT_EQ("1", amount);
 }
 
-
-///=================================================START VALID CASES=================================================
 
 GTEST_TEST(AmountTest, make_amount)
 {

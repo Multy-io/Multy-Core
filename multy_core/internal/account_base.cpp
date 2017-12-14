@@ -6,8 +6,8 @@
 
 #include "multy_core/internal/account_base.h"
 
+#include "multy_core/internal/exception.h"
 #include "multy_core/internal/key.h"
-
 #include "multy_core/internal/utility.h"
 
 namespace
@@ -36,7 +36,7 @@ uint32_t to_chain_code(Currency currency)
 
     if (array_size(currency_chain_codes) < static_cast<size_t>(currency))
     {
-        throw std::runtime_error("Can't convert currency to the chain code");
+        throw Exception("Can't convert currency to the chain code");
     }
     return currency_chain_codes[currency];
 }
@@ -146,8 +146,7 @@ AccountPtr HDAccountBase::make_leaf_account(
     // TODO: use glsl::not_null
     if (!new_account)
     {
-        throw std::runtime_error(
-                "Internal error: make_account() returned a null");
+        throw Exception("Internal error: make_account() returned a null");
     }
 
     return std::move(new_account);

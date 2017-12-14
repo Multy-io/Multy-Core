@@ -51,13 +51,7 @@ namespace wallet_core
 
 namespace internal
 {
-inline void throw_if_error(Error* err)
-{
-    if (err)
-    {
-        throw err;
-    }
-}
+MULTY_CORE_API void throw_if_error(struct Error* err);
 
 MULTY_CORE_API void throw_if_wally_error(int err_code, const char* message);
 

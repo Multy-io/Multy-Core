@@ -15,7 +15,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -69,7 +68,7 @@ protected:
 // it is now).
 struct MULTY_TRANSACTION_API Properties
 {
-    explicit Properties(std::string name);
+    explicit Properties(const std::string& name);
 
     struct MULTY_TRANSACTION_API Binder
     {
@@ -226,22 +225,22 @@ class PropertyT : public Property
 public:
     PropertyT(
             Properties& props,
-            const std::string name,
+            const std::string& name,
             Trait trait = Property::REQUIRED,
             Predicate<T> predicate = Predicate<T>())
-        : PropertyT(T(), props, std::move(name), trait, std::move(predicate))
+        : PropertyT(T(), props, name, trait, std::move(predicate))
     {}
 
     PropertyT(
             T initial_value,
             Properties& props,
-            const std::string name,
+            const std::string& name,
             Trait trait = Property::REQUIRED,
             Predicate<T> predicate = Predicate<T>())
         : Property(props),
           m_value(std::move(initial_value))
     {
-        props.bind_property(std::move(name), &m_value, trait, std::move(predicate));
+        props.bind_property(name, &m_value, trait, std::move(predicate));
     }
 
     const T& get_value() const
@@ -273,16 +272,5 @@ public:
 private:
     T m_value;
 };
-
-template <typename T, T Min, T Max>
-void limit_range(const T& value)
-{
-    if (value < Min || value > Max)
-    {
-        std::ostringstream message;
-        message << "Value is out of range [" << Min << ", " << Max << "].";
-        throw std::runtime_error(message.str());
-    }
-}
 
 #endif // MULTY_TRANSACTION_INTERNAL_PROPERTIES_H

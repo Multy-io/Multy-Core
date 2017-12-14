@@ -8,6 +8,7 @@
 
 #include "multy_core/common.h"
 
+#include "multy_core/internal/exception.h"
 #include "multy_core/internal/hd_path.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/utility.h"
@@ -25,18 +26,6 @@ using namespace wallet_core::internal;
 
 // This is a setting controlling default accout network mode for new accounts.
 const BitcoinNetType DEFAULT_NET_TYPE = BITCOIN_TESTNET;
-
-bool contains(const char* haystack, char needle)
-{
-    while (haystack)
-    {
-        if (*haystack++ == needle)
-        {
-            return true;
-        }
-    }
-    return false;
-}
 
 bool is_testnet(BitcoinNetType net_type)
 {
@@ -282,7 +271,7 @@ AccountPtr make_bitcoin_account(const char* private_key)
 
     if (resulting_size > key_data.size() || resulting_size < EC_PRIVATE_KEY_LEN)
     {
-        throw std::runtime_error("Failed to deserialize private key");
+        throw Exception("Failed to deserialize private key");
     }
     key_data.resize(resulting_size);
 
@@ -296,7 +285,7 @@ AccountPtr make_bitcoin_account(const char* private_key)
     bool use_compressed_public_key = false;
     // WIF, drop last 0x01 byte
     const char* compressed_pefixes = net_type == BITCOIN_MAINNET ? "LK" : "c";
-    if (contains(compressed_pefixes, private_key[0]) && key_data.back() == 0x01)
+    if (strchr(compressed_pefixes, private_key[0]) && key_data.back() == 0x01)
     {
         key_data.erase(key_data.end() - 1);
         use_compressed_public_key = true;

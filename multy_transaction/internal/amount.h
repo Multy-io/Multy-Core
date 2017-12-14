@@ -69,21 +69,19 @@ private:
 #define AMOUNT_DEFINE_OP(op)                                                   \
     inline Amount operator op(Amount left, const Amount& right)                \
     {                                                                          \
-        Amount result(std::move(left));                                        \
-        result op## = right;                                                   \
-        return result;                                                         \
+        left op## = right;                                                     \
+        return left;                                                           \
     }                                                                          \
     template <typename T>                                                      \
     inline Amount operator op(Amount left, const T& right)                     \
     {                                                                          \
-        Amount result(std::move(left));                                        \
-        result op## = right;                                                   \
-        return result;                                                         \
+        left op## = right;                                                     \
+        return left;                                                           \
     }                                                                          \
     template <typename T>                                                      \
     inline Amount operator op(T left, const Amount& right)                     \
     {                                                                          \
-        Amount result(std::move(left));                                        \
+        Amount result(left);                                                   \
         result op## = right;                                                   \
         return result;                                                         \
     }

@@ -40,6 +40,17 @@ struct BinaryData
 MULTY_CORE_API void free_binarydata(struct BinaryData*);
 
 /** Copies BinaryData. **/
+MULTY_CORE_API struct Error* make_binary_data(
+        size_t size, struct BinaryData** new_binary_data);
+
+MULTY_CORE_API struct Error* make_binary_data_from_bytes(
+        const unsigned char* data, size_t size,
+        struct BinaryData** new_binary_data);
+
+MULTY_CORE_API struct Error* make_binary_data_from_hex(
+        const char* hex_str, struct BinaryData** new_binary_data);
+
+/** Copies BinaryData. **/
 MULTY_CORE_API struct Error* binary_data_clone(
         const struct BinaryData* source, struct BinaryData** new_binary_data);
 

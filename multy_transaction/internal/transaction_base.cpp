@@ -35,9 +35,9 @@ Properties& TransactionBase::get_transaction_properties()
 }
 
 Properties& TransactionBase::register_properties(
-        std::string name, Properties& properties)
+        const std::string& name, Properties& properties)
 {
-    m_all_properties.push_back(std::make_pair(std::move(name), &properties));
+    m_all_properties.push_back(std::make_pair(name, &properties));
     return properties;
 }
 

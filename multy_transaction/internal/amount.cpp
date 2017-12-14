@@ -6,11 +6,19 @@
 
 #include "multy_transaction/internal/amount.h"
 
+#include "multy_core/internal/exception.h"
 #include "multy_core/internal/utility.h"
+
+#include "multy_test/value_printers.h"
 
 namespace
 {
 using namespace wallet_core::internal;
+void throw_exception(const std::string& message)
+{
+    throw Exception(message);
+}
+
 } // namespace
 
 Amount::Amount(const char* value)
@@ -65,9 +73,8 @@ Amount::~Amount()
 
 void Amount::set_value(const char* value)
 {
-    throw_if_wally_error(
-            mpz_set_str(m_value, value, 10),
-            "Failed to set Amount value from string.");
+    Amount tmp(value);
+    std::swap(m_value, tmp.m_value);
 }
 
 std::string Amount::get_value() const
@@ -89,7 +96,7 @@ uint64_t Amount::get_value_as_uint64() const
 {
     if (mpz_sizeinbase(m_value, 2) > sizeof(uint64_t) * 8)
     {
-        throw std::runtime_error("Amount value is not representable as int64_t");
+        throw_exception("Amount value is not representable as int64_t");
     }
     uint64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);
@@ -101,7 +108,7 @@ int64_t Amount::get_value_as_int64() const
     // >= due to the sign bit
     if (mpz_sizeinbase(m_value, 2) >= sizeof(int64_t) * 8)
     {
-        throw std::runtime_error("Amount value is not representable as int64_t");
+        throw_exception("Amount value is not representable as int64_t");
     }
     int64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);

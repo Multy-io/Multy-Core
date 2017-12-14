@@ -8,6 +8,8 @@
 
 #include "multy_core/error.h"
 
+#include "multy_core/internal/exception.h"
+
 #include "wally_core.h"
 
 #include <string.h>
@@ -33,14 +35,32 @@ public:
         return m_error->message;
     }
 
-    Error* steal()
+    Error* steal() const
     {
         return m_error.release();
     }
 
 private:
-    ErrorPtr m_error;
+    mutable ErrorPtr m_error;
 };
+
+Error* make_error_from_string(const char* message)
+{
+    // Copy a message from exception to a new buffer.
+    // Buffer memory has to be allocated by libwally, since we want
+    // to use free_string() consistently on all strings,
+    // even if those were allocated internaly.
+    const char* message_copy = copy_string(message);
+    if (message && !message_copy)
+    {
+        // We have to guess here, most likely out of memory.
+        return make_error(ERROR_OUT_OF_MEMORY, "Out of memory");
+    }
+
+    Error* error = make_error(ERROR_GENERAL_ERROR, message_copy);
+    error->owns_message = true;
+    return error;
+}
 
 } // namespace
 
@@ -67,18 +87,28 @@ char* copy_string(const char* str)
     int result = wally_get_operations(&wally_ops);
     if (result != WALLY_OK || !wally_ops.malloc_fn)
     {
-        throw std::runtime_error("Failed to copy string.");
+        throw ErrorWrapperException(make_error(ERROR_INTERNAL,
+                "Failed to copy string."));
     }
 
     char* new_message = static_cast<char*>(wally_ops.malloc_fn(len + 1));
     if (!new_message)
     {
-        throw std::runtime_error("Failed to allocate memory.");
+        throw ErrorWrapperException(make_error(ERROR_INTERNAL,
+                "Failed to allocate memory."));
     }
 
     memcpy(new_message, str, len);
     new_message[len] = '\0';
     return new_message;
+}
+
+void throw_if_error(Error* error)
+{
+    if (error)
+    {
+        throw ErrorWrapperException(error);
+    }
 }
 
 void throw_if_wally_error(int err_code, const char* message)
@@ -99,30 +129,21 @@ Error* exception_to_error()
     {
         throw;
     }
-    catch (Error* error)
+    catch (const Error* error)
     {
-        return error;
+        return const_cast<Error*>(error);
     }
-    catch (ErrorWrapperException& exception)
+    catch (const Exception& exception)
+    {
+        return make_error_from_string(exception.what());
+    }
+    catch (const ErrorWrapperException& exception)
     {
         return exception.steal();
     }
-    catch (std::exception const& exception)
+    catch (const std::exception& exception)
     {
-        // Copy a message from exception to a new buffer.
-        // Buffer memory has to be allocated by libwally, since we want
-        // to use free_string() consistently on all strings,
-        // even if those were allocated internaly.
-        const char* message = copy_string(exception.what());
-        if (!message)
-        {
-            // We have to guess here, most likely out of memory.
-            return make_error(ERROR_OUT_OF_MEMORY, "Out of memory");
-        }
-
-        Error* error = make_error(ERROR_GENERAL_ERROR, message);
-        error->owns_message = true;
-        return error;
+        return make_error_from_string(exception.what());
     }
     catch (...)
     {
