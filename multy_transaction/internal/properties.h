@@ -21,7 +21,7 @@
 struct Amount;
 struct BinaryData;
 struct PrivateKey;
-struct PublicKey;
+struct PrivateKey;
 
 struct Properties;
 
@@ -77,7 +77,7 @@ struct MULTY_TRANSACTION_API Properties
         virtual void set_value(const Amount& /*value*/) = 0;
         virtual void set_value(const std::string& /*value*/) = 0;
         virtual void set_value(const BinaryData& /*value*/) = 0;
-        virtual void set_value(const PublicKey& /*value*/) = 0;
+        virtual void set_value(const PrivateKey& /*value*/) = 0;
         virtual void reset_value() = 0;
 
         virtual std::string get_property_spec() const = 0;
@@ -109,11 +109,11 @@ struct MULTY_TRANSACTION_API Properties
     /** Validate all bound properties.
      *
      * Check if all required bound properties are set.
-     * @param validation_details - optional, names of required properties that
+     * @param unset_properties_names - optional, names of required properties that
      * was not set.
      * @return true if all required properties was set, false otherwise.
      */
-    bool validate(std::vector<std::string>* validation_details) const;
+    bool validate(std::vector<std::string>* unset_properties_names) const;
 
     /** Bind value to named property.
      *
@@ -162,9 +162,9 @@ struct MULTY_TRANSACTION_API Properties
 
     void bind_property(
             const std::string& name,
-            wallet_core::internal::PublicKeyPtr* value,
+            wallet_core::internal::PrivateKeyPtr* value,
             Property::Trait trait = Property::REQUIRED,
-            Property::Predicate<PublicKey> predicate = Property::Predicate<PublicKey>());
+            Property::Predicate<PrivateKey> predicate = Property::Predicate<PrivateKey>());
 
     //    void bind_property(
     //            const std::string& name,

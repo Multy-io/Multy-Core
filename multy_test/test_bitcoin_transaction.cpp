@@ -127,6 +127,8 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
         source.set_property("prev_tx_out_index", 0u);
         source.set_property("prev_tx_out_script_pubkey",
                 to_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
+        source.set_property("private_key",
+                *account->get_private_key());
     }
 
     {
@@ -186,6 +188,8 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
         source.set_property("prev_tx_out_index", 0u);
         source.set_property("prev_tx_out_script_pubkey",
                 to_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
+        source.set_property("private_key",
+                *account->get_private_key());
     }
 
     {

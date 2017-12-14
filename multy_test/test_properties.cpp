@@ -144,12 +144,12 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_binary_data_value)
     EXPECT_NE(nullptr, binary_data_check_not_nullptr);
 }
 
-GTEST_TEST(PropertiesTestInvalidArgs, properties_set_public_key_value)
+GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
 {
     ErrorPtr error;
     Properties properties("");
-    PublicKeyPtr pub_key_property;
-    PublicKeyPtr pub_key_property1;
+    PrivateKeyPtr priv_key_property;
+    PrivateKeyPtr priv_key_property1;
 
     AccountPtr account1;
     make_account(
@@ -157,33 +157,33 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_public_key_value)
             "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
             reset_sp(account1));
 
-    pub_key_property1 = account1->get_public_key();
+    priv_key_property1 = account1->get_private_key();
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, "v", pub_key_property.get()));
+            properties_set_private_key_value(
+                    &properties, "v", priv_key_property.get()));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 
-    properties.bind_property("v", &pub_key_property);
+    properties.bind_property("v", &priv_key_property);
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, nullptr, pub_key_property1.get()));
+            properties_set_private_key_value(
+                    &properties, nullptr, priv_key_property1.get()));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 
     error.reset(
-            properties_set_public_key_value(
-                    nullptr, "v", pub_key_property1.get()));
+            properties_set_private_key_value(
+                    nullptr, "v", priv_key_property1.get()));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 
-    properties.bind_property("vn", &pub_key_property1);
+    properties.bind_property("vn", &priv_key_property1);
 
-    error.reset(properties_set_public_key_value(&properties, "vn", nullptr));
+    error.reset(properties_set_private_key_value(&properties, "vn", nullptr));
     EXPECT_NE(nullptr, error);
-    EXPECT_NE(nullptr, pub_key_property1);
+    EXPECT_NE(nullptr, priv_key_property1);
 }
 
 GTEST_TEST(PropertiesTestInvalidArgs, properties_reset_value)
@@ -260,7 +260,7 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
-    const PublicKeyPtr pub_key_property = account->get_public_key();
+    const PrivateKeyPtr priv_key_property = account->get_private_key();
 
     properties.bind_property("v", &int_value);
 
@@ -279,8 +279,8 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
     EXPECT_EQ(1, int_value);
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, "v", pub_key_property.get()));
+            properties_set_private_key_value(
+                    &properties, "v", priv_key_property.get()));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(1, int_value);
 }
@@ -304,7 +304,7 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
-    const PublicKeyPtr pub_key_property = account->get_public_key();
+    const PrivateKeyPtr priv_key_property = account->get_private_key();
 
     properties.bind_property("v", &str);
 
@@ -323,8 +323,8 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
     EXPECT_EQ("0", str);
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, "v", pub_key_property.get()));
+            properties_set_private_key_value(
+                    &properties, "v", priv_key_property.get()));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ("0", str);
 }
@@ -348,7 +348,7 @@ GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
-    const PublicKeyPtr pub_key_property = account->get_public_key();
+    const PrivateKeyPtr priv_key_property = account->get_private_key();
 
     properties.bind_property("v", &amount);
 
@@ -367,8 +367,8 @@ GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
     EXPECT_STREQ("2", amount.get_value().c_str());
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, "v", pub_key_property.get()));
+            properties_set_private_key_value(
+                    &properties, "v", priv_key_property.get()));
     EXPECT_NE(nullptr, error);
     EXPECT_STREQ("2", amount.get_value().c_str());
 }
@@ -393,7 +393,7 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
-    const PublicKeyPtr pub_key_property = account->get_public_key();
+    const PrivateKeyPtr priv_key_property = account->get_private_key();
 
     properties.bind_property("v", &binaty_data_4_property);
 
@@ -410,8 +410,8 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
     EXPECT_EQ(reference_value, *binaty_data_4_property);
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, "v", pub_key_property.get()));
+            properties_set_private_key_value(
+                    &properties, "v", priv_key_property.get()));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(reference_value, *binaty_data_4_property);
 }
@@ -428,27 +428,27 @@ GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
     const BinaryDataPtr binaty_data_4_property(
             make_clone(BinaryData{data_4_vals, 4}));
 
-    PublicKeyPtr pub_key_property;
+    PrivateKeyPtr priv_key_property;
 
-    properties.bind_property("v", &pub_key_property);
+    properties.bind_property("v", &priv_key_property);
 
     error.reset(properties_set_int32_value(&properties, "v", int_value));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 
     error.reset(properties_set_string_value(&properties, "v", str.c_str()));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 
     error.reset(properties_set_amount_value(&properties, "v", &amount));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 
     error.reset(
             properties_set_binary_data_value(
                     &properties, "v", binaty_data_4_property.get()));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(nullptr, pub_key_property);
+    EXPECT_EQ(nullptr, priv_key_property);
 }
 
 GTEST_TEST(PropertiesTest, properties_set_int32_value)
@@ -518,11 +518,11 @@ GTEST_TEST(PropertiesTest, properties_set_binary_data_value)
     EXPECT_NE(reference_data_4_value, *binaty_data_property);
 }
 
-GTEST_TEST(PropertiesTest, properties_set_public_key_value)
+GTEST_TEST(PropertiesTest, properties_set_private_key_value)
 {
     ErrorPtr error;
     Properties properties("");
-    PublicKeyPtr pub_key_property;
+    PrivateKeyPtr priv_key_property;
 
     AccountPtr account1;
     error.reset(
@@ -530,15 +530,15 @@ GTEST_TEST(PropertiesTest, properties_set_public_key_value)
                     CURRENCY_BITCOIN,
                     "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
                     reset_sp(account1)));
-    const PublicKeyPtr pub_key_property1 = account1->get_public_key();
+    const PrivateKeyPtr priv_key_property1 = account1->get_private_key();
 
-    properties.bind_property("v", &pub_key_property);
+    properties.bind_property("v", &priv_key_property);
 
     error.reset(
-            properties_set_public_key_value(
-                    &properties, "v", pub_key_property1.get()));
+            properties_set_private_key_value(
+                    &properties, "v", priv_key_property1.get()));
     EXPECT_EQ(nullptr, error);
-    EXPECT_EQ(*pub_key_property, *pub_key_property1);
+    EXPECT_EQ(*priv_key_property, *priv_key_property1);
 }
 
 GTEST_TEST(PropertiesTest, properties_reset_value)

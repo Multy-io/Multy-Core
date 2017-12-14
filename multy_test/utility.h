@@ -56,12 +56,20 @@ void throw_exception(const char* message);
 } // test_utility
 
 bool operator==(const BinaryData& lhs, const BinaryData& rhs);
+bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);
 bool operator==(const PublicKey& lhs, const PublicKey& rhs);
+
 inline bool operator!=(const BinaryData& lhs, const BinaryData& rhs)
 {
     return !(lhs == rhs);
 }
+
 inline bool operator!=(const PublicKey& lhs, const PublicKey& rhs)
+{
+    return !(lhs == rhs);
+}
+
+inline bool operator!=(const PrivateKey& lhs, const PrivateKey& rhs)
 {
     return !(lhs == rhs);
 }

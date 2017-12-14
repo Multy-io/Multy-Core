@@ -72,8 +72,8 @@ Error* properties_set_binary_data_value(
     return nullptr;
 }
 
-Error* properties_set_public_key_value(
-        Properties* properties, const char* name, const PublicKey* value)
+Error* properties_set_private_key_value(
+        Properties* properties, const char* name, const PrivateKey* value)
 {
     ARG_CHECK(properties);
     ARG_CHECK(name);
