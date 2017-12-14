@@ -12,6 +12,7 @@
 
 #include "wally_bip39.h"
 #include "wally_core.h"
+#include "libwally-core/src/wordlist.h"
 
 #include <cstring>
 #include <memory>
@@ -65,21 +66,14 @@ Error* make_mnemonic(EntropySource entropy_source, const char** mnemonic)
                     "Unable to get required amount of entropy");
         }
 
-        const words* dictionary = nullptr;
-        throw_if_wally_error(
-                bip39_get_wordlist(nullptr, &dictionary),
-                "Failed to obtain wordlist");
         char* out = nullptr;
         throw_if_wally_error(
-                bip39_mnemonic_from_bytes(
-                        dictionary, entropy, entropy_size, &out),
+                bip39_mnemonic_from_bytes(nullptr, entropy, entropy_size, &out),
                 "Failed to generated mnemonic");
         *mnemonic = out;
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*mnemonic);
 
     return nullptr;
@@ -111,10 +105,8 @@ Error* make_seed(const char* mnemonic, const char* password, BinaryData** seed)
         out->len = written;
         *seed = out;
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*seed);
 
     return nullptr;
@@ -134,6 +126,36 @@ Error* seed_to_string(const BinaryData* seed, const char** str)
     }
     *str = out;
     OUT_CHECK(*str);
+
+    return nullptr;
+}
+
+Error* mnemonic_get_dictionary(const char** new_dictionary)
+{
+    ARG_CHECK(new_dictionary);
+
+    try
+    {
+        const words* dictionary = nullptr;
+        throw_if_wally_error(
+                bip39_get_wordlist(nullptr, &dictionary),
+                "Failed to obtain wordlist");
+
+        // estimated dictionary size.
+        std::string result;
+        result.reserve(dictionary->len * 15);
+
+        for (int i = 0; i < dictionary->len; ++i)
+        {
+            result += dictionary->indices[i];
+            result += ' ';
+        }
+
+        *new_dictionary = copy_string(result);
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    OUT_CHECK(*new_dictionary);
 
     return nullptr;
 }

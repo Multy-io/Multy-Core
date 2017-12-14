@@ -88,6 +88,11 @@ TEST_P(MnemonicTestValidCasesP, Test)
     error.reset(make_seed(expected_mnemonic.c_str(), "TREZOR", reset_sp(seed)));
     ASSERT_NE(nullptr, seed);
     EXPECT_EQ(to_binary_data(expected_seed), *seed);
+
+    ConstCharPtr dictionary;
+    error.reset(mnemonic_get_dictionary(reset_sp(dictionary)));
+    ASSERT_NE(nullptr, dictionary);
+    ASSERT_NE(0, strlen(dictionary.get()));
 }
 
 GTEST_TEST(MnemonicTest, empty_null_password)
