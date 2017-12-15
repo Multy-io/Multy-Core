@@ -30,9 +30,6 @@ using namespace wallet_core::internal;
 using namespace test_utility;
 } // namespace
 
-#define HANDLE_ERROR(statement) \
-        do { error.reset(statement); ASSERT_EQ(nullptr, error); } while(0)
-
 GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
 {
     AccountPtr account;
