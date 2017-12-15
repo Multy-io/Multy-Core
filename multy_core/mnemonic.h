@@ -44,9 +44,6 @@ MULTY_CORE_API struct Error* seed_to_string(
 MULTY_CORE_API struct Error* mnemonic_get_dictionary(
         const char** new_dictionary);
 
-/** Frees mnemonic, can take nullptr. **/
-MULTY_CORE_API void free_mnemonic(const char* mnemonic);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

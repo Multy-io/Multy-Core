@@ -184,26 +184,28 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_estimate_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    Amount amount;
+    AmountPtr amount;
 
     error.reset(transaction_estimate_fee(&transaction, nullptr ));
     EXPECT_NE(nullptr, error);
 
-    error.reset(transaction_estimate_fee(nullptr, &amount));
+    error.reset(transaction_estimate_fee(nullptr, reset_sp(amount)));
     EXPECT_NE(nullptr, error);
+    EXPECT_EQ(nullptr, amount);
 }
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    Amount amount;
+    AmountPtr amount;
 
     error.reset(transaction_get_total_fee(&transaction, nullptr ));
     EXPECT_NE(nullptr, error);
 
-    error.reset(transaction_get_total_fee(nullptr, &amount));
+    error.reset(transaction_get_total_fee(nullptr, reset_sp(amount)));
     EXPECT_NE(nullptr, error);
+    EXPECT_EQ(nullptr, amount);
 }
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_update)
@@ -307,9 +309,9 @@ GTEST_TEST(TransactionTest, transaction_estimate_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    Amount amount;
+    AmountPtr amount;
 
-    error.reset(transaction_estimate_fee(&transaction, &amount));
+    error.reset(transaction_estimate_fee(&transaction, reset_sp(amount)));
     EXPECT_EQ(nullptr, error);
 }
 
@@ -317,9 +319,9 @@ GTEST_TEST(TransactionTest, transaction_get_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    Amount amount;
+    AmountPtr amount;
 
-    error.reset(transaction_get_total_fee(&transaction, &amount));
+    error.reset(transaction_get_total_fee(&transaction, reset_sp(amount)));
     EXPECT_EQ(nullptr, error);
 }
 

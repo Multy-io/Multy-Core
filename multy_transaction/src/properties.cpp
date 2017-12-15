@@ -16,7 +16,7 @@
 Error* properties_set_int32_value(
         Properties* properties, const char* name, int32_t value)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(name);
     try
     {
@@ -30,7 +30,7 @@ Error* properties_set_int32_value(
 Error* properties_set_string_value(
         Properties* properties, const char* name, const char* value)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(name);
     ARG_CHECK(value);
     try
@@ -45,7 +45,7 @@ Error* properties_set_string_value(
 Error* properties_set_amount_value(
         Properties* properties, const char* name, const Amount* value)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(name);
     ARG_CHECK(value);
     try
@@ -60,7 +60,7 @@ Error* properties_set_amount_value(
 Error* properties_set_binary_data_value(
         Properties* properties, const char* name, const BinaryData* value)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(name);
     ARG_CHECK(value);
     try
@@ -75,7 +75,7 @@ Error* properties_set_binary_data_value(
 Error* properties_set_private_key_value(
         Properties* properties, const char* name, const PrivateKey* value)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(name);
     ARG_CHECK(value);
     try
@@ -89,7 +89,7 @@ Error* properties_set_private_key_value(
 
 Error* properties_reset_value(Properties* properties, const char* name)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(name);
     try
     {
@@ -102,7 +102,7 @@ Error* properties_reset_value(Properties* properties, const char* name)
 
 Error* properties_validate(const Properties* properties)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     try
     {
         std::vector<std::string> missing_properies;
@@ -127,7 +127,7 @@ Error* properties_validate(const Properties* properties)
 
 Error* properties_get_specification(const Properties* properties, const char** out_specification)
 {
-    ARG_CHECK(properties);
+    ARG_CHECK_OBJECT(properties);
     ARG_CHECK(out_specification);
     try
     {

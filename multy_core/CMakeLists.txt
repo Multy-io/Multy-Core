@@ -28,6 +28,14 @@ add_library(multy_core
 )
 
 target_compile_definitions(multy_core PRIVATE BUILDING_MULTY_CORE=1)
+target_compile_definitions(multy_core PRIVATE
+    MULTY_CORE_VERSION_MAJOR=0
+    MULTY_CORE_VERSION_MINOR=1
+    MULTY_CORE_VERSION_BUILD=0
+    MULTY_CORE_VERSION_NOTE="PRE-ALPHA-TESTNET"
+    MULTY_CORE_VERSION_COMMIT=""
+)
+
 target_include_directories(multy_core PRIVATE
     ..
     ../third-party/libwally-core/include/

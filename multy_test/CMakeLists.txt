@@ -6,6 +6,7 @@ add_library(multy_test SHARED
     test_account.cpp
     test_bitcoin_account.cpp
     test_bitcoin_transaction.cpp
+    test_common.cpp
     test_ethereum_account.cpp
     test_ethereum_transaction.cpp
     test_keys.cpp

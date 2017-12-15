@@ -12,6 +12,16 @@
 #include "wally_bip32.h"
 #include "wally_core.h"
 
+namespace
+{
+const int32_t EXTENDED_KEY_MAGIC = __LINE__;
+const int32_t KEY_MAGIC = __LINE__;
+} // namespace
+
+ExtendedKey::ExtendedKey()
+    : m_magic(&EXTENDED_KEY_MAGIC)
+{}
+
 std::string ExtendedKey::to_string() const
 {
     using namespace wallet_core::internal;
@@ -30,8 +40,22 @@ std::string ExtendedKey::to_string() const
     return std::string(out_str.get());
 }
 
+bool ExtendedKey::is_valid() const
+{
+    return m_magic == &EXTENDED_KEY_MAGIC;
+}
+
+Key::Key()
+    : m_magic(&KEY_MAGIC)
+{}
+
 Key::~Key()
 {
+}
+
+bool Key::is_valid() const
+{
+    return m_magic == &KEY_MAGIC;
 }
 
 PrivateKey::~PrivateKey()

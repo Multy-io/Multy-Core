@@ -66,7 +66,7 @@ Error* make_key_id(
         const ExtendedKey* key,
         const char** out_key_id)
 {
-    ARG_CHECK(key);
+    ARG_CHECK_OBJECT(key);
     ARG_CHECK(out_key_id);
     try
     {
@@ -99,7 +99,7 @@ Error* make_child_key(
         uint32_t chain_code,
         ExtendedKey** new_child_key)
 {
-    ARG_CHECK(parent_key);
+    ARG_CHECK_OBJECT(parent_key);
     ARG_CHECK(new_child_key);
 
     try
@@ -125,7 +125,7 @@ Error* make_child_key(
 Error* extended_key_to_string(
         const ExtendedKey* extended_key, const char** new_str)
 {
-    ARG_CHECK(extended_key);
+    ARG_CHECK_OBJECT(extended_key);
     ARG_CHECK(new_str);
 
     try
@@ -144,7 +144,7 @@ Error* extended_key_to_string(
 Error* private_to_public_key(
         const PrivateKey* private_key, PublicKey** new_public_key)
 {
-    ARG_CHECK(private_key);
+    ARG_CHECK_OBJECT(private_key);
     ARG_CHECK(new_public_key);
     try
     {
@@ -161,7 +161,7 @@ Error* private_to_public_key(
 
 Error* key_to_string(const Key* key, const char** new_str)
 {
-    ARG_CHECK(key);
+    ARG_CHECK_OBJECT(key);
     ARG_CHECK(new_str);
     try
     {

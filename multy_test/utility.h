@@ -4,8 +4,8 @@
  * See LICENSE for details
  */
 
-#ifndef UTILITY_H
-#define UTILITY_H
+#ifndef MULTY_TEST_UTILITY_H
+#define MULTY_TEST_UTILITY_H
 
 #include "multy_core/common.h"
 #include "multy_core/internal/utility.h"
@@ -18,8 +18,15 @@
 #define HANDLE_ERROR(statement)                                                \
     do                                                                         \
     {                                                                          \
-        error.reset(statement);                                                \
+        wallet_core::internal::ErrorPtr error(statement);                      \
         ASSERT_EQ(nullptr, error);                                             \
+    } while (0)
+
+#define EXPECT_ERROR(statement)                                                \
+    do                                                                         \
+    {                                                                          \
+        wallet_core::internal::ErrorPtr error(statement);                      \
+        EXPECT_NE(nullptr, error);                                             \
     } while (0)
 
 #define E(statement)                                                           \
@@ -74,4 +81,4 @@ inline bool operator!=(const PrivateKey& lhs, const PrivateKey& rhs)
     return !(lhs == rhs);
 }
 
-#endif // UTILITY_H
+#endif // MULTY_TEST_UTILITY_H

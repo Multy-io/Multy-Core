@@ -83,6 +83,11 @@ class BitcoinDataStream : public BitcoinStream
 public:
     BitcoinDataStream& write_data(const uint8_t* data, uint32_t len) override
     {
+        if (!data)
+        {
+            throw_exception("Attempt to write null data.");
+        }
+
         m_data.insert(m_data.end(), data, data + len);
         return *this;
     }
@@ -102,7 +107,6 @@ public:
     BitcoinHashStream& write_data(const uint8_t* data, uint32_t len) override
     {
         m_stream.write_data(data, len);
-
         return *this;
     }
 
@@ -283,16 +287,11 @@ struct BitcoinTransactionDestination
         sig_stream << OpCode(0x76); // OP_DUP
         sig_stream << OpCode(0xA9); // OP_HASH160
 
-        size_t binary_size = 0;
-        throw_if_wally_error(
-                wally_base58_get_length(
-                        address.get_value().c_str(), &binary_size),
-                "Failed to estimate base58-ecnoded-string length");
-
+        size_t binary_size = address->length();
         std::vector<uint8_t> decoded(binary_size, 0);
         throw_if_wally_error(
                 wally_base58_to_bytes(
-                        address.get_value().c_str(), BASE58_FLAG_CHECKSUM,
+                        address->c_str(), BASE58_FLAG_CHECKSUM,
                         decoded.data(), decoded.size(), &binary_size),
                 "Failed to convert address to public key hash");
         decoded.resize(binary_size);
@@ -312,6 +311,11 @@ struct BitcoinTransactionDestination
             BitcoinStream& stream,
             const BitcoinTransactionDestination& destination)
     {
+        if (!destination.sig_script)
+        {
+            throw_exception("BitcoinTransactionDestination: sig_script is nullptr.");
+        }
+
         stream << destination.amount;
         stream << as_compact_size(destination.sig_script->len);
         stream << *destination.sig_script;
@@ -353,12 +357,10 @@ struct BitcoinTransactionFee
     {
         const Amount max_fee(
                 max_amount_per_byte.get_default_value(get_amount_per_byte())
-                        .get_value_as_uint64()
-                * transaction_size);
+                        .get_value_as_uint64() * transaction_size);
         const Amount min_fee(
                 min_amount_per_byte.get_default_value(Amount(1))
-                        .get_value_as_uint64()
-                * transaction_size);
+                        .get_value_as_uint64() * transaction_size);
         if (leftover < min_fee)
         {
             throw_exception(
@@ -430,7 +432,7 @@ struct BitcoinTransactionSource
     friend BitcoinStream& operator<<(
             BitcoinStream& stream, const BitcoinTransactionSource& source)
     {
-        stream << reverse(*source.prev_transaction_hash.get_value());
+        stream << reverse(**source.prev_transaction_hash);
         stream << source.prev_transaction_out_index;
 
         if (source.script_signature)
@@ -528,7 +530,7 @@ BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations()
     Destinations result;
     for (const auto& dest : m_destinations)
     {
-        if (dest->amount.get_value() > Amount(0))
+        if (*dest->amount > Amount(0))
         {
             result.push_back(dest.get());
         }

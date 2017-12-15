@@ -4,9 +4,6 @@
  * See LICENSE for details
  */
 
-#ifndef TEST_UTILITY_CPP
-#define TEST_UTILITY_CPP
-
 #include "multy_core/internal/utility.h"
 
 #include "gtest/gtest.h"
@@ -55,5 +52,3 @@ GTEST_TEST(UtilityTest, reset_sp)
     p_char.reset();
     EXPECT_EQ(TEST_VALUE2, old_value);
 }
-
-#endif // TEST_UTILITY_CPP

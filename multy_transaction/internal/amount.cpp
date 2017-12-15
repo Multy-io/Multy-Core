@@ -18,10 +18,12 @@ void throw_exception(const std::string& message)
 {
     throw Exception(message);
 }
+const int32_t AMOUNT_MAGIC = __LINE__;
 
 } // namespace
 
 Amount::Amount(const char* value)
+    : m_magic(&AMOUNT_MAGIC)
 {
     throw_if_wally_error(
             mpz_init_set_str(m_value, value, 10),
@@ -29,11 +31,13 @@ Amount::Amount(const char* value)
 }
 
 Amount::Amount(int32_t value)
+    : m_magic(&AMOUNT_MAGIC)
 {
     mpz_init_set_si(m_value, value);
 }
 
 Amount::Amount(const Amount& other)
+    : m_magic(&AMOUNT_MAGIC)
 {
     mpz_init_set(m_value, other.m_value);
 }
@@ -51,6 +55,7 @@ Amount& Amount::operator=(const Amount& other)
 }
 
 Amount::Amount(int64_t value)
+    : m_magic(&AMOUNT_MAGIC)
 {
     mpz_init(m_value);
     mpz_import(m_value, 1, -1, sizeof(value), 0, 0, &value);
@@ -61,6 +66,7 @@ Amount::Amount(int64_t value)
 }
 
 Amount::Amount(uint64_t value)
+    : m_magic(&AMOUNT_MAGIC)
 {
     mpz_init(m_value);
     mpz_import(m_value, 1, -1, sizeof(value), 0, 0, &value);
@@ -161,4 +167,9 @@ bool Amount::operator<=(const Amount& other) const
 bool Amount::operator>=(const Amount& other) const
 {
     return mpz_cmp(m_value, other.m_value) >= 0;
+}
+
+bool Amount::is_valid() const
+{
+    return m_magic == &AMOUNT_MAGIC;
 }
