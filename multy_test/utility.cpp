@@ -15,6 +15,9 @@
 #include <memory.h>
 #include <string.h>
 
+#define HANDLE_ERROR(statement) \
+        do { error.reset(statement); ASSERT_EQ(nullptr, error); } while(0)
+
 namespace
 {
 using namespace wallet_core::internal;
