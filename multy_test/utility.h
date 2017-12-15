@@ -10,8 +10,17 @@
 #include "multy_core/common.h"
 #include "multy_core/internal/utility.h"
 
+#include "gtest/gtest.h"
+
 #include <string>
 #include <vector>
+
+#define HANDLE_ERROR(statement)                                                \
+    do                                                                         \
+    {                                                                          \
+        error.reset(statement);                                                \
+        ASSERT_EQ(nullptr, error);                                             \
+    } while (0)
 
 #define E(statement)                                                           \
     if ((statement) != 0)                                                      \
@@ -38,10 +47,8 @@ EntropySource make_dummy_entropy_source();
 template <typename T, size_t N>
 BinaryData to_binary_data(const T (&data)[N])
 {
-    return BinaryData{
-            reinterpret_cast<const unsigned char*>(data),
-            N * sizeof(data[0])
-    };
+    return BinaryData{reinterpret_cast<const unsigned char*>(data),
+                      N * sizeof(data[0])};
 }
 
 void throw_exception(const char* message);
@@ -54,7 +61,7 @@ inline bool operator!=(const BinaryData& lhs, const BinaryData& rhs)
 {
     return !(lhs == rhs);
 }
-inline bool operator !=(const PublicKey& lhs, const PublicKey& rhs)
+inline bool operator!=(const PublicKey& lhs, const PublicKey& rhs)
 {
     return !(lhs == rhs);
 }
