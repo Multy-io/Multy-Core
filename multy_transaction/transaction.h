@@ -91,14 +91,6 @@ MULTY_TRANSACTION_API struct Error* transaction_serialize(
         const struct Transaction* transaction,
         struct BinaryData** out_serialized_transaction);
 
-// MULTY_TRANSACTION_API struct Error* transaction_serialize_raw(
-//        const struct Transaction* transaction,
-//        const struct BinaryData** out_raw_transaction);
-
-//MULTY_TRANSACTION_API struct Error* transaction_get_hash(
-//        const struct Transaction* transaction,
-//        const struct BinaryData** out_transaction_hash);
-
 MULTY_TRANSACTION_API void free_transaction(struct Transaction* transaction);
 
 #ifdef __cplusplus

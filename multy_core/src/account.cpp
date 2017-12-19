@@ -59,7 +59,7 @@ Error* make_hd_account(
     {
         return exception_to_error();
     }
-    OUT_CHECK(*new_account);
+    OUT_CHECK_OBJECT(*new_account);
 
     return nullptr;
 }
@@ -70,7 +70,7 @@ Error* make_hd_leaf_account(
         uint32_t index,
         Account** new_account)
 {
-    ARG_CHECK(base_account);
+    ARG_CHECK_OBJECT(base_account);
     ARG_CHECK(address_type == ADDRESS_INTERNAL
             || address_type == ADDRESS_EXTERNAL);
     ARG_CHECK(index < HARDENED_INDEX_BASE);
@@ -85,7 +85,7 @@ Error* make_hd_leaf_account(
     {
         return exception_to_error();
     }
-    OUT_CHECK(*new_account);
+    OUT_CHECK_OBJECT(*new_account);
 
     return nullptr;
 }
@@ -127,14 +127,14 @@ Error* make_account(
     {
         return exception_to_error();
     }
-    OUT_CHECK(*new_account);
+    OUT_CHECK_OBJECT(*new_account);
 
     return nullptr;
 }
 
 Error* get_account_key(const Account* account, KeyType key_type, Key** out_key)
 {
-    ARG_CHECK(account != nullptr);
+    ARG_CHECK_OBJECT(account);
     ARG_CHECK(key_type == KEY_TYPE_PRIVATE || key_type == KEY_TYPE_PUBLIC);
     ARG_CHECK(out_key != nullptr);
 
@@ -161,7 +161,7 @@ Error* get_account_key(const Account* account, KeyType key_type, Key** out_key)
 Error* get_account_address_string(
         const Account* account, const char** out_address)
 {
-    ARG_CHECK(account);
+    ARG_CHECK_OBJECT(account);
     ARG_CHECK(out_address);
 
     try
@@ -180,7 +180,7 @@ Error* get_account_address_string(
 Error* get_account_address_path(
         const Account* account, const char** out_address_path)
 {
-    ARG_CHECK(account);
+    ARG_CHECK_OBJECT(account);
     ARG_CHECK(out_address_path);
 
     try
@@ -198,7 +198,7 @@ Error* get_account_address_path(
 
 Error* get_account_currency(const Account* account, Currency* out_currency)
 {
-    ARG_CHECK(account);
+    ARG_CHECK_OBJECT(account);
     ARG_CHECK(out_currency);
 
     try
@@ -215,10 +215,12 @@ Error* get_account_currency(const Account* account, Currency* out_currency)
 
 void free_hdaccount(HDAccount* account)
 {
+    // TODO: if account is non-null, do verify validity.
     delete account;
 }
 
 void free_account(Account* account)
 {
+    // TODO: if account is non-null, do verify validity.
     delete account;
 }

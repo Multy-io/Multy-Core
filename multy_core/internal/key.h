@@ -20,19 +20,33 @@ struct PublicKey;
 
 struct MULTY_CORE_API ExtendedKey
 {
-    ext_key key;
+    ExtendedKey();
 
     std::string to_string() const;
+
+    bool is_valid() const;
+
+public:
+    ext_key key;
+
+private:
+    const void* m_magic;
 };
 
 struct MULTY_CORE_API Key
 {
+    Key();
     virtual ~Key();
 
     virtual std::string to_string() const = 0;
 
 //    virtual wallet_core::internal::BinaryDataPtr encrypt(const BinaryData* data) const = 0;
 //    virtual wallet_core::internal::BinaryDataPtr decrypt(const BinaryData* data) const = 0;
+
+    bool is_valid() const;
+
+private:
+    const void* m_magic;
 };
 
 struct MULTY_CORE_API PrivateKey : public Key

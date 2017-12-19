@@ -23,7 +23,7 @@ using namespace multy_transaction::internal;
 
 Error* make_transaction(const Account* account, Transaction** new_transaction)
 {
-    ARG_CHECK(account);
+    ARG_CHECK_OBJECT(account);
     ARG_CHECK(new_transaction);
 
     try
@@ -39,7 +39,7 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
         }
     }
     CATCH_EXCEPTION_RETURN_ERROR();
-    OUT_CHECK(*new_transaction);
+    OUT_CHECK_OBJECT(*new_transaction);
 
     return nullptr;
 }
@@ -49,7 +49,7 @@ Error* transaction_has_trait(
         TransactionTrait trait,
         bool* out_has_capability)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(trait == TRANSACTION_REQUIRES_EXPLICIT_SOURCE
             || trait == TRANSACTION_SUPPORTS_MULTIPLE_SOURCES
             || trait == TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS
@@ -68,7 +68,7 @@ Error* transaction_has_trait(
 Error* transaction_get_currency(
         const Transaction* transaction, Currency* out_currency)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(out_currency);
 
     try
@@ -82,7 +82,7 @@ Error* transaction_get_currency(
 
 Error* transaction_add_source(Transaction* transaction, Properties** source)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(source);
 
     try
@@ -91,7 +91,7 @@ Error* transaction_add_source(Transaction* transaction, Properties** source)
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*source);
+    OUT_CHECK_OBJECT(*source);
 
     return nullptr;
 }
@@ -99,7 +99,7 @@ Error* transaction_add_source(Transaction* transaction, Properties** source)
 Error* transaction_add_destination(
         Transaction* transaction, Properties** destination)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(destination);
 
     try
@@ -108,14 +108,14 @@ Error* transaction_add_destination(
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*destination);
+    OUT_CHECK_OBJECT(*destination);
 
     return nullptr;
 }
 
 Error* transaction_get_fee(Transaction* transaction, Properties** fee)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(fee);
 
     try
@@ -124,47 +124,54 @@ Error* transaction_get_fee(Transaction* transaction, Properties** fee)
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*fee);
+    OUT_CHECK_OBJECT(*fee);
 
     return nullptr;
 }
+
 Error* transaction_estimate_total_fee(
         const Transaction* transaction,
         size_t sources_count,
         size_t destinations_count,
         Amount* out_fee_estimate)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(out_fee_estimate);
     ARG_CHECK(sources_count>0);
     ARG_CHECK(destinations_count>0);
 
     try
     {
-        *out_fee_estimate = transaction->estimate_total_fee(sources_count, destinations_count);
+        AmountPtr result(new Amount);
+        *result = transaction->estimate_total_fee(sources_count, destinations_count);
+        *out_fee_estimate = result.release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
+    OUT_CHECK_OBJECT(*out_fee_estimate);
 
     return nullptr;
 }
 
 Error* transaction_get_total_fee(const Transaction* transaction, Amount* out_total_fee)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(out_total_fee);
 
     try
     {
-        *out_total_fee = transaction->get_total_fee();
+        AmountPtr result(new Amount);
+        *result = transaction->get_total_fee();
+        *out_total_fee = result.release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
+    OUT_CHECK_OBJECT(*out_total_fee);
 
     return nullptr;
 }
 
 Error* transaction_update(Transaction* transaction)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
 
     try
     {
@@ -177,7 +184,7 @@ Error* transaction_update(Transaction* transaction)
 
 Error* transaction_sign(Transaction* transaction)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
 
     try
     {
@@ -192,7 +199,7 @@ Error* transaction_serialize(
         const Transaction* transaction,
         BinaryData** out_serialized_transaction)
 {
-    ARG_CHECK(transaction);
+    ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(out_serialized_transaction);
 
     try
