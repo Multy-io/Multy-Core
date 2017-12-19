@@ -26,6 +26,7 @@ public:
     typedef wallet_core::internal::PrivateKeyPtr PrivateKeyPtr;
     typedef wallet_core::internal::PublicKeyPtr PublicKeyPtr;
 
+    Account();
     virtual ~Account();
 
     virtual HDPath get_path() const = 0;
@@ -33,6 +34,11 @@ public:
     virtual std::string get_address() const = 0;
     virtual PrivateKeyPtr get_private_key() const = 0;
     virtual PublicKeyPtr get_public_key() const = 0;
+
+    bool is_valid() const;
+
+private:
+    const void* m_magic;
 };
 
 // Exported only to make testing easier.
@@ -42,11 +48,17 @@ public:
     typedef wallet_core::internal::AccountPtr AccountPtr;
     typedef wallet_core::internal::HDPath HDPath;
 
+    HDAccount();
+
     virtual HDPath get_path() const = 0;
     virtual Currency get_currency() const = 0;
 
     virtual ~HDAccount();
     virtual AccountPtr make_leaf_account(AddressType type, uint32_t index) const = 0;
+
+    bool is_valid() const;
+private:
+    const void* m_magic;
 };
 
 #endif // MULTY_CORE_INTERNAL_ACCOUNT_H

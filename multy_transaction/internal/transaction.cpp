@@ -6,7 +6,22 @@
 
 #include "transaction.h"
 
+namespace
+{
+const int32_t TRANSACTION_MAGIC = __LINE__;
+} // namespace
+
+Transaction::Transaction()
+    : m_magic(&TRANSACTION_MAGIC)
+{
+
+}
+
 Transaction::~Transaction()
 {
 }
 
+bool Transaction::is_valid() const
+{
+    return m_magic == &TRANSACTION_MAGIC;
+}

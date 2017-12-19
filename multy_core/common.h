@@ -36,6 +36,23 @@ struct BinaryData
     size_t len;
 };
 
+struct Version
+{
+    size_t major;
+    size_t minor;
+    size_t build;
+    const char* note;  /// can be null
+    const char* commit; /// can be null
+};
+
+MULTY_CORE_API struct Error* get_version(struct Version* version);
+
+/** Generates a version string from version object.
+ * @param version_string - out, version string, must be freed with free_string().
+ * @return Error on error, nullptr otherwise.
+ */
+MULTY_CORE_API struct Error* make_version_string(const char** out_version_string);
+
 /** Frees BinaryData, can take null. **/
 MULTY_CORE_API void free_binarydata(struct BinaryData*);
 

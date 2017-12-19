@@ -61,8 +61,11 @@ struct MULTY_TRANSACTION_API Amount
     bool operator<=(const Amount& other) const;
     bool operator>=(const Amount& other) const;
 
+    bool is_valid() const;
+
 private:
     mpz_t m_value;
+    const void* m_magic;
 };
 
 // TODO: Those perform not-so-obvious conversion to Amount, get rid of it.

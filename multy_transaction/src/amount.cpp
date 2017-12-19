@@ -21,7 +21,7 @@ Error* make_amount(const char* amount_str, Amount** new_amount)
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*new_amount);
+    OUT_CHECK_OBJECT(*new_amount);
 
     return nullptr;
 }

@@ -86,7 +86,7 @@ BinaryData to_binary_data(const char* data)
 ExtendedKey make_dummy_extended_key()
 {
     ExtendedKey result;
-    memset(&result, 0, sizeof(result));
+    memset(&result.key, 0, sizeof(result.key));
     return result;
 }
 

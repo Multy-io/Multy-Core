@@ -4,8 +4,8 @@
  * See LICENSE for details
  */
 
-#ifndef VALUE_PRINTERS_H
-#define VALUE_PRINTERS_H
+#ifndef MULTY_TEST_VALUE_PRINTERS_H
+#define MULTY_TEST_VALUE_PRINTERS_H
 
 #include "multy_core/account.h"
 
@@ -50,4 +50,4 @@ inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)
     }
 }
 
-#endif // VALUE_PRINTERS_H
+#endif // MULTY_TEST_VALUE_PRINTERS_H

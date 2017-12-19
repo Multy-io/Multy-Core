@@ -22,6 +22,8 @@ namespace
 using namespace wallet_core::internal;
 typedef Properties::Binder Binder;
 
+const int32_t PROPERTIES_MAGIC = __LINE__;
+
 enum ValueType
 {
     VALUE_TYPE_INT32,
@@ -311,7 +313,8 @@ Properties::Binder::~Binder()
 }
 
 Properties::Properties(const std::string& name)
-    : m_name(name)
+    : m_magic(&PROPERTIES_MAGIC),
+      m_name(name)
 {
 }
 
@@ -521,4 +524,9 @@ bool Properties::is_set(const void* value) const
 void Properties::throw_exception(const std::string& message) const
 {
     throw Exception(get_name() + " : " + message);
+}
+
+bool Properties::is_valid() const
+{
+    return m_magic == &PROPERTIES_MAGIC;
 }

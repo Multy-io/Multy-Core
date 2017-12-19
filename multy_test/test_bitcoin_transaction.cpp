@@ -33,18 +33,17 @@ using namespace test_utility;
 GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
 {
     AccountPtr account;
-    ErrorPtr error(
-            make_account(
-                    CURRENCY_BITCOIN,
-                    "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
-                    reset_sp(account)));
+    HANDLE_ERROR(make_account(
+            CURRENCY_BITCOIN,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
+            reset_sp(account)));
+
 //    ASSERT_EQ(nullptr, error);
 //    ASSERT_NE(nullptr, account);
 //    EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
     TransactionPtr transaction;
-    error.reset(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
     {
@@ -100,18 +99,16 @@ GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
 {
     AccountPtr account;
-    ErrorPtr error(
+    HANDLE_ERROR(
             make_account(
                     CURRENCY_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
     TransactionPtr transaction;
-    error.reset(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
     Amount available(Amount(1000) * 1000 * 1000 * 1000 * 1000);
@@ -160,18 +157,16 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
 {
     AccountPtr account;
-    ErrorPtr error(
+    HANDLE_ERROR(
             make_account(
                     CURRENCY_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
     TransactionPtr transaction;
-    error.reset(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
     const Amount available(Amount(1000) * 1000 * 1000 * 1000 * 1000);
@@ -188,8 +183,69 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
         source.set_property("prev_tx_out_index", 0u);
         source.set_property("prev_tx_out_script_pubkey",
                 to_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property("private_key",
-                *account->get_private_key());
+        source.set_property("private_key", *account->get_private_key());
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property(
+                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
+        destination.set_property("amount", dest_amount);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property("amount_per_byte", fee_value);
+        //Ridicuosly high fee just to pass the checks.
+        fee.set_property("max_amount_per_byte", available);
+    }
+
+    transaction->update_state();
+
+    transaction->sign();
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // TODO: should re-signing produce same result ?
+    transaction->sign();
+    const BinaryDataPtr serialied2 = transaction->serialize();
+    std::cerr << "2. signed transaction: " << to_hex(*serialied2) << "\n";
+
+    ASSERT_EQ(*serialied, *serialied2);
+    ASSERT_EQ(to_binary_data(from_hex(
+            "010000000191a34273f5cb57244de3d7b27678b3ad385ac46c7df2c440f3f7b5ad23929748000000006a473044022064d09103c9d48c8b094db03227621ced41732a74963578d3495bac4f7f65b40e02201f2f7adf872c1de2af5027edefdf29379faf9fe8f5751015c974e064a9d9d6e0012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff014062b007000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000")),
+            *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
+{
+    AccountPtr account;
+    HANDLE_ERROR(
+            make_account(
+                    CURRENCY_BITCOIN,
+                    "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
+                    reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const Amount available(Amount(1000) * 1000 * 1000 * 1000 * 1000);
+    const Amount dest_amount(Amount(129) * 1000 * 1000);
+    const Amount fee_value(Amount(1) * 1000 * 1000);
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property("amount", available);
+        source.set_property(
+                "prev_tx_hash",
+                to_binary_data(
+                        from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391")));
+        source.set_property("prev_tx_out_index", 0u);
+        source.set_property("prev_tx_out_script_pubkey",
+                to_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
+        source.set_property("private_key", *account->get_private_key());
     }
 
     {

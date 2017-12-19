@@ -12,8 +12,8 @@
  */
 
 #include "multy_core/api.h"
-#include "multy_core/error.h"
 #include "multy_core/common.h"
+#include "multy_core/error.h"
 #include "multy_core/internal/u_ptr.h"
 
 #include <memory>
@@ -45,6 +45,30 @@ struct Error;
     {                                                                          \
         return wallet_core::internal::exception_to_error();                    \
     }
+
+#define CHECK_OBJECT(obj)                                                      \
+    do                                                                         \
+    {                                                                          \
+        if (!(obj)->is_valid())                                                \
+        {                                                                      \
+            return make_error(                                                 \
+                    ERROR_INVALID_ARGUMENT, #obj " is not a valid object.");   \
+        }                                                                      \
+    } while (false)
+
+#define ARG_CHECK_OBJECT(obj)                                                  \
+    do                                                                         \
+    {                                                                          \
+        ARG_CHECK((obj) != nullptr);                                           \
+        CHECK_OBJECT((obj));                                                   \
+    } while (false)
+
+#define OUT_CHECK_OBJECT(obj)                                                  \
+    do                                                                         \
+    {                                                                          \
+        OUT_CHECK((obj) != nullptr);                                           \
+        CHECK_OBJECT((obj));                                                   \
+    } while (false)
 
 namespace wallet_core
 {

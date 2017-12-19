@@ -201,6 +201,7 @@ struct MULTY_TRANSACTION_API Properties
 
     // Not a part of public interface.
     void throw_exception(const std::string& message) const;
+    bool is_valid() const;
 
 private:
     template <typename T, typename P>
@@ -214,6 +215,7 @@ protected:
     BinderPtr& make_property(const std::string& name, const void* value);
 
 private:
+    const void* m_magic;
     const std::string m_name;
     std::map<std::string, BinderPtr> m_properties;
     std::map<const void*, std::string> m_property_name_by_value;
@@ -241,6 +243,26 @@ public:
           m_value(std::move(initial_value))
     {
         props.bind_property(name, &m_value, trait, std::move(predicate));
+    }
+
+    const T& operator*() const
+    {
+        return get_value();
+    }
+
+    T& operator*()
+    {
+        return get_value();
+    }
+
+    const T* operator->() const
+    {
+        return &get_value();
+    }
+
+    T* operator->()
+    {
+        return &get_value();
     }
 
     const T& get_value() const

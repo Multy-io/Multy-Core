@@ -23,6 +23,7 @@ struct MULTY_TRANSACTION_API Transaction
 {
     typedef wallet_core::internal::BinaryDataPtr BinaryDataPtr;
 
+    Transaction();
     virtual ~Transaction();
 
     virtual Currency get_currency() const = 0;
@@ -75,6 +76,11 @@ struct MULTY_TRANSACTION_API Transaction
      * @return own properties of the transaction, DO NOT DELETE/FREE.
      */
     virtual Properties& get_transaction_properties() = 0;
+
+    bool is_valid() const;
+
+private:
+    const void* m_magic;
 };
 
 #endif // MULTY_TRANSACTION_INTERNAL_TRANSACTION_H
