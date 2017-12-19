@@ -28,8 +28,7 @@ enum ValueType
     VALUE_TYPE_AMOUNT,
     VALUE_TYPE_STRING,
     VALUE_TYPE_BINARY_DATA,
-    VALUE_TYPE_PUBLIC_KEY,
-    //        VALUE_TYPE_PRIVATE_KEY
+    VALUE_TYPE_PRIVATE_KEY,
 };
 
 // If you find that compilation fails du to this function definition missing,
@@ -62,9 +61,9 @@ constexpr ValueType deduce_value_type<BinaryData>()
 }
 
 template <>
-constexpr ValueType deduce_value_type<PublicKey>()
+constexpr ValueType deduce_value_type<PrivateKey>()
 {
-    return VALUE_TYPE_PUBLIC_KEY;
+    return VALUE_TYPE_PRIVATE_KEY;
 }
 
 // Property::ValueType deduce_value_type(const PrivateKey&)
@@ -84,10 +83,8 @@ std::string get_value_type_string(ValueType type)
             return "Amount";
         case VALUE_TYPE_BINARY_DATA:
             return "BinaryData";
-        case VALUE_TYPE_PUBLIC_KEY:
-            return "PublicKey";
-            //        case Property::VALUE_TYPE_PRIVATE_KEY:
-            //            return "PrivateKey";
+        case VALUE_TYPE_PRIVATE_KEY:
+            return "PrivateKey";
     }
     return "UNKNOWN TYPE";
 }
@@ -115,7 +112,7 @@ struct BinderBase : public Binder
 
     template <typename T>
     void throw_unexpected_type(
-            const std::string& name, ValueType expected_type, const T& value)
+            const std::string& name, ValueType expected_type, const T&)
     {
         m_properties.throw_exception(
                 "Invalid value type \""
@@ -144,7 +141,7 @@ struct BinderBase : public Binder
         throw_unexpected_type(m_name, m_type, value);
     }
 
-    void set_value(const PublicKey& value)
+    void set_value(const PrivateKey& value)
     {
         throw_unexpected_type(m_name, m_type, value);
     }
@@ -225,11 +222,6 @@ void copy_value(const BinaryData& from, BinaryDataPtr* to)
     *to = std::move(make_clone(from));
 }
 
-void copy_value(const PublicKey& from, PublicKeyPtr* to)
-{
-    *to = std::move(from.clone());
-}
-
 void copy_value(const PrivateKey& from, PrivateKeyPtr* to)
 {
     *to = std::move(from.clone());
@@ -298,15 +290,14 @@ Property::~Property()
 {
 }
 
-// throws exception if value is unset
 void Property::throw_if_unset(const void* property_var) const
 {
     if (!is_set(property_var))
     {
         const Properties::Binder& b
                 = m_properties.get_property_by_value(property_var);
-        throw Exception(
-                m_properties.get_name() + " property \"" + b.get_name()
+        m_properties.throw_exception(m_properties.get_name()
+                + " property \"" + b.get_name()
                 + "\" is not set.");
     }
 }
@@ -314,11 +305,6 @@ bool Property::is_set(const void* property_var) const
 {
     return m_properties.is_set(property_var);
 }
-
-// void Property::set_value(const PrivateKey& value)
-//{
-//    throw_unexpected_type(m_name, m_type, value);
-//}
 
 Properties::Binder::~Binder()
 {
@@ -350,7 +336,8 @@ std::string Properties::get_name() const
     return m_name;
 }
 
-bool Properties::validate(std::vector<std::string>* validation_details) const
+typedef std::vector<std::string> Strings;
+bool Properties::validate(Strings* unset_properties_names) const
 {
     bool all_required_properties_set = true;
     for (const auto& i : m_properties)
@@ -359,9 +346,9 @@ bool Properties::validate(std::vector<std::string>* validation_details) const
         if ((property.get_trait() == Property::REQUIRED) && !property.is_set())
         {
             all_required_properties_set = false;
-            if (validation_details)
+            if (unset_properties_names)
             {
-                validation_details->push_back(property.get_name());
+                unset_properties_names->push_back(property.get_name());
             }
         }
     }
@@ -406,21 +393,12 @@ void Properties::bind_property(
 
 void Properties::bind_property(
         const std::string& name,
-        PublicKeyPtr* value,
+        PrivateKeyPtr* value,
         Property::Trait trait,
-        Property::Predicate<PublicKey> predicate)
+        Property::Predicate<PrivateKey> predicate)
 {
     do_bind_property(name, value, trait, std::move(predicate));
 }
-
-// void Properties::bind_property(
-//        const std::string& name,
-//        PrivateKeyPtr* value,
-//        Property::Trait trait,
-//        Predicate<PrivateKey> predicate)
-//{
-//    do_bind_property(name, value, trait, std::move(predicate));
-//}
 
 template <typename T, typename P>
 void Properties::do_bind_property(

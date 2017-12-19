@@ -17,7 +17,7 @@ extern "C" {
 
 struct Amount;
 struct BinaryData;
-struct PublicKey;
+struct PrivateKey;
 struct Properties;
 
 MULTY_TRANSACTION_API struct Error* properties_set_int32_value(
@@ -36,10 +36,10 @@ MULTY_TRANSACTION_API struct Error* properties_set_binary_data_value(
         const char* name,
         const struct BinaryData* value);
 
-MULTY_TRANSACTION_API struct Error* properties_set_public_key_value(
+MULTY_TRANSACTION_API struct Error* properties_set_private_key_value(
         struct Properties* properties,
         const char* name,
-        const struct PublicKey* value);
+        const struct PrivateKey* value);
 
 MULTY_TRANSACTION_API struct Error* properties_reset_value(
         struct Properties* properties, const char* name);

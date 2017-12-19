@@ -400,7 +400,8 @@ struct BitcoinTransactionSource
                   }),
           prev_transaction_out_index(properties, "prev_tx_out_index"),
           prev_transaction_out_script_pubkey(
-                  properties, "prev_tx_out_script_pubkey")
+                  properties, "prev_tx_out_script_pubkey"),
+          private_key(properties, "private_key", Property::REQUIRED)
     {
     }
 
@@ -453,6 +454,7 @@ public:
     PropertyT<BinaryDataPtr> prev_transaction_hash;
     PropertyT<int32_t> prev_transaction_out_index;
     PropertyT<BinaryDataPtr> prev_transaction_out_script_pubkey;
+    PropertyT<PrivateKeyPtr> private_key;
 
     // not a property since set by Transaction or Source itself.
     uint32_t seq = 0xffffffff;
@@ -636,18 +638,19 @@ void BitcoinTransaction::sign()
             BitcoinDataStream hash_stream;
             serialize_to_stream(&hash_stream);
             hash_stream << uint32_t(1); // signature version
-            BinaryDataPtr sign = m_account.get_private_key()->sign(
-                    hash_stream.get_content());
+
+            const PrivateKeyPtr& private_key = source->private_key.get_value();
+            BinaryDataPtr signature = private_key->sign(hash_stream.get_content());
 
             BitcoinDataStream sig_script_stream;
-            sig_script_stream << as_compact_size(sign->len + 1);
-            sig_script_stream << *sign;
+            sig_script_stream << as_compact_size(signature->len + 1);
+            sig_script_stream << *signature;
             sig_script_stream << uint8_t(1); // hash-code type
 
-            const BinaryData& public_key
-                    = m_account.get_public_key()->get_content();
-            sig_script_stream << as_compact_size(public_key.len);
-            sig_script_stream << m_account.get_public_key()->get_content();
+            const PublicKeyPtr& public_key = private_key->make_public_key();
+            const BinaryData& public_key_data = public_key->get_content();
+            sig_script_stream << as_compact_size(public_key_data.len);
+            sig_script_stream << public_key_data;
 
             sig_script = make_clone(sig_script_stream.get_content());
         }

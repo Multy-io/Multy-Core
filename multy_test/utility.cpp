@@ -116,3 +116,8 @@ bool operator==(const PublicKey& lhs, const PublicKey& rhs)
 {
     return lhs.get_content() == rhs.get_content();
 }
+
+bool operator==(const PrivateKey& lhs, const PrivateKey& rhs)
+{
+    return lhs.to_string() == rhs.to_string();
+}
