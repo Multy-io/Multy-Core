@@ -14,7 +14,7 @@
 #include "wally_core.h"
 #include "libwally-core/src/wordlist.h"
 
-#include <cstring>
+#include <string>
 #include <memory>
 #include <stdlib.h>
 

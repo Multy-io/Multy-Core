@@ -44,7 +44,7 @@ struct TestTransaction: Transaction
         return BinaryDataPtr(new BinaryData{nullptr, 0});
     }
 
-    Amount estimate_fee() const override
+    Amount estimate_total_fee(size_t sources_count, size_t destinations_count) const override
     {
         return (m_total-1);
     }
@@ -180,17 +180,25 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_get_fee)
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(TransactionTestInvalidArgs, transaction_estimate_fee)
+GTEST_TEST(TransactionTestInvalidArgs, transaction_estimate_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
     Amount amount;
 
-    error.reset(transaction_estimate_fee(&transaction, nullptr ));
+    error.reset(transaction_estimate_total_fee(&transaction, 1, 1, nullptr ));
     EXPECT_NE(nullptr, error);
 
-    error.reset(transaction_estimate_fee(nullptr, &amount));
+    error.reset(transaction_estimate_total_fee(&transaction, 1, 0, &amount));
     EXPECT_NE(nullptr, error);
+
+    error.reset(transaction_estimate_total_fee(&transaction, 0, 1, &amount));
+    EXPECT_NE(nullptr, error);
+
+    error.reset(transaction_estimate_total_fee(nullptr, 1, 1, &amount));
+    EXPECT_NE(nullptr, error);
+
+
 }
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
@@ -235,7 +243,7 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize)
 }
 
 
-GTEST_TEST(TransactionTest, make_account)
+GTEST_TEST(TransactionTest, make_transaction)
 {
     ErrorPtr error;
     AccountPtr account_transaction;
@@ -303,13 +311,13 @@ GTEST_TEST(TransactionTest, transaction_get_fee)
     EXPECT_EQ(nullptr, error);
 }
 
-GTEST_TEST(TransactionTest, transaction_estimate_fee)
+GTEST_TEST(TransactionTest, transaction_estimate_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
     Amount amount;
 
-    error.reset(transaction_estimate_fee(&transaction, &amount));
+    error.reset(transaction_estimate_total_fee(&transaction, 1, 1, &amount));
     EXPECT_EQ(nullptr, error);
 }
 

@@ -30,7 +30,8 @@ struct MULTY_TRANSACTION_API Transaction
 
     virtual BinaryDataPtr serialize() const = 0;
     virtual Amount get_total_fee() const = 0;
-    virtual Amount estimate_fee() const = 0;
+//    virtual Amount estimate_fee() const = 0;
+    virtual Amount estimate_total_fee(size_t sources_count, size_t destinations_count) const = 0;
 
     /** Update transaction internal state, recalculate fee, change, sign inputs, etc.
      *

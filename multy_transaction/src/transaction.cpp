@@ -13,6 +13,8 @@
 #include "multy_core/internal/account.h"
 #include "multy_core/internal/utility.h"
 
+
+
 namespace
 {
 using namespace wallet_core::internal;
@@ -126,21 +128,27 @@ Error* transaction_get_fee(Transaction* transaction, Properties** fee)
 
     return nullptr;
 }
-Error* transaction_estimate_fee(Transaction* transaction, Amount* out_fee_estimate)
+Error* transaction_estimate_total_fee(
+        const Transaction* transaction,
+        size_t sources_count,
+        size_t destinations_count,
+        Amount* out_fee_estimate)
 {
     ARG_CHECK(transaction);
     ARG_CHECK(out_fee_estimate);
+    ARG_CHECK(sources_count>0);
+    ARG_CHECK(destinations_count>0);
 
     try
     {
-        *out_fee_estimate = transaction->estimate_fee();
+        *out_fee_estimate = transaction->estimate_total_fee(sources_count, destinations_count);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
     return nullptr;
 }
 
-Error* transaction_get_total_fee(Transaction* transaction, Amount* out_total_fee)
+Error* transaction_get_total_fee(const Transaction* transaction, Amount* out_total_fee)
 {
     ARG_CHECK(transaction);
     ARG_CHECK(out_total_fee);
@@ -182,7 +190,7 @@ Error* transaction_sign(Transaction* transaction)
 
 Error* transaction_serialize(
         const Transaction* transaction,
-        BinaryData** const out_serialized_transaction)
+        BinaryData** out_serialized_transaction)
 {
     ARG_CHECK(transaction);
     ARG_CHECK(out_serialized_transaction);
@@ -197,6 +205,7 @@ Error* transaction_serialize(
 
     return nullptr;
 }
+
 
 // Error* transaction_serialize_raw(
 //        const Transaction* transaction, const BinaryData**

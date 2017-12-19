@@ -552,12 +552,10 @@ Amount BitcoinTransaction::get_total_fee() const
     return m_total_fee;
 }
 
-Amount BitcoinTransaction::estimate_fee() const
+Amount BitcoinTransaction::estimate_total_fee(size_t sources_count, size_t destinations_count) const
 {
-    const size_t sources_count = m_sources.size();
-    const size_t destinations_count = get_non_zero_destinations().size();
     const int64_t transaction_size
-            = sources_count * 147 + destinations_count * 34 + 5;
+            = sources_count * 147 + destinations_count * 34 + 10;
     return transaction_size * m_fee->get_amount_per_byte();
 }
 void BitcoinTransaction::update_state()

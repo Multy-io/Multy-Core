@@ -185,7 +185,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     }
 
     transaction->update_state();
-    Amount estimated_fee = transaction->estimate_fee();
+    Amount estimated_fee = transaction->estimate_total_fee(1, 1);
     std::cerr << "estimated_fee: " << estimated_fee.get_value() << "\n";
 
     transaction->sign();
