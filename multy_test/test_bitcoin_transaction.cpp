@@ -267,6 +267,15 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     transaction->sign();
     const BinaryDataPtr serialied = transaction->serialize();
 
+    {
+        Amount total_fee = transaction->estimate_total_fee(1,1);
+
+        uint64_t max_total_fee = serialied->len * fee_value.get_value_as_uint64() * 1.05;
+        uint64_t min_total_fee = serialied->len * fee_value.get_value_as_uint64() * 0.95;
+        ASSERT_LE(min_total_fee, total_fee.get_value_as_uint64());
+        ASSERT_GE(max_total_fee, total_fee.get_value_as_uint64());
+    }
+
     // TODO: should re-signing produce same result ?
     transaction->sign();
     const BinaryDataPtr serialied2 = transaction->serialize();

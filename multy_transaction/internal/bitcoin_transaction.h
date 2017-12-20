@@ -41,7 +41,7 @@ public:
     BitcoinTransaction(const Account& account);
 
     Amount get_total_fee() const override;
-    Amount estimate_fee() const override;
+    Amount estimate_total_fee(size_t sources_count, size_t destinations_count) const override;
     BinaryDataPtr serialize() const override;
 
     void update_state() override;
