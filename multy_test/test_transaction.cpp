@@ -28,7 +28,7 @@ using namespace wallet_core::internal;
 
 struct TestTransaction: Transaction
 {
-    TestTransaction(): m_properties(""){}
+    TestTransaction(): m_properties(""), m_total("5"){}
     Currency get_currency() const override
     {
         return m_currency;
@@ -188,15 +188,19 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_estimate_total_fee)
 
     error.reset(transaction_estimate_total_fee(&transaction, 1, 1, nullptr ));
     EXPECT_NE(nullptr, error);
+    EXPECT_EQ(nullptr, amount);
 
-    error.reset(transaction_estimate_total_fee(&transaction, 1, 0, &amount));
+    error.reset(transaction_estimate_total_fee(&transaction, 1, 0, reset_sp(amount)));
     EXPECT_NE(nullptr, error);
+    EXPECT_EQ(nullptr, amount);
 
-    error.reset(transaction_estimate_total_fee(&transaction, 0, 1, &amount));
+    error.reset(transaction_estimate_total_fee(&transaction, 0, 1, reset_sp(amount)));
     EXPECT_NE(nullptr, error);
+    EXPECT_EQ(nullptr, amount);
 
-    error.reset(transaction_estimate_total_fee(nullptr, 1, 1, &amount));
+    error.reset(transaction_estimate_total_fee(nullptr, 1, 1, reset_sp(amount)));
     EXPECT_NE(nullptr, error);
+    EXPECT_EQ(nullptr, amount);
 }
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
@@ -316,8 +320,9 @@ GTEST_TEST(TransactionTest, transaction_estimate_total_fee)
     TestTransaction transaction;
     AmountPtr amount;
 
-    error.reset(transaction_estimate_total_fee(&transaction, 1, 1, &amount));
+    error.reset(transaction_estimate_total_fee(&transaction, 1, 1, reset_sp(amount)));
     EXPECT_EQ(nullptr, error);
+    EXPECT_EQ("4", *amount);
 }
 
 GTEST_TEST(TransactionTest, transaction_get_total_fee)
@@ -328,6 +333,7 @@ GTEST_TEST(TransactionTest, transaction_get_total_fee)
 
     error.reset(transaction_get_total_fee(&transaction, reset_sp(amount)));
     EXPECT_EQ(nullptr, error);
+    EXPECT_EQ("3", *amount);
 }
 
 GTEST_TEST(TransactionTest, transaction_update)
