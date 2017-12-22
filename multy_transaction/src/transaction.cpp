@@ -133,7 +133,7 @@ Error* transaction_estimate_total_fee(
         const Transaction* transaction,
         size_t sources_count,
         size_t destinations_count,
-        Amount* out_fee_estimate)
+        Amount** out_fee_estimate)
 {
     ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(out_fee_estimate);
@@ -152,7 +152,7 @@ Error* transaction_estimate_total_fee(
     return nullptr;
 }
 
-Error* transaction_get_total_fee(const Transaction* transaction, Amount* out_total_fee)
+Error* transaction_get_total_fee(const Transaction* transaction, Amount** out_total_fee)
 {
     ARG_CHECK_OBJECT(transaction);
     ARG_CHECK(out_total_fee);

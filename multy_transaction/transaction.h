@@ -62,10 +62,10 @@ MULTY_TRANSACTION_API struct Error* transaction_estimate_total_fee(
         const struct Transaction* transaction,
         size_t sources_count,
         size_t destinations_count,
-        struct Amount* out_fee_estimation);
+        struct Amount** out_fee_estimation);
 
 MULTY_TRANSACTION_API struct Error* transaction_get_total_fee(
-        const struct Transaction* transaction, struct Amount* out_fee_total);
+        const struct Transaction* transaction, struct Amount** out_fee_total);
 
 ///** Get total amount transferred from sources to destinations.
 // * @return
