@@ -48,8 +48,8 @@ enum KeyType
  * @param account - (out) new account
  */
 MULTY_CORE_API struct Error* make_hd_account(
-        const ExtendedKey* master_key,
-        Currency currency,
+        const struct ExtendedKey* master_key,
+        enum Currency currency,
         uint32_t index,
         struct HDAccount** new_account);
 
@@ -62,7 +62,7 @@ MULTY_CORE_API struct Error* make_hd_account(
  */
 MULTY_CORE_API struct Error* make_hd_leaf_account(
         const struct HDAccount* base_account,
-        AddressType address_type,
+        enum AddressType address_type,
         uint32_t index,
         struct Account** new_account);
 
@@ -73,7 +73,7 @@ MULTY_CORE_API struct Error* make_hd_leaf_account(
  * free_account().
  */
 MULTY_CORE_API struct Error* make_account(
-        Currency currency,
+        enum Currency currency,
         const char* serialized_private_key,
         struct Account** new_account);
 
@@ -86,8 +86,8 @@ MULTY_CORE_API struct Error* make_account(
  */
 MULTY_CORE_API struct Error* get_account_key(
         const struct Account* account,
-        KeyType key_type,
-        Key** out_key);
+        enum KeyType key_type,
+        struct Key** out_key);
 
 /** Get account address as a string.
  * @param account - account.
@@ -113,7 +113,7 @@ MULTY_CORE_API struct Error* get_account_address_path(
  */
 MULTY_CORE_API struct Error* get_account_currency(
         const struct Account* account,
-        Currency* out_currency);
+        enum Currency* out_currency);
 
 /** Frees HDAccount instance, can accept nullptr. **/
 MULTY_CORE_API void free_hdaccount(struct HDAccount*);
