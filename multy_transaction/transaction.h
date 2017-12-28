@@ -34,11 +34,11 @@ MULTY_TRANSACTION_API struct Error* make_transaction(
 
 MULTY_TRANSACTION_API struct Error* transaction_has_trait(
         const struct Transaction* transaction,
-        TransactionTrait trait,
+        enum TransactionTrait trait,
         bool* out_has_capability);
 
 MULTY_TRANSACTION_API struct Error* transaction_get_currency(
-        const struct Transaction* transaction, Currency* out_currency);
+        const struct Transaction* transaction, enum Currency* out_currency);
 
 /// @param source - new source, must NOT be freed by the caller.
 MULTY_TRANSACTION_API struct Error* transaction_add_source(
