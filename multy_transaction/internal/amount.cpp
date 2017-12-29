@@ -117,6 +117,35 @@ int64_t Amount::get_value_as_int64() const
     return result;
 }
 
+size_t Amount::get_exported_size_in_bytes() const
+{
+    const size_t limbs_count = mpz_size(m_value);
+    const mp_limb_t* limbs = mpz_limbs_read(m_value);
+
+    size_t result = 0;
+    for (int i = 0; i < limbs_count; ++i)
+    {
+        result += get_bytes_len(limbs[i]);
+    }
+    return result;
+}
+
+BinaryDataPtr Amount::export_as_binary_data(Amount::ExportFormat format) const
+{
+    const size_t size = get_exported_size_in_bytes();
+
+    BinaryDataPtr result;
+    throw_if_error(make_binary_data(size, reset_sp(result)));
+
+    const int word_order = (format == EXPORT_BIG_ENDIAN) ? 1 : -1;
+    const int byte_order = word_order;
+    size_t result_size = 0;
+    mpz_export(const_cast<uint8_t*>(result->data), &result_size, word_order,
+            result->len, byte_order, 0, m_value);
+
+    return result;
+}
+
 Amount& Amount::operator+=(const Amount& other)
 {
     mpz_add(m_value, m_value, other.m_value);

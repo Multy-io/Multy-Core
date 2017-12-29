@@ -10,6 +10,8 @@
 #include "multy_core/api.h"
 #include "multy_core/error.h"
 
+#include "multy_core/error.h"
+
 #include <exception>
 #include <string>
 
@@ -35,19 +37,8 @@ private:
     const CodeLocation m_location;
 };
 
-inline const Exception& operator<<(const Exception& e, const char* message)
-{
-    e.append_message(message);
-    return e;
-}
-
-inline const Exception& operator<<(const Exception& e, const std::string& message)
-{
-    return e << message.c_str();
-}
-
 #define THROW_EXCEPTION(msg) \
-    throw Exception(msg, MULTY_CODE_LOCATION)
+    throw wallet_core::internal::Exception(msg, MULTY_CODE_LOCATION)
 
 } // namespace internal
 } // namespace wallet_core

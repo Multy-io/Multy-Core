@@ -73,6 +73,10 @@ void PrintTo(const std::nullptr_t&, std::ostream* out)
 void PrintTo(const Error& e, std::ostream* out)
 {
     *out << "Error{ " << e.code << ", \"" << e.message << "\" }";
+    if (e.location.file)
+    {
+        *out << " @ " << e.location.file << " : " << e.location.line;
+    }
 }
 
 void PrintTo(const BinaryData& data, std::ostream* out)

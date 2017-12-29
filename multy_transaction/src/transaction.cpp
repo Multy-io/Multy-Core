@@ -6,14 +6,13 @@
 
 #include "multy_transaction/transaction.h"
 
+#include "multy_transaction/internal/ethereum_transaction.h"
 #include "multy_transaction/internal/bitcoin_transaction.h"
 #include "multy_transaction/internal/transaction.h"
 #include "multy_transaction/internal/u_ptr.h"
 
 #include "multy_core/internal/account.h"
 #include "multy_core/internal/utility.h"
-
-
 
 namespace
 {
@@ -32,6 +31,9 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
         {
             case CURRENCY_BITCOIN:
                 *new_transaction = new BitcoinTransaction(*account);
+                break;
+            case CURRENCY_ETHEREUM:
+                *new_transaction = new EthereumTransaction(*account);
                 break;
             default:
                 return MAKE_ERROR(
@@ -129,6 +131,24 @@ Error* transaction_get_fee(Transaction* transaction, Properties** fee)
     return nullptr;
 }
 
+Error* transaction_get_properties(Transaction* transaction,
+        Properties** transaction_properties)
+{
+    ARG_CHECK_OBJECT(transaction);
+    ARG_CHECK(transaction_properties);
+
+    try
+    {
+        *transaction_properties = &transaction->get_transaction_properties();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    OUT_CHECK_OBJECT(*transaction_properties);
+
+    return nullptr;
+}
+
+
 Error* transaction_estimate_total_fee(
         const Transaction* transaction,
         size_t sources_count,
@@ -212,41 +232,6 @@ Error* transaction_serialize(
 
     return nullptr;
 }
-
-
-// Error* transaction_serialize_raw(
-//        const Transaction* transaction, const BinaryData**
-//        out_raw_transaction)
-//{
-//    ARG_CHECK(transaction);
-//    ARG_CHECK(out_raw_transaction);
-
-//    try
-//    {
-//    }
-//    CATCH_EXCEPTION_RETURN_ERROR();
-
-//    OUT_CHECK(*out_raw_transaction);
-
-//    return nullptr;
-//}
-
-//Error* transaction_get_hash(
-//        Transaction* transaction, struct BinaryData** out_transaction_hash)
-//{
-//    ARG_CHECK(transaction);
-//    ARG_CHECK(out_transaction_hash);
-
-//    try
-//    {
-//        *out_transaction_hash = transaction->get_hash().release();
-//    }
-//    CATCH_EXCEPTION_RETURN_ERROR();
-
-//    OUT_CHECK(*out_transaction_hash);
-
-//    return nullptr;
-//}
 
 void free_transaction(Transaction* transaction)
 {

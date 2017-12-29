@@ -17,6 +17,48 @@ namespace multy_transaction
 namespace internal
 {
 
+class MULTY_TRANSACTION_API TransactionFeeBase
+{
+public:
+    TransactionFeeBase();
+
+    Properties& get_properties();
+
+protected:
+    ~TransactionFeeBase();
+
+protected:
+    Properties m_properties;
+};
+
+class MULTY_TRANSACTION_API TransactionDestinationBase
+{
+public:
+    TransactionDestinationBase();
+
+    Properties& get_properties();
+
+protected:
+    ~TransactionDestinationBase();
+
+protected:
+    Properties m_properties;
+};
+
+class MULTY_TRANSACTION_API TransactionSourceBase
+{
+public:
+    TransactionSourceBase();
+
+    Properties& get_properties();
+
+protected:
+    ~TransactionSourceBase();
+
+protected:
+    Properties m_properties;
+};
+
 class MULTY_TRANSACTION_API TransactionBase : public Transaction
 {
 public:

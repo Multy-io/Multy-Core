@@ -9,6 +9,9 @@
 
 #include "multy_transaction/api.h"
 
+#include "multy_core/common.h"
+#include "multy_core/internal/u_ptr.h"
+
 #include "third-party/mini-gmp/mini-gmp.h"
 
 #include <stdint.h>
@@ -31,6 +34,11 @@ struct MULTY_TRANSACTION_API Amount
     std::string get_value() const;
     int64_t get_value_as_int64() const;
     uint64_t get_value_as_uint64() const;
+
+    size_t get_exported_size_in_bytes() const;
+
+    enum ExportFormat {EXPORT_BIG_ENDIAN, EXPORT_LITTLE_ENDIAN};
+    wallet_core::internal::BinaryDataPtr export_as_binary_data(ExportFormat format) const;
 
     Amount& operator+=(const Amount& other);
     Amount& operator-=(const Amount& other);

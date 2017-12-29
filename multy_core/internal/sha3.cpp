@@ -10,6 +10,7 @@
 #include "multy_core/sha3.h"
 
 #include "multy_core/internal/exception.h"
+#include "multy_core/internal/exception_stream.h"
 #include "multy_core/internal/utility.h"
 
 extern "C" {
@@ -28,15 +29,6 @@ using namespace wallet_core::internal;
 static const size_t HASH_SIZES[] = {
     SHA3_224, SHA3_256, SHA3_384, SHA3_512
 };
-
-// Since on some Android SDK versions std::to_string() is missing.
-template <typename T>
-std::string my_to_string(const T& value)
-{
-    std::stringstream sstr;
-    sstr << value;
-    return sstr.str();
-}
 
 #define DO_SHA3(size, in, out)                                                 \
     THROW_IF_WALLY_ERROR(                                                      \
@@ -72,8 +64,8 @@ void do_sha3(const BinaryData& input, BinaryData* output)
         }
         default:
         {
-            THROW_EXCEPTION("unsupported hash size: ")
-                    << my_to_string(output->len);
+            THROW_EXCEPTION("unsupported hash size.")
+                    << " Size:" << output->len;
         }
     }
 }
@@ -127,8 +119,8 @@ void sha3(const BinaryData& input, BinaryData* output)
             HASH_SIZES, default_value, output->len);
     if (hash_size == default_value)
     {
-        THROW_EXCEPTION("output BinaryData has not enough space available (")
-                << my_to_string(output->len) << " bytes) to hold hash result.";
+        THROW_EXCEPTION("output BinaryData has not enough space available.")
+                << " Need at least " << output->len << " bytes.";
     }
     output->len = hash_size;
     do_sha3(input, output);

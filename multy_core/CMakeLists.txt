@@ -46,6 +46,11 @@ target_include_directories(multy_core PRIVATE
     ../third-party
 )
 
-target_link_libraries(multy_core libwally-core keccak-tiny)
+target_link_libraries(multy_core
+    PUBLIC
+    libwally-core
+    keccak-tiny
+)
+
 set_target_properties(multy_core PROPERTIES CXX_VISIBILITY_PRESET hidden)
 

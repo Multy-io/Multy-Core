@@ -18,6 +18,7 @@
 #include "multy_core/internal/u_ptr.h"
 
 #include <memory>
+#include <limits>
 
 struct Error;
 
@@ -145,6 +146,16 @@ MULTY_CORE_API char* copy_string(const char* str);
 
 MULTY_CORE_API char* copy_string(const std::string& str);
 
+/** Slice existing BinaryData into new BinaryData,
+ *  starting from offset and with given size;
+ *
+ * Note that returned object points inside original one, so it must not outlive it,
+ * also, data pointed by returned object should not be freed.
+ *
+ * Throws exceptions if offset or size (or offset + size) is too big.
+ */
+MULTY_CORE_API BinaryData slice(const BinaryData& data, size_t offset, size_t size);
+
 /** Convenience to simplify passing C++ smart_pointers (like std::unique_ptr<T>)
  * to C-like functions than take T** and store address of new object there.
  * Should be used in conjunction with reset_sp() function.
@@ -199,6 +210,22 @@ inline BinaryDataPtr make_clone(const BinaryData& other)
     BinaryDataPtr result;
     throw_if_error(binary_data_clone(&other, reset_sp(result)));
     return result;
+}
+
+// gets number of bytes excluding leading zeroes.
+template <typename T>
+size_t get_bytes_len(T value)
+{
+    static_assert(!std::numeric_limits<T>::is_signed, "Only unsigned types supported");
+    // All bytes up to leading zeroes.
+    int i = 0;
+    uint64_t tmp_value = value;
+    for (; i < sizeof(value) && tmp_value; ++i)
+    {
+        tmp_value >>= 8;
+    }
+
+    return i;
 }
 
 } // namespace internal

@@ -15,6 +15,7 @@
 
 #include "multy_transaction/amount.h"
 #include "multy_transaction/properties.h"
+#include "multy_transaction/internal/ethereum_transaction.h"
 
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
@@ -44,6 +45,15 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
     ASSERT_NE(nullptr, transaction);
 
     {
+        Properties* properties = nullptr;
+        const Amount nonce("0");
+
+        HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
+        HANDLE_ERROR(properties_set_amount_value(properties, "nonce", &nonce));
+        HANDLE_ERROR(properties_set_int32_value(properties, "chain_id", ETHEREUM_CHAIN_ID_RINKEBY));
+    }
+
+    {
         Properties* source = nullptr;
         HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
 
@@ -52,10 +62,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
         HANDLE_ERROR(make_amount("7500000000000000000", reset_sp(balance)));
 
         HANDLE_ERROR(properties_set_amount_value(source, "amount", balance.get()));
-
-        const unsigned char nonce_char[256] = {0U};
-        const BinaryData nonce{nonce_char, 256};
-        HANDLE_ERROR(properties_set_binary_data_value(source, "nonce", &nonce));
     }
 
     {
@@ -66,7 +72,9 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
         HANDLE_ERROR(make_amount("1", reset_sp(amount)));
         HANDLE_ERROR(properties_set_amount_value(destination, "amount", amount.get()));
 
-        HANDLE_ERROR(properties_set_string_value(destination, "address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19"));
+        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
+        const BinaryData address_data = to_binary_data(address);
+        HANDLE_ERROR(properties_set_binary_data_value(destination, "address", &address_data));
     }
 
     {
@@ -112,20 +120,22 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     const Amount value("1");
     const Amount gas_limit("21001");
     const Amount gas_price("1");
+
     {
-        Properties& source = transaction->add_source();
-
-        source.set_property("amount", balance);
-
-        const unsigned char nonce_char[256] = {0U};
-        const BinaryData nonce{nonce_char, 256};
-        source.set_property("nonce", nonce);
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property("nonce", Amount("0"));
+        properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
     {
+        Properties& source = transaction->add_source();
+        source.set_property("amount", balance);
+    }
+
+    {
+        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property(
-                "address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
+        destination.set_property("address", to_binary_data(address));
         destination.set_property("amount", value);
     }
 
@@ -160,21 +170,23 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     const Amount balance("7500000000000000000");
     const Amount value("2305843009213693952");
     const Amount gas_limit("21001");
-    const Amount gas_price("6442450944");
+    const Amount gas_price("64424509440");
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property("nonce", Amount("4"));
+        properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
+    }
 
     {
         Properties& source = transaction->add_source();
         source.set_property("amount", balance);
-
-        const unsigned char nonce_char[256] = {0U};
-        const BinaryData nonce{nonce_char, 256};
-        source.set_property("nonce", nonce);
     }
 
     {
+        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property(
-                "address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
+        destination.set_property("address", to_binary_data(address));
         destination.set_property("amount", value);
     }
 

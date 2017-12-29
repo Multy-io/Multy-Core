@@ -13,6 +13,7 @@ add_library(multy_transaction
 
     internal/amount.cpp
     internal/bitcoin_transaction.cpp
+    internal/ethereum_transaction.cpp
     internal/properties.cpp
     internal/transaction_base.cpp
     internal/transaction.cpp
@@ -33,6 +34,7 @@ target_link_libraries(
     PRIVATE
     multy_core
     mini-gmp
+    libwally-core
 )
 
 set_target_properties(multy_transaction PROPERTIES CXX_VISIBILITY_PRESET hidden)

@@ -13,6 +13,50 @@ namespace multy_transaction
 namespace internal
 {
 
+TransactionFeeBase::TransactionFeeBase()
+    : m_properties("TransactionFee")
+{
+}
+
+TransactionFeeBase::~TransactionFeeBase()
+{
+}
+
+Properties& TransactionFeeBase::get_properties()
+{
+    return m_properties;
+}
+
+TransactionDestinationBase::TransactionDestinationBase()
+    : m_properties("TransactionDestination")
+{
+}
+
+TransactionDestinationBase::~TransactionDestinationBase()
+{
+}
+
+Properties& TransactionDestinationBase::get_properties()
+{
+    return m_properties;
+}
+
+TransactionSourceBase::TransactionSourceBase()
+    : m_properties("TransactionSource")
+{
+}
+
+TransactionSourceBase::~TransactionSourceBase()
+{
+}
+
+Properties& TransactionSourceBase::get_properties()
+{
+    return m_properties;
+}
+
+
+
 TransactionBase::TransactionBase(Currency currency, uint32_t traits)
     : m_properties("Transaction"), m_currency(currency), m_traits(traits)
 {

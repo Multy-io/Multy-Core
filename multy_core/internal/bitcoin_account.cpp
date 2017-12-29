@@ -3,7 +3,6 @@
  *
  * See LICENSE for details
  */
-
 #include "multy_core/internal/bitcoin_account.h"
 
 #include "multy_core/common.h"
