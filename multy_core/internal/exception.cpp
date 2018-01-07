@@ -30,6 +30,22 @@ ExceptionBuilder::ExceptionBuilder(const std::string& message)
       m_message(message)
 {}
 
+ExceptionBuilder::ExceptionBuilder(ExceptionBuilder&& other)
+    : m_exception_thrown(other.m_exception_thrown),
+      m_message(other.m_message)
+{
+    other.m_exception_thrown = true;
+}
+
+ExceptionBuilder&& ExceptionBuilder::operator=(ExceptionBuilder&& other)
+{
+    m_exception_thrown = other.m_exception_thrown;
+    m_message = other.m_message;
+    other.m_exception_thrown = true;
+
+    return std::move(*this);
+}
+
 ExceptionBuilder::~ExceptionBuilder()
 {
     if (!std::uncaught_exception() && !m_exception_thrown)

@@ -9,10 +9,12 @@ add_library(multy_core
     error.h
     keys.h
     mnemonic.h
+    sha3.h
 
     src/account.cpp
     src/common.cpp
     src/error.cpp
+    src/sha3.cpp
     src/keys.cpp
     src/mnemonic.cpp
 
@@ -22,6 +24,7 @@ add_library(multy_core
     internal/ethereum_account.cpp
     internal/exception.cpp
     internal/hd_path.cpp
+    internal/sha3.cpp
     internal/key.cpp
     internal/u_ptr.cpp
     internal/utility.cpp
