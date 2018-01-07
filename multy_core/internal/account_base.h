@@ -1,4 +1,4 @@
-/* Copyright 2017 by Multy.io
+/* Copyright 2018 by Multy.io
  * Licensed under Multy.io license.
  *
  * See LICENSE for details
