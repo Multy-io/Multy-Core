@@ -6,12 +6,20 @@
 
 #include "multy_core/account.h"
 
+#include "multy_core/internal/account.h"
+#include "multy_core/internal/utility.h"
+#include "multy_core/internal/key.h"
+#include "multy_core/internal/sha3.h"
+
 #include "multy_test/serialized_keys_test_base.h"
+#include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
 
 namespace
 {
+using namespace wallet_core::internal;
+
 SerializedKeyTestCase TEST_CASES[] = {
     {
         "6bd05118bf92e4236232db724a64abbf709f01b4f37041c88ae3ebf3eeed5596",
@@ -95,5 +103,37 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Combine(
                 ::testing::Values(CURRENCY_ETHEREUM),
                 ::testing::ValuesIn(TEST_CASES)));
+
+GTEST_TEST(EtheremAccountTest, PrivateKeySig)
+{
+    // Based on cpp-ethereum test case `Crypto.devcrypto.SignAndRecover`
+    // Original test case, for the reference:
+    //    auto sec = Secret{sha3("sec")};
+    //    auto msg = sha3("msg");
+    //    auto sig = sign(sec, msg);
+    //    auto expectedSig = "b826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000";
+    //    BOOST_CHECK_EQUAL(sig.hex(), expectedSig);
+
+    // Ethereum-sha3 (keccak_256 as we call it) of "sec":
+    const char PRIVATE_KEY[] = "cc798d20ea341f838981c3df7f58f1bf453e6dcc2894c0d17d7da1b422a623c7";
+    const char MESSAGE[] = "msg";
+
+    AccountPtr account;
+    HANDLE_ERROR(make_account(CURRENCY_ETHEREUM, PRIVATE_KEY, reset_sp(account)));
+
+    BinaryDataPtr message;
+    HANDLE_ERROR(make_binary_data_from_bytes(
+            reinterpret_cast<const unsigned char*>(MESSAGE),
+            array_size(MESSAGE) - 1, reset_sp(message))); // -1 to ditch null-terminator
+
+    const BinaryDataPtr expected_hash = keccak_256(*message);
+
+    const BinaryDataPtr signature = account->get_private_key()->sign(*message);
+    ASSERT_NE(nullptr, signature);
+
+    BinaryDataPtr expected_signature;
+    HANDLE_ERROR(make_binary_data_from_hex("b826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000", reset_sp(expected_signature)));
+    EXPECT_EQ(*expected_signature, *signature);
+}
 
 } // namespace

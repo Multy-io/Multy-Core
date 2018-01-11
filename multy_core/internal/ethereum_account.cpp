@@ -16,7 +16,10 @@ extern "C" {
 //   and then re-enable using hex-converting functions from CCAN.
 //#include "ccan/str/hex/hex.h"
 #include "keccak-tiny/keccak-tiny.h"
+#include "libwally-core/src/internal.h"
 } // extern "C"
+
+#include "secp256k1/include/secp256k1_recovery.h"
 
 #include "wally_core.h"
 #include "wally_crypto.h"
@@ -126,7 +129,32 @@ struct EthereumPrivateKey : public PrivateKey
 
     BinaryDataPtr sign(const BinaryData& data) const override
     {
-        throw_exception("Not implemented yet");
+        std::array<unsigned char, SHA256_LEN> data_hash;
+        throw_if_wally_error(
+                keccak_256(data_hash.data(), data_hash.size(),
+                         data.data, data.len),
+                "Failed to hash data.");
+
+        secp256k1_ecdsa_recoverable_signature signature;
+        if (!secp256k1_ecdsa_sign_recoverable(secp_ctx(), &signature,
+                data_hash.data(), m_data.data(), nullptr, nullptr))
+        {
+            throw_exception("Failed to sign with private key.");
+        }
+
+        std::array<unsigned char, 65> signature_data;
+        int recovery_id = 0;
+        secp256k1_ecdsa_recoverable_signature_serialize_compact(
+                secp_ctx(), signature_data.data(), &recovery_id, &signature);
+
+        signature_data.back() = static_cast<unsigned char>(recovery_id);
+        BinaryDataPtr result;
+        throw_if_error(
+                make_binary_data_from_bytes(
+                        signature_data.data(), signature_data.size(),
+                        reset_sp(result)));
+        return result;
+
     }
 
     const KeyData& get_data() const
@@ -146,7 +174,7 @@ EthereumAddressValue make_address(const EthereumPublicKey& key)
             keccak_256(
                     address_hash.data(), address_hash.size(),
                     key_data.data, key_data.len),
-            "Failed to compute sha3 of public key");
+            "Failed to compute keccak hash of public key");
 
     EthereumAddressValue result;
     static_assert(

@@ -63,23 +63,23 @@ target_compile_options(secp256k1
     PRIVATE
         -std=c89
 )
-if(LINUX_DESKTOP)
-    target_compile_definitions(secp256k1
-        PUBLIC
-            -DUSE_NUM_NONE=1 -DUSE_FIELD_5X52=1 -DUSE_FIELD_INV_BUILTIN=1
-            -DUSE_SCALAR_4X64=1 -DUSE_SCALAR_INV_BUILTIN=1
-            -DHAVE___INT128=1 -DVERIFY=1
-        PRIVATE
-            -DENABLE_MODULE_ECDH -DENABLE_MODULE_RECOVERY
-            -DENABLE_MODULE_GENERATOR -DENABLE_MODULE_RANGEPROOF
-            -DENABLE_MODULE_SURJECTIONPROOF
-    )
-else()
+#if(LINUX_DESKTOP)
+#    target_compile_definitions(secp256k1
+#        PUBLIC
+#            -DUSE_NUM_NONE=1 -DUSE_FIELD_5X52=1 -DUSE_FIELD_INV_BUILTIN=1
+#            -DUSE_SCALAR_4X64=1 -DUSE_SCALAR_INV_BUILTIN=1
+#            -DHAVE___INT128=1 -DVERIFY=1
+#        PRIVATE
+#            -DENABLE_MODULE_ECDH -DENABLE_MODULE_RECOVERY
+#            -DENABLE_MODULE_GENERATOR -DENABLE_MODULE_RANGEPROOF
+#            -DENABLE_MODULE_SURJECTIONPROOF
+#    )
+#else()
     target_compile_definitions(secp256k1
             PUBLIC
               -DHAVE_CONFIG_H
             PRIVATE
               -DENABLE_MODULE_RANGEPROOF -DENABLE_MODULE_SURJECTIONPROOF
-              -DENABLE_MODULE_ECDH -DENABLE_MODULE_GENERATOR
+              -DENABLE_MODULE_ECDH -DENABLE_MODULE_GENERATOR -DENABLE_MODULE_RECOVERY
     )
-endif()
+#endif()
