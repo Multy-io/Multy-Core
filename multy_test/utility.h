@@ -58,6 +58,13 @@ BinaryData to_binary_data(const T (&data)[N])
                       N * sizeof(data[0])};
 }
 
+template <typename T, size_t N>
+BinaryData to_binary_data(const std::array<T, N>& data)
+{
+    return BinaryData{reinterpret_cast<const unsigned char*>(data.data()),
+                      N * sizeof(data[0])};
+}
+
 void throw_exception(const char* message);
 
 } // test_utility

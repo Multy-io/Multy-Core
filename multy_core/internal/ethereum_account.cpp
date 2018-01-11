@@ -143,7 +143,7 @@ EthereumAddressValue make_address(const EthereumPublicKey& key)
     const BinaryData key_data = key.get_content();
     std::array<unsigned char, SHA256_LEN> address_hash;
     throw_if_wally_error(
-            sha3_256(
+            keccak_256(
                     address_hash.data(), address_hash.size(),
                     key_data.data, key_data.len),
             "Failed to compute sha3 of public key");

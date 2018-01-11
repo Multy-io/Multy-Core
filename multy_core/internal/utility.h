@@ -91,6 +91,29 @@ constexpr size_t array_size(const std::array<T, N>&)
     return N;
 }
 
+/** Finds a max item in values that is smaller than value;
+ * If there is no such value, returns default_value.
+ * Relies on the fact that values are sorted in ascending order.
+ * @param values - orderes array of value to choose from.
+ * @param default_value - returned if value is less than any in values.
+ * @param value - initial value, the one being compared.
+ * @return reference either to matching item in values or to default_value.
+ */
+template <typename T, size_t N>
+T find_max_value(const T(&values)[N], const T& default_value, const T& value)
+{
+    T result = default_value;
+    for (int i = array_size(values) - 1; i >= 0; --i)
+    {
+        if (value >= values[i])
+        {
+            result = values[i];
+            break;
+        }
+    }
+    return result;
+}
+
 /// Converts exception to a Error*, to be used inside a catch(...) block.
 MULTY_CORE_API Error* exception_to_error();
 

@@ -32,7 +32,13 @@ private:
 class MULTY_CORE_API ExceptionBuilder
 {
 public:
-    ExceptionBuilder(const std::string& message);
+    explicit ExceptionBuilder(const std::string& message);
+
+    ExceptionBuilder(const ExceptionBuilder&) = delete;
+    ExceptionBuilder& operator=(const ExceptionBuilder&) = delete;
+
+    ExceptionBuilder(ExceptionBuilder&& other);
+    ExceptionBuilder&& operator=(ExceptionBuilder&& other);
 
     // Throws an exception
     ~ExceptionBuilder();
@@ -50,6 +56,11 @@ inline const ExceptionBuilder& operator<<(
 {
     builder.append_message(message);
     return builder;
+}
+
+inline ExceptionBuilder build_and_throw_exception(const std::string& message)
+{
+    return ExceptionBuilder(message);
 }
 
 } // namespace internal
