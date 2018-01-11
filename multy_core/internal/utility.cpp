@@ -12,6 +12,7 @@
 
 #include "wally_core.h"
 
+#include <cassert>
 #include <string.h>
 #include <string>
 
@@ -19,15 +20,21 @@ namespace
 {
 using namespace wallet_core::internal;
 
-class ErrorWrapperException : public std::exception
+class ErrorWrapperException : public Exception
 {
 public:
-    explicit ErrorWrapperException(ErrorPtr error) : m_error(std::move(error))
+    ErrorWrapperException(ErrorPtr error)
+        : Exception("", error ? error->location : CodeLocation{nullptr, 0}),
+          m_error(std::move(error))
     {
+        assert(m_error.get());
     }
 
-    explicit ErrorWrapperException(Error* error) : m_error(error)
+    ErrorWrapperException(Error* error)
+        : Exception("", error ? error->location : CodeLocation{nullptr, 0}),
+          m_error(std::move(error))
     {
+        assert(m_error.get());
     }
 
     const char* what() const noexcept override
@@ -35,7 +42,7 @@ public:
         return m_error->message;
     }
 
-    Error* steal() const
+    Error* make_error() const override
     {
         return m_error.release();
     }
@@ -54,12 +61,17 @@ Error* make_error_from_string(const char* message)
     if (message && !message_copy)
     {
         // We have to guess here, most likely out of memory.
-        return make_error(ERROR_OUT_OF_MEMORY, "Out of memory");
+        return MAKE_ERROR(ERROR_OUT_OF_MEMORY, "Out of memory");
     }
 
-    Error* error = make_error(ERROR_GENERAL_ERROR, message_copy);
+    Error* error = MAKE_ERROR(ERROR_GENERAL_ERROR, message_copy);
     error->owns_message = true;
     return error;
+}
+
+Error* make_error_from_string(const std::string& message)
+{
+    return make_error_from_string(message.c_str());
 }
 
 } // namespace
@@ -87,15 +99,13 @@ char* copy_string(const char* str)
     int result = wally_get_operations(&wally_ops);
     if (result != WALLY_OK || !wally_ops.malloc_fn)
     {
-        throw ErrorWrapperException(make_error(ERROR_INTERNAL,
-                "Failed to copy string."));
+        THROW_EXCEPTION("Failed to copy string.");
     }
 
     char* new_message = static_cast<char*>(wally_ops.malloc_fn(len + 1));
     if (!new_message)
     {
-        throw ErrorWrapperException(make_error(ERROR_INTERNAL,
-                "Failed to allocate memory."));
+        THROW_EXCEPTION("Failed to allocate memory.");
     }
 
     memcpy(new_message, str, len);
@@ -111,43 +121,50 @@ void throw_if_error(Error* error)
     }
 }
 
-void throw_if_wally_error(int err_code, const char* message)
+#ifndef NO_MULTY_SIMULATE_ERROR
+int simulate_error(int err_code, const char* statement, const CodeLocation& location)
+{
+    // Here you can inject an error for some statement and\or code location,
+    // simulating specific failure.
+    if (false)
+    {
+        return INT32_MIN;
+    }
+    return err_code;
+}
+#endif
+
+void throw_if_wally_error(int err_code, const char* message, const CodeLocation& location)
 {
     if (err_code != 0)
     {
-        ErrorPtr error(internal_make_error(err_code, message));
-        if (error)
-        {
-            throw ErrorWrapperException(std::move(error));
-        }
+        throw_if_error(internal_make_error(err_code, message, location));
     }
 }
 
-Error* exception_to_error()
+Error* exception_to_error(const CodeLocation& location)
 {
     try
     {
         throw;
     }
-    catch (const Error* error)
+    catch (const Exception* exception)
     {
-        return const_cast<Error*>(error);
+        return exception->make_error();
     }
-    catch (const Exception& exception)
+    catch (const wallet_core::internal::Exception& exception)
     {
-        return make_error_from_string(exception.what());
-    }
-    catch (const ErrorWrapperException& exception)
-    {
-        return exception.steal();
+        return exception.make_error();
     }
     catch (const std::exception& exception)
     {
-        return make_error_from_string(exception.what());
+        Error* result = make_error_from_string(exception.what());
+        result->location = location;
+        return result;
     }
     catch (...)
     {
-        return make_error(ERROR_GENERAL_ERROR, "Unknown exception");
+        return make_error(ERROR_GENERAL_ERROR, "Unknown exception", location);
     }
 }
 

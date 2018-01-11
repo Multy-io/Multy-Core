@@ -32,18 +32,14 @@ ErrorCode convert_error_code(int code)
 
 } // namespace
 
-Error* make_error(ErrorCode code, const char* message)
+Error* make_error(ErrorCode code, const char* message, CodeLocation location)
 {
-    Error* result = new Error;
-    result->message = message;
-    result->code = code;
-    result->owns_message = false;
-    return result;
+    return new Error{code, message, false, location};
 }
 
-Error* internal_make_error(int code, const char* message)
+Error* internal_make_error(int code, const char* message, CodeLocation location)
 {
-    return make_error(convert_error_code(code), message);
+    return make_error(convert_error_code(code), message, location);
 }
 
 void free_error(Error* error)

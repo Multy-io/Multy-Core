@@ -117,7 +117,7 @@ Error* properties_validate(const Properties* properties)
             std::string report = report_stream.str();
             report.erase(report.size() - 2, 2); // trim trailing ", "
 
-            return internal_make_error(ERROR_GENERAL_ERROR, report.c_str());
+            return internal_make_error(ERROR_GENERAL_ERROR, report.c_str(), MULTY_CODE_LOCATION);
         }
     }
     CATCH_EXCEPTION_RETURN_ERROR();

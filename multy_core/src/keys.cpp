@@ -46,17 +46,15 @@ Error* make_master_key(const BinaryData* seed, ExtendedKey** new_master_key)
                 seed->data, seed->len, BIP32_VER_MAIN_PRIVATE, 0, &key->key);
         if (result == WALLY_ERROR)
         {
-            return make_error(
+            return MAKE_ERROR(
                     ERROR_BAD_ENTROPY,
                     "Can't generate master key with given entropy");
         }
-        throw_if_wally_error(result, "Failed to generate master key");
+        THROW_IF_WALLY_ERROR(result, "Failed to generate master key");
         *new_master_key = key.release();
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*new_master_key);
 
     return nullptr;
@@ -72,23 +70,21 @@ Error* make_key_id(
     {
         const auto& pub_key = key->key.pub_key;
         std::array<uint8_t, SHA256_LEN> address_hash;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 sha3_256(address_hash.data(), address_hash.size(),
                         &pub_key[1], sizeof(pub_key) - 1),
                 "Failed to compute SHA3_256 of public key");
 
         CharPtr out_id;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_base58_from_bytes(address_hash.data(), address_hash.size(),
                         BASE58_FLAG_CHECKSUM, reset_sp(out_id)),
                 "Failed to convert to base58");
 
         *out_key_id = out_id.release();
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*out_key_id);
 
     return nullptr;
@@ -105,7 +101,7 @@ Error* make_child_key(
     try
     {
         ExtendedKeyPtr key(new ExtendedKey);
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 bip32_key_from_parent(
                         &parent_key->key, chain_code, BIP32_FLAG_KEY_PRIVATE,
                         &key->key),
@@ -113,10 +109,7 @@ Error* make_child_key(
 
         *new_child_key = key.release();
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
     OUT_CHECK(*new_child_key);
 
     return nullptr;
@@ -132,10 +125,7 @@ Error* extended_key_to_string(
     {
         *new_str = copy_string(extended_key->to_string());
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
     OUT_CHECK(*new_str);
 
     return nullptr;
@@ -150,10 +140,7 @@ Error* private_to_public_key(
     {
         *new_public_key = private_key->make_public_key().release();
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
     OUT_CHECK(*new_public_key);
 
     return nullptr;
@@ -167,10 +154,7 @@ Error* key_to_string(const Key* key, const char** new_str)
     {
         *new_str = copy_string(key->to_string());
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
     OUT_CHECK(*new_str);
 
     return nullptr;

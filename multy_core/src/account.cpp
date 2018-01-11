@@ -50,15 +50,13 @@ Error* make_hd_account(
             }
             default:
             {
-                return make_error(
+                return MAKE_ERROR(
                         ERROR_GENERAL_ERROR, "Currency not supported yet");
             }
         }
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK_OBJECT(*new_account);
 
     return nullptr;
@@ -81,10 +79,8 @@ Error* make_hd_leaf_account(
         *new_account = base_account->make_leaf_account(address_type, index)
                                .release();
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK_OBJECT(*new_account);
 
     return nullptr;
@@ -118,15 +114,13 @@ Error* make_account(
             }
             default:
             {
-                return make_error(
+                return MAKE_ERROR(
                         ERROR_GENERAL_ERROR, "Currency not supported yet");
             }
         }
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK_OBJECT(*new_account);
 
     return nullptr;
@@ -149,10 +143,8 @@ Error* get_account_key(const Account* account, KeyType key_type, Key** out_key)
             *out_key = account->get_public_key().release();
         }
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*out_key);
 
     return nullptr;
@@ -168,10 +160,8 @@ Error* get_account_address_string(
     {
         *out_address = copy_string(account->get_address());
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*out_address);
 
     return nullptr;
@@ -187,10 +177,8 @@ Error* get_account_address_path(
     {
         *out_address_path = copy_string(to_string(account->get_path()));
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*out_address_path);
 
     return nullptr;
@@ -205,10 +193,7 @@ Error* get_account_currency(const Account* account, Currency* out_currency)
     {
         *out_currency = account->get_currency();
     }
-    catch (...)
-    {
-        return exception_to_error();
-    }
+    CATCH_EXCEPTION_RETURN_ERROR();
 
     return nullptr;
 }

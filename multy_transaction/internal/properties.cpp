@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+#define THROW_PROPERTY_EXCEPTION(msg) throw_exception(msg , MULTY_CODE_LOCATION)
+
 namespace
 {
 using namespace wallet_core::internal;
@@ -112,40 +114,43 @@ struct BinderBase : public Binder
     {
     }
 
-    template <typename T>
-    void throw_unexpected_type(
-            const std::string& name, ValueType expected_type, const T&)
+    void throw_exception(std::string message, const CodeLocation& location) const
     {
-        m_properties.throw_exception(
-                "Invalid value type \""
+        m_properties.throw_exception(message, location);
+    }
+
+    template <typename T>
+    void throw_unexpected_type(const T& value) const
+    {
+        THROW_PROPERTY_EXCEPTION("Invalid value type \""
                 + ::get_value_type_string(deduce_value_type<T>())
-                + "\" for property \"" + name + "\" expected "
-                + ::get_value_type_string(expected_type));
+                + "\" for property \"" + m_name + "\" expected "
+                + ::get_value_type_string(m_type));
     }
 
     void set_value(const int32_t& value)
     {
-        throw_unexpected_type(m_name, m_type, value);
+        throw_unexpected_type(value);
     }
 
     void set_value(const Amount& value)
     {
-        throw_unexpected_type(m_name, m_type, value);
+        throw_unexpected_type(value);
     }
 
     void set_value(const std::string& value)
     {
-        throw_unexpected_type(m_name, m_type, value);
+        throw_unexpected_type(value);
     }
 
     void set_value(const BinaryData& value)
     {
-        throw_unexpected_type(m_name, m_type, value);
+        throw_unexpected_type(value);
     }
 
     void set_value(const PrivateKey& value)
     {
-        throw_unexpected_type(m_name, m_type, value);
+        throw_unexpected_type(value);
     }
 
     std::string get_name() const
@@ -183,7 +188,7 @@ struct BinderBase : public Binder
         return m_value;
     }
 
-    void handle_exception(const char* action)
+    void handle_exception(const char* action, const CodeLocation& location)
     {
         try
         {
@@ -191,14 +196,14 @@ struct BinderBase : public Binder
         }
         catch (const std::exception& e)
         {
-            m_properties.throw_exception(std::string(" Failed to ") + action
-                    + " of property \"" + m_name + "\" : " + e.what());
+            throw_exception(std::string(" Failed to ") + action
+                    + " of property \"" + m_name + "\" : " + e.what(), location);
         }
         catch (...)
         {
-            m_properties.throw_exception(std::string("Failed to ") + action
+            throw_exception(std::string("Failed to ") + action
                     + " of property \"" + m_name
-                    + "\" due to unknown exception");
+                    + "\" due to unknown exception", location);
         }
     }
 
@@ -265,7 +270,7 @@ struct BinderT : public BinderBase
         }
         catch (...)
         {
-            handle_exception("set value");
+            handle_exception("set value", MULTY_CODE_LOCATION);
         }
     }
 
@@ -292,15 +297,19 @@ Property::~Property()
 {
 }
 
+void Property::throw_exception(std::string message, const CodeLocation& location) const
+{
+    return m_properties.throw_exception(message, location);
+}
+
 void Property::throw_if_unset(const void* property_var) const
 {
     if (!is_set(property_var))
     {
         const Properties::Binder& b
                 = m_properties.get_property_by_value(property_var);
-        m_properties.throw_exception(m_properties.get_name()
-                + " property \"" + b.get_name()
-                + "\" is not set.");
+        THROW_PROPERTY_EXCEPTION(m_properties.get_name() + " property \""
+                + b.get_name() + "\" is not set.");
     }
 }
 bool Property::is_set(const void* property_var) const
@@ -409,12 +418,11 @@ void Properties::do_bind_property(
 {
     if (!value)
     {
-        throw_exception("Attempt to bind property to nullptr");
+        THROW_PROPERTY_EXCEPTION("Attempt to bind property to nullptr.");
     }
 
-    make_property(name, value)
-            .reset(new BinderT<T, P>(
-                    *this, name, value, trait, std::move(predicate)));
+    make_property(name, value).reset(new BinderT<T, P>(
+            *this, name, value, trait, std::move(predicate)));
 }
 
 bool Properties::unbind_property(const std::string& name)
@@ -469,7 +477,7 @@ const Binder& Properties::get_property(const std::string& name) const
     auto i = m_properties.find(name);
     if (i == m_properties.end())
     {
-        throw_exception("Property with name \"" + name + "\" does not exists.");
+        THROW_PROPERTY_EXCEPTION("Property with name \"" + name + "\" does not exists.");
     }
     return *i->second;
 }
@@ -485,7 +493,7 @@ const Binder& Properties::get_property_by_value(const void* value) const
     auto p = m_property_name_by_value.find(value);
     if (p == m_property_name_by_value.end())
     {
-        throw_exception("Can't find property bound to value.");
+        THROW_PROPERTY_EXCEPTION("Can't find property bound to value.");
     }
 
     return get_property(p->second);
@@ -497,16 +505,15 @@ Properties::BinderPtr& Properties::make_property(
     auto p = m_properties.insert(std::make_pair(name, BinderPtr()));
     if (!p.second)
     {
-        throw_exception("Property \"" + name + "\" already exists.");
+        THROW_PROPERTY_EXCEPTION("Property with name \"" + name + "\" already exists.");
     }
 
     auto p2 = m_property_name_by_value.insert(std::make_pair(value, name));
     if (!p2.second)
     {
         m_properties.erase(p.first);
-        throw_exception(
-                "Value is already bound to property \"" + p2.first->second
-                + "\".");
+        THROW_PROPERTY_EXCEPTION("Value is already bound to property \""
+                + p2.first->second + "\".");
     }
     return p.first->second;
 }
@@ -521,9 +528,9 @@ bool Properties::is_set(const void* value) const
     return false;
 }
 
-void Properties::throw_exception(const std::string& message) const
+void Properties::throw_exception(const std::string& message, const CodeLocation& location) const
 {
-    throw Exception(get_name() + " : " + message);
+    throw Exception(get_name().c_str(), location) << " : " << message;
 }
 
 bool Properties::is_valid() const

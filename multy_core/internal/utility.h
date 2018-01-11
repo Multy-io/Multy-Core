@@ -14,6 +14,7 @@
 #include "multy_core/api.h"
 #include "multy_core/common.h"
 #include "multy_core/error.h"
+
 #include "multy_core/internal/u_ptr.h"
 
 #include <memory>
@@ -25,8 +26,9 @@ struct Error;
     {                                                                          \
         if (!(arg))                                                            \
         {                                                                      \
-            return make_error(                                                 \
-                    ERROR_INVALID_ARGUMENT, "Argument check failed: " #arg);   \
+            return MAKE_ERROR(                                                 \
+                    ERROR_INVALID_ARGUMENT,                                    \
+                    "Argument check failed: \"" #arg "\"");                    \
         }                                                                      \
     } while (false)
 
@@ -35,15 +37,16 @@ struct Error;
     {                                                                          \
         if (!(arg))                                                            \
         {                                                                      \
-            return make_error(                                                 \
-                    ERROR_INTERNAL, "Failed to create output value: " #arg);   \
+            return MAKE_ERROR(                                                 \
+                    ERROR_INTERNAL,                                            \
+                    "Failed to create output value: \"" #arg "\"");            \
         }                                                                      \
     } while (false)
 
 #define CATCH_EXCEPTION_RETURN_ERROR()                                         \
     catch (...)                                                                \
     {                                                                          \
-        return wallet_core::internal::exception_to_error();                    \
+        return wallet_core::internal::exception_to_error(MULTY_CODE_LOCATION); \
     }
 
 #define CHECK_OBJECT(obj)                                                      \
@@ -51,8 +54,9 @@ struct Error;
     {                                                                          \
         if (!(obj)->is_valid())                                                \
         {                                                                      \
-            return make_error(                                                 \
-                    ERROR_INVALID_ARGUMENT, #obj " is not a valid object.");   \
+            return MAKE_ERROR(                                                 \
+                    ERROR_INVALID_ARGUMENT,                                    \
+                    "\"" #obj "\" is not a valid object.");                    \
         }                                                                      \
     } while (false)
 
@@ -77,7 +81,22 @@ namespace internal
 {
 MULTY_CORE_API void throw_if_error(struct Error* err);
 
-MULTY_CORE_API void throw_if_wally_error(int err_code, const char* message);
+#define THROW_IF_WALLY_ERROR(statement, message)                               \
+    throw_if_wally_error(                                                      \
+            MULTY_SIMULATE_ERROR(                                              \
+                    (statement), #statement, MULTY_CODE_LOCATION),             \
+            (message), MULTY_CODE_LOCATION)
+
+#ifdef NO_MULTY_SIMULATE_ERROR
+#define MULTY_SIMULATE_ERROR(err, statement, location) (err)
+#else
+#define MULTY_SIMULATE_ERROR simulate_error
+MULTY_CORE_API int simulate_error(
+        int err_code, const char* statement, const CodeLocation& location);
+#endif
+
+MULTY_CORE_API void throw_if_wally_error(
+        int err_code, const char* message, const CodeLocation& location);
 
 template <typename T, size_t N>
 constexpr size_t array_size(T (&)[N])
@@ -100,7 +119,7 @@ constexpr size_t array_size(const std::array<T, N>&)
  * @return reference either to matching item in values or to default_value.
  */
 template <typename T, size_t N>
-T find_max_value(const T(&values)[N], const T& default_value, const T& value)
+T find_max_value(const T (&values)[N], const T& default_value, const T& value)
 {
     T result = default_value;
     for (int i = array_size(values) - 1; i >= 0; --i)
@@ -115,7 +134,7 @@ T find_max_value(const T(&values)[N], const T& default_value, const T& value)
 }
 
 /// Converts exception to a Error*, to be used inside a catch(...) block.
-MULTY_CORE_API Error* exception_to_error();
+MULTY_CORE_API Error* exception_to_error(const CodeLocation& context);
 
 /** Convenience function to copy a string.
  * @param str - string to copy, must not be null.
@@ -142,9 +161,11 @@ class UniquePointerUpdater
 
 public:
     // TODO: change from reference to pointer
-    explicit UniquePointerUpdater(SP& sp) : sp(sp), p(sp.get())
+    explicit UniquePointerUpdater(SP& sp)
+        : sp(sp), p(sp.get())
     {
     }
+
     ~UniquePointerUpdater()
     {
         if (p != sp.get())
@@ -152,6 +173,7 @@ public:
             sp.reset(p);
         }
     }
+
     operator Pointer*() const
     {
         p = sp.get();
