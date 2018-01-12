@@ -16,11 +16,18 @@ extern "C" {
 #include "keccak-tiny/keccak-tiny.h"
 } // extern "C"
 
+#include <algorithm>
+#include <iterator>
 #include <sstream>
 
 namespace
 {
 using namespace wallet_core::internal;
+
+// Byte-size.
+static const size_t HASH_SIZES[] = {
+    SHA3_224, SHA3_256, SHA3_384, SHA3_512
+};
 
 // Since on some Android SDK versions std::to_string() is missing.
 template <typename T>
@@ -83,8 +90,14 @@ namespace wallet_core
 namespace internal
 {
 
-BinaryDataPtr sha3(size_t hash_size, const BinaryData& input)
+BinaryDataPtr sha3(const size_t hash_size, const BinaryData& input)
 {
+    if (std::find(std::begin(HASH_SIZES), std::end(HASH_SIZES), hash_size/8)
+                    == std::end(HASH_SIZES))
+    {
+        throw_exception("Unsupported hash_size");
+    }
+
     BinaryDataPtr result;
 
     throw_if_error(make_binary_data(hash_size / 8, reset_sp(result)));
@@ -93,12 +106,21 @@ BinaryDataPtr sha3(size_t hash_size, const BinaryData& input)
     return result;
 }
 
+BinaryDataPtr keccak_256(const BinaryData& input)
+{
+    BinaryDataPtr result;
+    throw_if_error(make_binary_data(256 / 8, reset_sp(result)));
+
+    throw_if_wally_error(
+            ::keccak_256(const_cast<unsigned char*>(result->data), result->len,
+                    input.data, input.len),
+            "Failed to hash input with keccack_256");
+
+    return result;
+}
+
 void sha3(const BinaryData& input, BinaryData* output)
 {
-    static const size_t SUPPORTED_HASH_SIZES[] = {
-        SHA3_224, SHA3_256, SHA3_384, SHA3_512
-    };
-
     static const size_t default_value = 0;
 
     if (!output)
@@ -107,7 +129,7 @@ void sha3(const BinaryData& input, BinaryData* output)
     }
 
     const size_t hash_size = find_max_value(
-            SUPPORTED_HASH_SIZES, default_value, output->len);
+            HASH_SIZES, default_value, output->len);
     if (hash_size == default_value)
     {
         throw_exception("output BinaryData has not enough space available (")
