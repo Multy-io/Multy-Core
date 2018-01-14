@@ -32,11 +32,6 @@ namespace
 using namespace wallet_core::internal;
 typedef std::array<unsigned char, 20> EthereumAddressValue;
 
-void throw_exception(const std::string& message)
-{
-    throw Exception("Ethereum:" + message);
-}
-
 struct EthereumPublicKey : public PublicKey
 {
 public:
@@ -48,14 +43,14 @@ public:
     {
         if (m_data.size() != DATA_SIZE)
         {
-            throw_exception("invalid public key length");
+            THROW_EXCEPTION("invalid public key length.");
         }
     }
 
     std::string to_string() const override
     {
         UPtr<char> out_str;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_hex_from_bytes(
                         m_data.data(), m_data.size(), reset_sp(out_str)),
                 "Failed to serialize Enthereum public key");
@@ -89,7 +84,7 @@ struct EthereumPrivateKey : public PrivateKey
     std::string to_string() const override
     {
         UPtr<char> out_str;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_hex_from_bytes(
                         m_data.data(), m_data.size(), reset_sp(out_str)),
                 "Failed to serialize Ethereum private key");
@@ -99,14 +94,14 @@ struct EthereumPrivateKey : public PrivateKey
     PublicKeyPtr make_public_key() const override
     {
         unsigned char public_key_data[EC_PUBLIC_KEY_LEN];
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_ec_public_key_from_private_key(
                         m_data.data(), m_data.size(),
                         public_key_data, sizeof(public_key_data)),
                 "Failed to derive public key from private key");
 
         EthereumPublicKey::KeyData uncompressed(EC_PUBLIC_KEY_UNCOMPRESSED_LEN, 0);
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_ec_public_key_decompress(
                         public_key_data, sizeof(public_key_data),
                         uncompressed.data(), uncompressed.size()),
@@ -114,7 +109,7 @@ struct EthereumPrivateKey : public PrivateKey
 
         if (uncompressed[0] != 0x04)
         {
-            throw_exception("Invalid uncompressed public key prefix");
+            THROW_EXCEPTION("Invalid uncompressed public key prefix.");
         }
         uncompressed.erase(uncompressed.begin());
 
@@ -130,7 +125,7 @@ struct EthereumPrivateKey : public PrivateKey
     BinaryDataPtr sign(const BinaryData& data) const override
     {
         std::array<unsigned char, SHA256_LEN> data_hash;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 keccak_256(data_hash.data(), data_hash.size(),
                          data.data, data.len),
                 "Failed to hash data.");
@@ -139,7 +134,7 @@ struct EthereumPrivateKey : public PrivateKey
         if (!secp256k1_ecdsa_sign_recoverable(secp_ctx(), &signature,
                 data_hash.data(), m_data.data(), nullptr, nullptr))
         {
-            throw_exception("Failed to sign with private key.");
+            THROW_EXCEPTION("Failed to sign with private key.");
         }
 
         std::array<unsigned char, 65> signature_data;
@@ -170,7 +165,7 @@ EthereumAddressValue make_address(const EthereumPublicKey& key)
 {
     const BinaryData key_data = key.get_content();
     std::array<unsigned char, SHA256_LEN> address_hash;
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             keccak_256(
                     address_hash.data(), address_hash.size(),
                     key_data.data, key_data.len),
@@ -253,18 +248,18 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
     EthereumPrivateKey::KeyData key_data;
     if (private_key_len != key_data.max_size() * 2)
     {
-        throw_exception("Serialized private key has invalid length");
+        THROW_EXCEPTION("Serialized private key has invalid length");
     }
     size_t resulting_size = 0;
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_hex_to_bytes(serialized_private_key,
                     key_data.data(), key_data.size(), &resulting_size),
             "Failed to convert private key from hex string.");
     if (resulting_size != key_data.size())
     {
-        throw_exception("Failed to deserialize private key");
+        THROW_EXCEPTION("Failed to deserialize private key");
     }
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
             "Failed to verify private key");
 

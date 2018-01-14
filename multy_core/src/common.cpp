@@ -140,7 +140,7 @@ Error* make_binary_data_from_hex(
         const size_t hex_str_len = strlen(hex_str);
         if (hex_str_len & 1)
         {
-            return make_error(ERROR_INVALID_ARGUMENT, "Input string length must be even.");
+            return MAKE_ERROR(ERROR_INVALID_ARGUMENT, "Input string length must be even.");
         }
 
         const size_t data_len = hex_str_len / 2;
@@ -150,7 +150,7 @@ Error* make_binary_data_from_hex(
         if (data_len != 0)
         {
             size_t real_size = 0;
-            throw_if_wally_error(
+            THROW_IF_WALLY_ERROR(
                     wally_hex_to_bytes(
                             hex_str, const_cast<unsigned char*>(result->data),
                             result->len, &real_size),

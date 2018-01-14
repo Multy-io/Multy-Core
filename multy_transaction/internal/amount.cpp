@@ -14,10 +14,6 @@
 namespace
 {
 using namespace wallet_core::internal;
-void throw_exception(const std::string& message)
-{
-    throw Exception(message);
-}
 const int32_t AMOUNT_MAGIC = __LINE__;
 
 } // namespace
@@ -25,7 +21,7 @@ const int32_t AMOUNT_MAGIC = __LINE__;
 Amount::Amount(const char* value)
     : m_magic(&AMOUNT_MAGIC)
 {
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             mpz_init_set_str(m_value, value, 10),
             "Failed to initialize Amount from string.");
 }
@@ -102,7 +98,7 @@ uint64_t Amount::get_value_as_uint64() const
 {
     if (mpz_sizeinbase(m_value, 2) > sizeof(uint64_t) * 8)
     {
-        throw_exception("Amount value is not representable as int64_t");
+        THROW_EXCEPTION("Amount value is not representable as int64_t");
     }
     uint64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);
@@ -114,7 +110,7 @@ int64_t Amount::get_value_as_int64() const
     // >= due to the sign bit
     if (mpz_sizeinbase(m_value, 2) >= sizeof(int64_t) * 8)
     {
-        throw_exception("Amount value is not representable as int64_t");
+        THROW_EXCEPTION("Amount value is not representable as int64_t");
     }
     int64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);

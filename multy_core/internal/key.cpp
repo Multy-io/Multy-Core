@@ -27,12 +27,12 @@ std::string ExtendedKey::to_string() const
     using namespace wallet_core::internal;
 
     unsigned char serialized_key[BIP32_SERIALIZED_LEN] = {'\0'};
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             bip32_key_serialize(
                     &key, 0, serialized_key, sizeof(serialized_key)),
             "Failed to searialize ExtendedKey");
     CharPtr out_str;
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_base58_from_bytes(
                     serialized_key, sizeof(serialized_key),
                     BASE58_FLAG_CHECKSUM, reset_sp(out_str)),

@@ -31,11 +31,6 @@ namespace
 using namespace wallet_core::internal;
 using namespace multy_transaction::internal;
 
-void throw_exception(const std::string& message = std::string())
-{
-    throw Exception("BitcoinTransaction: " + message);
-}
-
 uint32_t bitcoin_traits()
 {
     return 1 << TRANSACTION_REQUIRES_EXPLICIT_SOURCE
@@ -58,7 +53,7 @@ void verify_non_negative_amount(const Amount& amount)
 {
     if (amount < Amount(0))
     {
-        throw_exception("Amount value is negative.");
+        THROW_EXCEPTION("Amount value is negative.");
     }
 }
 
@@ -85,7 +80,7 @@ public:
     {
         if (!data)
         {
-            throw_exception("Attempt to write null data.");
+            THROW_EXCEPTION("Attempt to write null data.");
         }
 
         m_data.insert(m_data.end(), data, data + len);
@@ -114,7 +109,7 @@ public:
     {
         const BinaryData data = m_stream.get_content();
 
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_sha256d(
                         data.data, data.len, m_hash.data(), m_hash.size()),
                 "Failed to compute SHA256");
@@ -289,10 +284,10 @@ struct BitcoinTransactionDestination
 
         size_t binary_size = address->length();
         std::vector<uint8_t> decoded(binary_size, 0);
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_base58_to_bytes(
-                        address->c_str(), BASE58_FLAG_CHECKSUM,
-                        decoded.data(), decoded.size(), &binary_size),
+                        address->c_str(), BASE58_FLAG_CHECKSUM, decoded.data(),
+                        decoded.size(), &binary_size),
                 "Failed to convert address to public key hash");
         decoded.resize(binary_size);
         // remove the prefix.
@@ -313,7 +308,8 @@ struct BitcoinTransactionDestination
     {
         if (!destination.sig_script)
         {
-            throw_exception("BitcoinTransactionDestination: sig_script is nullptr.");
+            THROW_EXCEPTION(
+                    "BitcoinTransactionDestination: sig_script is nullptr.");
         }
 
         stream << destination.amount;
@@ -357,21 +353,21 @@ struct BitcoinTransactionFee
     {
         const Amount max_fee(
                 max_amount_per_byte.get_default_value(get_amount_per_byte())
-                        .get_value_as_uint64() * transaction_size);
+                        .get_value_as_uint64()
+                * transaction_size);
         const Amount min_fee(
                 min_amount_per_byte.get_default_value(Amount(1))
-                        .get_value_as_uint64() * transaction_size);
+                        .get_value_as_uint64()
+                * transaction_size);
         if (leftover < min_fee)
         {
-            throw_exception(
-                    "Current transaction total fee (" + leftover.get_value()
-                    + ") is to low ( <" + min_fee.get_value() + " ).");
+            THROW_EXCEPTION("Transaction total fee is too low: ")
+                    << leftover.get_value() << " < " << min_fee.get_value();
         }
         if (leftover > max_fee)
         {
-            throw_exception(
-                    "Current transaction total fee (" + leftover.get_value()
-                    + ") is to high ( >" + max_fee.get_value() + " ).");
+            THROW_EXCEPTION("Transaction total fee is too high: ")
+                    << leftover.get_value() << " > " + max_fee.get_value();
         }
     }
 
@@ -395,7 +391,7 @@ struct BitcoinTransactionSource
                   [](const BinaryData& new_tx_out_hash) {
                       if (new_tx_out_hash.len != 32)
                       {
-                          throw_exception(
+                          THROW_EXCEPTION(
                                   "Previous transaction hash should be"
                                   "exactly 32 bytes long");
                       }
@@ -554,7 +550,8 @@ Amount BitcoinTransaction::get_total_fee() const
     return m_total_fee;
 }
 
-Amount BitcoinTransaction::estimate_total_fee(size_t sources_count, size_t destinations_count) const
+Amount BitcoinTransaction::estimate_total_fee(
+        size_t sources_count, size_t destinations_count) const
 {
     const int64_t transaction_size
             = sources_count * 147 + destinations_count * 34 + 10;
@@ -564,19 +561,19 @@ void BitcoinTransaction::update_state()
 {
     if (m_sources.empty())
     {
-        throw_exception("Transaction should have at least one source.");
+        THROW_EXCEPTION("Transaction should have at least one source.");
     }
 
     if (m_destinations.empty())
     {
-        throw_exception("Transaction should have at least one destination.");
+        THROW_EXCEPTION("Transaction should have at least one destination.");
     }
 
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        throw_exception(
-                "Not all required properties set:\n" + missing_properties);
+        THROW_EXCEPTION("Not all required properties set:\n")
+                << missing_properties;
     }
 
     Amount available;
@@ -599,9 +596,8 @@ void BitcoinTransaction::update_state()
 
     if (available < 0)
     {
-        throw_exception(
-                "Transaction is trying to spend more than available in inputs: "
-                + total_spent.get_value());
+        THROW_EXCEPTION("Transaction is trying to spend more than available in "
+                        "inputs: ") << total_spent.get_value();
     }
     m_total_fee = available;
     m_fee->validate_fee(available, estimate_transaction_size());
@@ -640,7 +636,8 @@ void BitcoinTransaction::sign()
             hash_stream << uint32_t(1); // signature version
 
             const PrivateKeyPtr& private_key = source->private_key.get_value();
-            BinaryDataPtr signature = private_key->sign(hash_stream.get_content());
+            BinaryDataPtr signature
+                    = private_key->sign(hash_stream.get_content());
 
             BitcoinDataStream sig_script_stream;
             sig_script_stream << as_compact_size(signature->len + 1);
@@ -660,7 +657,7 @@ void BitcoinTransaction::sign()
         const auto p = sig_scripts.emplace(source.get(), std::move(sig_script));
         if (!p.second)
         {
-            throw_exception("Failed to save transaction source signature");
+            THROW_EXCEPTION("Failed to save transaction source signature");
         }
     }
 
@@ -670,7 +667,7 @@ void BitcoinTransaction::sign()
         const auto p = sig_scripts.find(source.get());
         if (p == sig_scripts.end())
         {
-            throw_exception("Failed to set transaction source signature");
+            THROW_EXCEPTION("Failed to set transaction source signature");
         }
         source->script_signature.swap(p->second);
     }

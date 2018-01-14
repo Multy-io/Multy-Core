@@ -34,7 +34,7 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
                 *new_transaction = new BitcoinTransaction(*account);
                 break;
             default:
-                return make_error(
+                return MAKE_ERROR(
                         ERROR_GENERAL_ERROR, "Currency not supported yet");
         }
     }

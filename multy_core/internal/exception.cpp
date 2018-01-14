@@ -4,15 +4,21 @@
  * See LICENSE for details
  */
 
-#include "exception.h"
+#include "multy_core/internal/exception.h"
+
+#include "multy_core/error.h"
+#include "multy_core/internal/utility.h"
+
+#include <iostream>
 
 namespace wallet_core
 {
 namespace internal
 {
 
-Exception::Exception(const std::string& message)
-    : m_message(message)
+Exception::Exception(const char* message, CodeLocation location)
+    : m_message(message),
+      m_location(location)
 {
 }
 
@@ -25,42 +31,17 @@ const char* Exception::what() const noexcept
     return m_message.c_str();
 }
 
-ExceptionBuilder::ExceptionBuilder(const std::string& message)
-    : m_exception_thrown(false),
-      m_message(message)
-{}
-
-ExceptionBuilder::ExceptionBuilder(ExceptionBuilder&& other)
-    : m_exception_thrown(other.m_exception_thrown),
-      m_message(other.m_message)
+Error* Exception::make_error() const
 {
-    other.m_exception_thrown = true;
+    CharPtr message(copy_string(m_message));
+    Error* result = ::make_error(ERROR_GENERAL_ERROR, message.get(), m_location);
+    result->owns_message = true;
+    message.release();
+
+    return result;
 }
 
-ExceptionBuilder&& ExceptionBuilder::operator=(ExceptionBuilder&& other)
-{
-    m_exception_thrown = other.m_exception_thrown;
-    m_message = other.m_message;
-    other.m_exception_thrown = true;
-
-    return std::move(*this);
-}
-
-ExceptionBuilder::~ExceptionBuilder()
-{
-    if (!std::uncaught_exception() && !m_exception_thrown)
-    {
-        throw_exception();
-    }
-}
-
-void ExceptionBuilder::throw_exception()
-{
-    m_exception_thrown = true;
-    throw Exception(m_message);
-}
-
-void ExceptionBuilder::append_message(const std::string& message) const
+void Exception::append_message(const char* message) const
 {
     m_message += message;
 }

@@ -55,7 +55,7 @@ public:
     std::string to_string() const override
     {
         UPtr<char> out_str;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_base58_from_bytes(
                         m_data.data(), m_data.size(), 0, reset_sp(out_str)),
                 "Failed to serialize Bitcoin public key");
@@ -94,7 +94,7 @@ struct BitcoinPrivateKey : public PrivateKey
     std::string to_string() const override
     {
         UPtr<char> out_str;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_base58_from_bytes(
                         m_data.data(), m_data.size(), BASE58_FLAG_CHECKSUM,
                         reset_sp(out_str)),
@@ -105,7 +105,7 @@ struct BitcoinPrivateKey : public PrivateKey
     PublicKeyPtr make_public_key() const override
     {
         BitcoinPublicKey::KeyData key_data(EC_PUBLIC_KEY_LEN, 0);
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_ec_public_key_from_private_key(
                         m_data.data(), m_data.size(), key_data.data(),
                         key_data.size()),
@@ -115,7 +115,7 @@ struct BitcoinPrivateKey : public PrivateKey
         {
             BitcoinPublicKey::KeyData uncompressed_data(
                     EC_PUBLIC_KEY_UNCOMPRESSED_LEN, 0);
-            throw_if_wally_error(
+            THROW_IF_WALLY_ERROR(
                     wally_ec_public_key_decompress(
                             key_data.data(), key_data.size(),
                             uncompressed_data.data(), uncompressed_data.size()),
@@ -134,12 +134,12 @@ struct BitcoinPrivateKey : public PrivateKey
     BinaryDataPtr sign(const BinaryData& data) const override
     {
         std::array<uint8_t, SHA256_LEN> hash;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_sha256d(data.data, data.len, hash.data(), hash.size()),
                 "Failed to hash input binary data");
 
         std::array<uint8_t, EC_SIGNATURE_LEN> signature;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_ec_sig_from_bytes(
                         m_data.data(), m_data.size(), hash.data(), hash.size(),
                         EC_FLAG_ECDSA, signature.data(), signature.size()),
@@ -148,7 +148,7 @@ struct BitcoinPrivateKey : public PrivateKey
 
         std::array<uint8_t, EC_SIGNATURE_DER_MAX_LEN> der_signature;
         size_t written;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 wally_ec_sig_to_der(
                         signature.data(), signature.size(),
                         der_signature.data(), der_signature.size(), &written),
@@ -195,7 +195,7 @@ std::string BitcoinAccount::get_address() const
 
     // 2 - Perform SHA-256 hashing on the public key
     // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_hash160(
                     key_data.data, key_data.len,
                     // Leave space for prefix at step 4.
@@ -213,7 +213,7 @@ std::string BitcoinAccount::get_address() const
     // 9 - Convert the result from a byte string into a base58 string
     //      using Base58Check encoding.
     CharPtr base58_string_ptr;
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_base58_from_bytes(
                     pub_hash, sizeof(pub_hash), BASE58_FLAG_CHECKSUM,
                     reset_sp(base58_string_ptr)),
@@ -256,14 +256,14 @@ AccountPtr BitcoinHDAccount::make_account(
 
 AccountPtr make_bitcoin_account(const char* private_key)
 {
-    size_t resulting_size;
-    throw_if_wally_error(
+    size_t resulting_size = 0;
+    THROW_IF_WALLY_ERROR(
             wally_base58_get_length(private_key, &resulting_size),
             "Faield to process base-58 encoded private key");
 
     std::vector<unsigned char> key_data(resulting_size, 0);
 
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_base58_to_bytes(
                     private_key, BASE58_FLAG_CHECKSUM, key_data.data(),
                     key_data.size(), &resulting_size),
@@ -271,7 +271,7 @@ AccountPtr make_bitcoin_account(const char* private_key)
 
     if (resulting_size > key_data.size() || resulting_size < EC_PRIVATE_KEY_LEN)
     {
-        throw Exception("Failed to deserialize private key");
+        THROW_EXCEPTION("Failed to deserialize private key");
     }
     key_data.resize(resulting_size);
 
@@ -291,7 +291,7 @@ AccountPtr make_bitcoin_account(const char* private_key)
         use_compressed_public_key = true;
     }
 
-    throw_if_wally_error(
+    THROW_IF_WALLY_ERROR(
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
             "Failed to verify private key");
 

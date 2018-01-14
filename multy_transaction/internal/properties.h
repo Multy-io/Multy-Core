@@ -22,6 +22,7 @@ struct Amount;
 struct BinaryData;
 struct PrivateKey;
 struct PrivateKey;
+struct CodeLocation;
 
 struct Properties;
 
@@ -50,10 +51,12 @@ public:
     using Predicate = std::function<void(typename PredicateArgTraits<U>::ArgumentType const&)>;
 
 protected:
-    Property(Properties& properties);
+    explicit Property(Properties& properties);
     virtual ~Property();
 
-    // throws exception if value is unset
+    void throw_exception(std::string message, const CodeLocation& location) const;
+
+    // throws exception if value is unset.
     void throw_if_unset(const void*) const;
     bool is_set(const void*) const;
 
@@ -68,6 +71,7 @@ protected:
 // it is now).
 struct MULTY_TRANSACTION_API Properties
 {
+public:
     explicit Properties(const std::string& name);
 
     struct MULTY_TRANSACTION_API Binder
@@ -88,6 +92,8 @@ struct MULTY_TRANSACTION_API Properties
     };
 
     typedef std::unique_ptr<Binder> BinderPtr;
+    template <typename U>
+    using Predicate = Property::Predicate<U>;
 
     /** Set specific value to a bound property.
      *
@@ -131,7 +137,7 @@ struct MULTY_TRANSACTION_API Properties
      */
     template <typename T>
     void bind_property(
-            const std::string& name, T* value, Property::Predicate<T> predicate)
+            const std::string& name, T* value, Predicate<T> predicate)
     {
         bind_property(name, value, Property::REQUIRED, std::move(predicate));
     }
@@ -140,25 +146,25 @@ struct MULTY_TRANSACTION_API Properties
             const std::string& name,
             int32_t* value,
             Property::Trait trait = Property::REQUIRED,
-            Property::Predicate<int32_t> predicate = Property::Predicate<int32_t>());
+            Predicate<int32_t> predicate = Predicate<int32_t>());
 
     void bind_property(
             const std::string& name,
             std::string* value,
             Property::Trait trait = Property::REQUIRED,
-            Property::Predicate<std::string> predicate = Property::Predicate<std::string>());
+            Predicate<std::string> predicate = Predicate<std::string>());
 
     void bind_property(
             const std::string& name,
             Amount* value,
             Property::Trait trait = Property::REQUIRED,
-            Property::Predicate<Amount> predicate = Property::Predicate<Amount>());
+            Predicate<Amount> predicate = Predicate<Amount>());
 
     void bind_property(
             const std::string& name,
             wallet_core::internal::BinaryDataPtr* value,
             Property::Trait trait = Property::REQUIRED,
-            Property::Predicate<BinaryData> predicate = Property::Predicate<BinaryData>());
+            Predicate<BinaryData> predicate = Predicate<BinaryData>());
 
     void bind_property(
             const std::string& name,
@@ -200,7 +206,7 @@ struct MULTY_TRANSACTION_API Properties
     std::string get_name() const;
 
     // Not a part of public interface.
-    void throw_exception(const std::string& message) const;
+    void throw_exception(const std::string& message, const CodeLocation& location) const;
     bool is_valid() const;
 
 private:
@@ -244,6 +250,13 @@ public:
     {
         props.bind_property(name, &m_value, trait, std::move(predicate));
     }
+
+    // Disallowing copying and moving.
+    // Moving is dangerous since in Properties we bind to a specific variable address.
+    PropertyT(const PropertyT&) = delete;
+    PropertyT& operator=(const PropertyT&) = delete;
+    PropertyT(PropertyT&&) = delete;
+    PropertyT& operator=(const PropertyT&&) = delete;
 
     const T& operator*() const
     {

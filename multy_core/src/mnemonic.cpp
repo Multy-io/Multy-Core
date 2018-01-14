@@ -61,13 +61,13 @@ Error* make_mnemonic(EntropySource entropy_source, const char** mnemonic)
                         entropy_source.data, max_entropy_size, &entropy[0]));
         if (entropy_size == 0)
         {
-            return make_error(
+            return MAKE_ERROR(
                     ERROR_BAD_ENTROPY,
                     "Unable to get required amount of entropy");
         }
 
         char* out = nullptr;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 bip39_mnemonic_from_bytes(nullptr, entropy, entropy_size, &out),
                 "Failed to generated mnemonic");
         *mnemonic = out;
@@ -89,12 +89,12 @@ Error* make_seed(const char* mnemonic, const char* password, BinaryData** seed)
     try
     {
         size_t written = 0;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 bip39_mnemonic_validate(nullptr, mnemonic),
                 "Invalid mnemonic value");
 
         std::unique_ptr<unsigned char[]> data(new unsigned char[max_seed_size]);
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 bip39_mnemonic_to_seed(
                         mnemonic, password, data.get(), max_seed_size,
                         &written),
@@ -123,7 +123,7 @@ Error* seed_to_string(const BinaryData* seed, const char** str)
     int result = wally_base58_from_bytes(seed->data, seed->len, 0, &out);
     if (result != WALLY_OK)
     {
-        return internal_make_error(result, "Failed to convert seed to string");
+        return internal_make_error(result, "Failed to convert seed to string", MULTY_CODE_LOCATION);
     }
     *str = out;
     OUT_CHECK(*str);
@@ -138,7 +138,7 @@ Error* mnemonic_get_dictionary(const char** new_dictionary)
     try
     {
         const words* dictionary = nullptr;
-        throw_if_wally_error(
+        THROW_IF_WALLY_ERROR(
                 bip39_get_wordlist(nullptr, &dictionary),
                 "Failed to obtain wordlist");
 

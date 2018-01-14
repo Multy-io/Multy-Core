@@ -8,6 +8,7 @@
 #define MULTY_CORE_INTERNAL_EXCEPTION_H
 
 #include "multy_core/api.h"
+#include "multy_core/error.h"
 
 #include <exception>
 #include <string>
@@ -20,48 +21,33 @@ namespace internal
 class MULTY_CORE_API Exception : public std::exception
 {
 public:
-    Exception(const std::string& message);
+    Exception(const char* message, CodeLocation location);
     virtual ~Exception();
+
+    virtual Error* make_error() const;
 
     const char* what() const noexcept override;
 
+    void append_message(const char* message) const;
+
 private:
-    std::string m_message;
-};
-
-class MULTY_CORE_API ExceptionBuilder
-{
-public:
-    explicit ExceptionBuilder(const std::string& message);
-
-    ExceptionBuilder(const ExceptionBuilder&) = delete;
-    ExceptionBuilder& operator=(const ExceptionBuilder&) = delete;
-
-    ExceptionBuilder(ExceptionBuilder&& other);
-    ExceptionBuilder&& operator=(ExceptionBuilder&& other);
-
-    // Throws an exception
-    ~ExceptionBuilder();
-
-    void throw_exception();
-    void append_message(const std::string& message) const;
-
-public:
-    bool m_exception_thrown;
     mutable std::string m_message;
+    const CodeLocation m_location;
 };
 
-inline const ExceptionBuilder& operator<<(
-        const ExceptionBuilder& builder, const std::string& message)
+inline const Exception& operator<<(const Exception& e, const char* message)
 {
-    builder.append_message(message);
-    return builder;
+    e.append_message(message);
+    return e;
 }
 
-inline ExceptionBuilder build_and_throw_exception(const std::string& message)
+inline const Exception& operator<<(const Exception& e, const std::string& message)
 {
-    return ExceptionBuilder(message);
+    return e << message.c_str();
 }
+
+#define THROW_EXCEPTION(msg) \
+    throw Exception(msg, MULTY_CODE_LOCATION)
 
 } // namespace internal
 } // namespace wallet_core
