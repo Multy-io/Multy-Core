@@ -1,4 +1,6 @@
-
+# Explicitly building multy_test as shared library, otherwise test cases would be thrown away by
+# linker as symbols with internal linkage with is never referenced.
+# That means that test cases can't be discovered by gtest runtime and hence not run.
 add_library(multy_test SHARED
     run_tests.cpp
     utility.cpp
@@ -7,7 +9,7 @@ add_library(multy_test SHARED
     serialized_keys_test_base.cpp
     smoke_test.cpp
     test_account.cpp
-    test_amount.cpp
+    test_big_int.cpp
     test_bitcoin_account.cpp
     test_bitcoin_transaction.cpp
     test_common.cpp
@@ -15,6 +17,7 @@ add_library(multy_test SHARED
     test_ethereum_transaction.cpp
     test_keys.cpp
     test_mnemonic.cpp
+    test_object.cpp
     test_properties.cpp
     test_sha3.cpp
     test_transaction.cpp
@@ -30,11 +33,18 @@ target_include_directories(
     ../third-party/libwally-core/include
 )
 
+set_target_properties(
+    multy_test
+    PROPERTIES
+    CXX_STANDARD 11
+    LANGUAGE CXX
+    LINKER_LANGUAGE CXX
+)
+
 target_link_libraries(
     multy_test
     PRIVATE
     gtest
     multy_core
-    multy_transaction
     libwally-core
 )

@@ -4,15 +4,15 @@
  * See LICENSE for details
  */
 
-#include "multy_core/internal/u_ptr.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/u_ptr.h"
+#include "multy_core/src/utility.h"
 #include "multy_core/error.h"
 #include "multy_core/account.h"
 #include "multy_core/common.h"
 
-#include "multy_transaction/transaction.h"
-#include "multy_transaction/internal/transaction_base.h"
-#include "multy_transaction/internal/u_ptr.h"
+#include "multy_core/transaction.h"
+#include "multy_core/src/transaction_base.h"
+
 
 #include "gtest/gtest.h"
 
@@ -21,9 +21,7 @@
 
 namespace
 {
-using namespace multy_transaction::internal;
-using namespace wallet_core::internal;
-
+using namespace multy_core::internal;
 } //namespace
 
 struct TestTransaction: Transaction
@@ -39,29 +37,19 @@ struct TestTransaction: Transaction
         return m_traits;
     }
 
-    BinaryDataPtr serialize() const override
+    BinaryDataPtr serialize() override
     {
         return BinaryDataPtr(new BinaryData{nullptr, 0});
     }
 
-    Amount estimate_total_fee(size_t sources_count, size_t destinations_count) const override
+    BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override
     {
         return (m_total-1);
     }
 
-    Amount get_total_fee() const override
+    BigInt get_total_fee() const override
     {
         return (m_total-2);
-    }
-
-    void update_state() override
-    {
-        return;
-    }
-
-    void sign() override
-    {
-        return;
     }
 
     Properties& add_source() override
@@ -88,7 +76,7 @@ struct TestTransaction: Transaction
 private:
     Currency m_currency = CURRENCY_BITCOIN;
     uint32_t m_traits = TRANSACTION_REQUIRES_EXPLICIT_SOURCE;
-    Amount m_total;
+    BigInt m_total;
     Properties m_properties;
     BinaryDataPtr m_binarydata;
 };
@@ -184,7 +172,7 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_estimate_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    AmountPtr amount;
+    BigIntPtr amount;
 
     error.reset(transaction_estimate_total_fee(&transaction, 1, 1, nullptr ));
     EXPECT_NE(nullptr, error);
@@ -207,7 +195,7 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    AmountPtr amount;
+    BigIntPtr amount;
 
     error.reset(transaction_get_total_fee(&transaction, nullptr ));
     EXPECT_NE(nullptr, error);
@@ -216,21 +204,6 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, amount);
 }
-
-GTEST_TEST(TransactionTestInvalidArgs, transaction_update)
-{
-    ErrorPtr error;
-    error.reset(transaction_update(nullptr));
-    EXPECT_NE(nullptr, error);
-}
-
-GTEST_TEST(TransactionTestInvalidArgs, sign)
-{
-    ErrorPtr error;
-    error.reset(transaction_sign(nullptr));
-    EXPECT_NE(nullptr, error);
-}
-
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize)
 {
@@ -318,7 +291,7 @@ GTEST_TEST(TransactionTest, transaction_estimate_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    AmountPtr amount;
+    BigIntPtr amount;
 
     error.reset(transaction_estimate_total_fee(&transaction, 1, 1, reset_sp(amount)));
     EXPECT_EQ(nullptr, error);
@@ -329,27 +302,11 @@ GTEST_TEST(TransactionTest, transaction_get_total_fee)
 {
     ErrorPtr error;
     TestTransaction transaction;
-    AmountPtr amount;
+    BigIntPtr amount;
 
     error.reset(transaction_get_total_fee(&transaction, reset_sp(amount)));
     EXPECT_EQ(nullptr, error);
     EXPECT_EQ("3", *amount);
-}
-
-GTEST_TEST(TransactionTest, transaction_update)
-{
-    ErrorPtr error;
-    TestTransaction transaction;
-    error.reset(transaction_update(&transaction));
-    EXPECT_EQ(nullptr, error);
-}
-
-GTEST_TEST(TransactionTest, transaction_sign)
-{
-    ErrorPtr error;
-    TestTransaction transaction;
-    error.reset(transaction_sign(&transaction));
-    EXPECT_EQ(nullptr, error);
 }
 
 GTEST_TEST(TransactionTest, transaction_serialize)

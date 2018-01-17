@@ -4,10 +4,10 @@
  * See LICENSE for details
  */
 
-#include "multy_transaction/internal/amount.h"
-#include "multy_transaction/amount.h"
+#include "multy_core/src/amount.h"
+#include "multy_core/amount.h"
 
-#include "multy_transaction/internal/u_ptr.h"
+#include "multy_core/src/u_ptr.h"
 
 #include "multy_core/internal/u_ptr.h"
 #include "multy_core/internal/utility.h"
@@ -23,8 +23,8 @@
 namespace
 {
 
-using namespace wallet_core::internal;
-using namespace multy_transaction::internal;
+using namespace multy_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 
 enum ArithmeticOperation {
@@ -37,50 +37,50 @@ struct AmountArithmeticTestCase
 {
     const ArithmeticOperation op;
     const char* number;
-    const Amount amount;
+    const BigInt amount;
     const char * answer;
 };
 
 AmountArithmeticTestCase TEST_CASES[] = {
-    { ADD, "1", Amount("1"), "2" },
-    { ADD, "3", Amount("6"), "9" },
-    { ADD, "0", Amount("1"), "1" },
-    { ADD, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "19999999999999999999999999999999999999998" },
-    { ADD, "0", Amount("0"), "0" },
-    { ADD, "1", Amount("-1"), "0" },
-    { ADD, "-3", Amount("6"), "3" },
-    { ADD, "9999999999999999999999999999999999999999", Amount("-9999999999999999999999999999999999999999"), "0" },
+    { ADD, "1", BigInt("1"), "2" },
+    { ADD, "3", BigInt("6"), "9" },
+    { ADD, "0", BigInt("1"), "1" },
+    { ADD, "9999999999999999999999999999999999999999", BigInt("9999999999999999999999999999999999999999"), "19999999999999999999999999999999999999998" },
+    { ADD, "0", BigInt("0"), "0" },
+    { ADD, "1", BigInt("-1"), "0" },
+    { ADD, "-3", BigInt("6"), "3" },
+    { ADD, "9999999999999999999999999999999999999999", BigInt("-9999999999999999999999999999999999999999"), "0" },
 
 
-    { MUL, "1", Amount("1"), "1" },
-    { MUL, "3", Amount("6"), "18" },
-    { MUL, "0", Amount("1"), "0" },
-    { MUL, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
-    { MUL, "0", Amount("0"), "0" },
-    { MUL, "1", Amount("-1"), "-1" },
-    { MUL, "3", Amount("-6"), "-18" },
-    { MUL, "-9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "-99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
+    { MUL, "1", BigInt("1"), "1" },
+    { MUL, "3", BigInt("6"), "18" },
+    { MUL, "0", BigInt("1"), "0" },
+    { MUL, "9999999999999999999999999999999999999999", BigInt("9999999999999999999999999999999999999999"), "99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
+    { MUL, "0", BigInt("0"), "0" },
+    { MUL, "1", BigInt("-1"), "-1" },
+    { MUL, "3", BigInt("-6"), "-18" },
+    { MUL, "-9999999999999999999999999999999999999999", BigInt("9999999999999999999999999999999999999999"), "-99999999999999999999999999999999999999980000000000000000000000000000000000000001" },
 
 
-    { SUB, "1", Amount("1"), "0" },
-    { SUB, "6", Amount("3"), "3" },
-    { SUB, "0", Amount("1"), "-1" },
-    { SUB, "9999999999999999999999999999999999999999", Amount("9999999999999999999999999999999999999999"), "0" },
-    { SUB, "0", Amount("0"), "0" },
-    { SUB, "-5", Amount("1"), "-6" },
-    { SUB, "6", Amount("-3"), "9" },
-    { SUB, "-9999999999999999999999999999999999999999", Amount("-9999999999999999999999999999999999999999"), "0" },
+    { SUB, "1", BigInt("1"), "0" },
+    { SUB, "6", BigInt("3"), "3" },
+    { SUB, "0", BigInt("1"), "-1" },
+    { SUB, "9999999999999999999999999999999999999999", BigInt("9999999999999999999999999999999999999999"), "0" },
+    { SUB, "0", BigInt("0"), "0" },
+    { SUB, "-5", BigInt("1"), "-6" },
+    { SUB, "6", BigInt("-3"), "9" },
+    { SUB, "-9999999999999999999999999999999999999999", BigInt("-9999999999999999999999999999999999999999"), "0" },
 };
 
 } // namespace
 
 GTEST_TEST(AmountClassTest, BasicMethod)
 {
-    EXPECT_STREQ("1", Amount("1").get_value().c_str());
-    Amount temp(4);
-    EXPECT_EQ("2", Amount("2"));
-    EXPECT_EQ("3", Amount(3));
-    EXPECT_EQ("4", Amount(temp));
+    EXPECT_STREQ("1", BigInt("1").get_value().c_str());
+    BigInt temp(4);
+    EXPECT_EQ("2", BigInt("2"));
+    EXPECT_EQ("3", BigInt(3));
+    EXPECT_EQ("4", BigInt(temp));
     temp.set_value("5");
     EXPECT_EQ("5", temp);
 }
@@ -88,7 +88,7 @@ GTEST_TEST(AmountClassTest, BasicMethod)
 GTEST_TEST(AmountClassTest, get_value)
 {
     // get_value used to return sting with extra '\0' symbols at the end.
-    Amount amount("3");
+    BigInt amount("3");
     std::string str = "3";
     EXPECT_EQ(1, amount.get_value().size());
     EXPECT_TRUE(amount.get_value() == str);
@@ -106,11 +106,11 @@ GTEST_TEST(AmountClassTest, BasicArithmetic)
 
             {
                 // Testing commutativity, i.e. A + B == B + A
-                Amount temp_ADD_amount1(test_case.number);
+                BigInt temp_ADD_amount1(test_case.number);
                 temp_ADD_amount1 += test_case.amount;
                 ASSERT_EQ(test_case.answer, temp_ADD_amount1);
 
-                Amount temp_ADD_amount2(test_case.amount);
+                BigInt temp_ADD_amount2(test_case.amount);
                 temp_ADD_amount2 += test_case.number;
                 ASSERT_EQ(test_case.answer, temp_ADD_amount2);
             }
@@ -122,11 +122,11 @@ GTEST_TEST(AmountClassTest, BasicArithmetic)
             ASSERT_EQ(test_case.answer, (test_case.amount * test_case.number));
             {
                 // Testing commutativity, i.e. A * B == B * A
-                Amount temp_MUL_amount1(test_case.number);
+                BigInt temp_MUL_amount1(test_case.number);
                 temp_MUL_amount1 *= test_case.amount;
                 ASSERT_EQ(test_case.answer, temp_MUL_amount1);
 
-                Amount temp_MUL_amount2(test_case.amount);
+                BigInt temp_MUL_amount2(test_case.amount);
                 temp_MUL_amount2 *= test_case.number;
                 ASSERT_EQ(test_case.answer, temp_MUL_amount2);
             }
@@ -136,7 +136,7 @@ GTEST_TEST(AmountClassTest, BasicArithmetic)
         {
             ASSERT_EQ(test_case.answer, (test_case.number - test_case.amount));
 
-            Amount temp_SUB_amount(test_case.number);
+            BigInt temp_SUB_amount(test_case.number);
             temp_SUB_amount -= test_case.amount;
             ASSERT_EQ(test_case.answer, temp_SUB_amount);
 
@@ -164,7 +164,7 @@ GTEST_TEST(AmountTestInvalidArgs, make_amount)
 GTEST_TEST(AmountTestInvalidArgs, amount_to_string)
 {
     ErrorPtr error;
-    Amount amount(1);
+    BigInt amount(1);
     ConstCharPtr str;
 
     error.reset(amount_to_string(nullptr, reset_sp(str)));
@@ -179,7 +179,7 @@ GTEST_TEST(AmountTestInvalidArgs, amount_to_string)
 GTEST_TEST(AmountTestInvalidArgs, amount_set_value)
 {
     ErrorPtr error;
-    Amount amount(1);
+    BigInt amount(1);
 
     error.reset(amount_set_value(nullptr, "1"));
     EXPECT_NE(nullptr, error);
@@ -193,7 +193,7 @@ GTEST_TEST(AmountTestInvalidArgs, amount_set_value)
 GTEST_TEST(AmountTestInvalidValue, make_amount)
 {
     ErrorPtr error;
-    AmountPtr amount(new Amount(1));
+    AmountPtr amount(new BigInt(1));
 
     error.reset(make_amount("foo",  reset_sp(amount)));
     EXPECT_NE(nullptr, error);
@@ -215,7 +215,7 @@ GTEST_TEST(AmountTestInvalidValue, make_amount)
 GTEST_TEST(AmountTestInvalidValue, amount_set_value)
 {
     ErrorPtr error;
-    Amount amount("1");
+    BigInt amount("1");
 
     error.reset(amount_set_value(&amount, "foo"));
     EXPECT_NE(nullptr, error);
@@ -248,7 +248,7 @@ GTEST_TEST(AmountTest, make_amount)
 GTEST_TEST(AmountTest, amount_to_string)
 {
     ErrorPtr error;
-    Amount amount(1);
+    BigInt amount(1);
     ConstCharPtr test_str;
 
     error.reset(amount_to_string(&amount, reset_sp(test_str)));
@@ -260,7 +260,7 @@ GTEST_TEST(AmountTest, amount_to_string)
 GTEST_TEST(AmountTest, amount_set_value)
 {
     ErrorPtr error;
-    Amount amount(5);
+    BigInt amount(5);
 
     error.reset(amount_set_value(&amount, "1"));
     EXPECT_EQ(nullptr, error);
@@ -269,7 +269,7 @@ GTEST_TEST(AmountTest, amount_set_value)
 
 GTEST_TEST(AmountTest, free_amount)
 {
-    Amount* amount;
+    BigInt* amount;
     make_amount("1", &amount);
 
     EXPECT_NO_THROW(free_amount(amount));
@@ -337,8 +337,8 @@ TEST_P(AmountExportTestP, export_as_binary_data)
     const auto& param = GetParam();
     const BinaryData expected = to_binary_data(param.expected_data);
 
-    Amount amount(param.amount_string);
-    BinaryDataPtr exported = amount.export_as_binary_data(Amount::EXPORT_BIG_ENDIAN);
+    BigInt amount(param.amount_string);
+    BinaryDataPtr exported = amount.export_as_binary_data(BigInt::EXPORT_BIG_ENDIAN);
 
     EXPECT_EQ(expected, *exported);
 }

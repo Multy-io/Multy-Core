@@ -6,12 +6,12 @@
 
 #include "multy_core/account.h"
 #include "multy_core/common.h"
-#include "multy_core/keys.h"
+#include "multy_core/key.h"
 #include "multy_core/mnemonic.h"
 
-#include "multy_core/internal/account.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/internal/u_ptr.h"
+#include "multy_core/src/api/account_impl.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/u_ptr.h"
 
 #include "multy_test/bip39_test_cases.h"
 #include "multy_test/utility.h"
@@ -24,7 +24,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 
 class AccountSmokeTestP : public ::testing::TestWithParam<Currency>
@@ -83,7 +83,7 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     ASSERT_NE(nullptr, account);
 
     ConstCharPtr address;
-    error.reset(get_account_address_string(account.get(), reset_sp(address)));
+    error.reset(account_get_address_string(account.get(), reset_sp(address)));
     ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, address);
     ASSERT_LT(0, strlen(address.get()));
@@ -98,7 +98,7 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
 
     KeyPtr private_key;
     error.reset(
-            get_account_key(
+            account_get_key(
                     account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
     ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, private_key);
@@ -110,7 +110,7 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
 
     KeyPtr public_key;
     error.reset(
-            get_account_key(
+            account_get_key(
                     account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
     ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, public_key);
@@ -123,7 +123,7 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     ASSERT_STRNE(public_key_str.get(), private_key_str.get());
 
     Currency currency = static_cast<Currency>(-1);
-    error.reset(get_account_currency(account.get(), &currency));
+    error.reset(account_get_currency(account.get(), &currency));
     ASSERT_EQ(nullptr, error);
     ASSERT_EQ(expected_currency, currency);
 }

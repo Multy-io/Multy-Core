@@ -4,18 +4,18 @@
  * See LICENSE for details
  */
 
-#include "multy_transaction/internal/bitcoin_transaction.h"
-#include "multy_transaction/internal/properties.h"
+#include "multy_core/src/bitcoin/bitcoin_transaction.h"
+#include "multy_core/src/api/properties_impl.h"
 
 #include "multy_core/account.h"
-#include "multy_core/internal/account.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/internal/u_ptr.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/big_int.h"
+#include "multy_core/properties.h"
 
-#include "multy_transaction/amount.h"
-#include "multy_transaction/properties.h"
-#include "multy_transaction/internal/ethereum_transaction.h"
+#include "multy_core/src/api/account_impl.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/ethereum/ethereum_transaction.h"
+#include "multy_core/src/u_ptr.h"
+#include "multy_core/src/utility.h"
 
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
@@ -26,8 +26,7 @@
 
 namespace
 {
-using namespace multy_transaction::internal;
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 } // namespace
 
@@ -46,10 +45,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
 
     {
         Properties* properties = nullptr;
-        const Amount nonce("0");
+        const BigInt nonce("0");
 
         HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
-        HANDLE_ERROR(properties_set_amount_value(properties, "nonce", &nonce));
+        HANDLE_ERROR(properties_set_big_int_value(properties, "nonce", &nonce));
         HANDLE_ERROR(properties_set_int32_value(properties, "chain_id", ETHEREUM_CHAIN_ID_RINKEBY));
     }
 
@@ -58,19 +57,19 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
         HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
 
         // Address balance
-        AmountPtr balance;
-        HANDLE_ERROR(make_amount("7500000000000000000", reset_sp(balance)));
+        BigIntPtr balance;
+        HANDLE_ERROR(make_big_int("7500000000000000000", reset_sp(balance)));
 
-        HANDLE_ERROR(properties_set_amount_value(source, "amount", balance.get()));
+        HANDLE_ERROR(properties_set_big_int_value(source, "amount", balance.get()));
     }
 
     {
         Properties* destination = nullptr;
         HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
 
-        AmountPtr amount;
-        HANDLE_ERROR(make_amount("1", reset_sp(amount)));
-        HANDLE_ERROR(properties_set_amount_value(destination, "amount", amount.get()));
+        BigIntPtr amount;
+        HANDLE_ERROR(make_big_int("1", reset_sp(amount)));
+        HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
 
         const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         const BinaryData address_data = to_binary_data(address);
@@ -81,20 +80,16 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
         Properties* fee = nullptr;
         HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
 
-        AmountPtr amount_gas_price;
-        HANDLE_ERROR(make_amount("1", reset_sp(amount_gas_price)));
-        HANDLE_ERROR(properties_set_amount_value(fee, "gas_price", amount_gas_price.get()));
+        BigIntPtr amount_gas_price;
+        HANDLE_ERROR(make_big_int("1", reset_sp(amount_gas_price)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
 
-        AmountPtr amount_gas_limit;
-        HANDLE_ERROR(make_amount("21001", reset_sp(amount_gas_limit)));
-        HANDLE_ERROR(properties_set_amount_value(fee, "gas_limit", amount_gas_limit.get()));
+        BigIntPtr amount_gas_limit;
+        HANDLE_ERROR(make_big_int("21001", reset_sp(amount_gas_limit)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
     }
 
     {
-        HANDLE_ERROR(transaction_update(transaction.get()));
-
-        HANDLE_ERROR(transaction_sign(transaction.get()));
-
         BinaryDataPtr serialied;
         HANDLE_ERROR(transaction_serialize(transaction.get(), reset_sp(serialied)));
         ASSERT_EQ(to_binary_data(from_hex("f85f800182520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea1901802ba033de58162abbfdf1e744f5fee2b7a3c92691d9c59fc3f9ad2fa3fb946c8ea90aa0787abc84d20457c12fdcf62b612247fb34e397f6bdec64fc6a3bc9444df3e946")),
@@ -116,14 +111,14 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const Amount balance("7500000000000000000");
-    const Amount value("1");
-    const Amount gas_limit("21001");
-    const Amount gas_price("1");
+    const BigInt balance("7500000000000000000");
+    const BigInt value("1");
+    const BigInt gas_limit("21001");
+    const BigInt gas_price("1");
 
     {
         Properties& properties = transaction->get_transaction_properties();
-        properties.set_property("nonce", Amount("0"));
+        properties.set_property("nonce", BigInt("0"));
         properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
@@ -144,9 +139,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
         fee.set_property("gas_price", gas_price);
         fee.set_property("gas_limit", gas_limit);
     }
-
-    transaction->update_state();
-    transaction->sign();
     BinaryDataPtr serialied = transaction->serialize();  
     ASSERT_EQ(to_binary_data(from_hex(
             "f85f800182520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea1901802ba033de58162abbfdf1e744f5fee2b7a3c92691d9c59fc3f9ad2fa3fb946c8ea90aa0787abc84d20457c12fdcf62b612247fb34e397f6bdec64fc6a3bc9444df3e946")),
@@ -167,14 +159,14 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const Amount balance("7500000000000000000");
-    const Amount value("2305843009213693952");
-    const Amount gas_limit("21001");
-    const Amount gas_price("64424509440");
+    const BigInt balance("7500000000000000000");
+    const BigInt value("2305843009213693952");
+    const BigInt gas_limit("21001");
+    const BigInt gas_price("64424509440");
 
     {
         Properties& properties = transaction->get_transaction_properties();
-        properties.set_property("nonce", Amount("4"));
+        properties.set_property("nonce", BigInt("4"));
         properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
@@ -196,11 +188,9 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
         fee.set_property("gas_limit", gas_limit);
     }
 
-    transaction->update_state();
-    Amount estimated_fee = transaction->estimate_total_fee(1, 1);
+    BigInt estimated_fee = transaction->estimate_total_fee(1, 1);
     std::cerr << "estimated_fee: " << estimated_fee.get_value() << "\n";
 
-    transaction->sign();
     const BinaryDataPtr serialied = transaction->serialize();
     std::cerr << "signed transaction:" << to_hex(*serialied) << "\n";
 
@@ -224,15 +214,15 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const Amount balance("7500000000000000000");
-    const Amount value("1000");
-    const Amount gas_limit("121000");
-    const Amount gas_price("3000000000000");
+    const BigInt balance("7500000000000000000");
+    const BigInt value("1000");
+    const BigInt gas_limit("121000");
+    const BigInt gas_price("3000000000000");
 
     {
         const bytes payload = from_hex("ffff");
         Properties& properties = transaction->get_transaction_properties();
-        properties.set_property("nonce", Amount("3"));
+        properties.set_property("nonce", BigInt("3"));
         properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
         properties.set_property("payload", to_binary_data(payload));
     }
@@ -255,11 +245,9 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
         fee.set_property("gas_limit", gas_limit);
     }
 
-    transaction->update_state();
-    Amount estimated_fee = transaction->estimate_total_fee(1, 1);
+    BigInt estimated_fee = transaction->estimate_total_fee(1, 1);
     std::cerr << "estimated_fee: " << estimated_fee.get_value() << "\n";
 
-    transaction->sign();
     const BinaryDataPtr serialied = transaction->serialize();
     std::cerr << "signed transaction:" << to_hex(*serialied) << "\n";
 

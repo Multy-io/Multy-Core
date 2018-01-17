@@ -8,7 +8,7 @@
 #define MULTY_TEST_UTILITY_H
 
 #include "multy_core/common.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/utility.h"
 
 #include "gtest/gtest.h"
 
@@ -18,14 +18,14 @@
 #define HANDLE_ERROR(statement)                                                \
     do                                                                         \
     {                                                                          \
-        wallet_core::internal::ErrorPtr error(statement);                      \
+        multy_core::internal::ErrorPtr error(statement);                      \
         ASSERT_EQ(nullptr, error);                                             \
     } while (0)
 
 #define EXPECT_ERROR(statement)                                                \
     do                                                                         \
     {                                                                          \
-        wallet_core::internal::ErrorPtr error(statement);                      \
+        multy_core::internal::ErrorPtr error(statement);                      \
         EXPECT_NE(nullptr, error);                                             \
     } while (0)
 
@@ -48,7 +48,7 @@ std::string to_hex(const BinaryData& data);
 BinaryData to_binary_data(const bytes& data);
 BinaryData to_binary_data(const char* data);
 ExtendedKey make_dummy_extended_key();
-wallet_core::internal::ExtendedKeyPtr make_dummy_extended_key_ptr();
+multy_core::internal::ExtendedKeyPtr make_dummy_extended_key_ptr();
 EntropySource make_dummy_entropy_source();
 
 template <typename T, size_t N>

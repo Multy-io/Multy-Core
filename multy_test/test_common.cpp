@@ -6,7 +6,7 @@
 
 #include "multy_core/common.h"
 
-#include "multy_core/internal/u_ptr.h"
+#include "multy_core/src/u_ptr.h"
 
 #include "multy_test/utility.h"
 
@@ -17,7 +17,7 @@
 namespace
 {
 using namespace test_utility;
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 
 struct HexTestCase
 {

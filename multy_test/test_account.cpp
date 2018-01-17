@@ -7,9 +7,9 @@
 #include "multy_core/account.h"
 
 #include "multy_core/common.h"
-#include "multy_core/internal/account.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/internal/u_ptr.h"
+#include "multy_core/src/api/account_impl.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/u_ptr.h"
 
 #include "multy_test/bip39_test_cases.h"
 #include "multy_test/utility.h"
@@ -22,7 +22,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 
 const char* TEST_ADDRESS = "TEST_ADDRESS";
@@ -210,7 +210,7 @@ GTEST_TEST(AccountTest, fake_account)
     {
         ConstCharPtr address_str;
         error.reset(
-                get_account_address_string(
+                account_get_address_string(
                         account.get(), reset_sp(address_str)));
         EXPECT_EQ(nullptr, error);
         ASSERT_NE(nullptr, address_str);
@@ -220,7 +220,7 @@ GTEST_TEST(AccountTest, fake_account)
     {
         ConstCharPtr path_str;
         error.reset(
-                get_account_address_path(account.get(), reset_sp(path_str)));
+                account_get_address_path(account.get(), reset_sp(path_str)));
         EXPECT_EQ(nullptr, error);
         ASSERT_NE(nullptr, path_str);
         ASSERT_STREQ(EXPECTED_PATH_STRING, path_str.get());
@@ -229,7 +229,7 @@ GTEST_TEST(AccountTest, fake_account)
     {
         Currency currency = INVALID_CURRENCY;
 
-        error.reset(get_account_currency(account.get(), &currency));
+        error.reset(account_get_currency(account.get(), &currency));
         EXPECT_EQ(nullptr, error);
         ASSERT_EQ(EXPECTED_CURRENCY, currency);
     }
@@ -256,7 +256,7 @@ GTEST_TEST(AccountTestInvalidArgs, make_account)
     EXPECT_EQ(nullptr, account);
 }
 
-GTEST_TEST(AccountTestInvalidArgs, get_account_key)
+GTEST_TEST(AccountTestInvalidArgs, account_get_key)
 {
     const KeyType INVALID_KEY_TYPE = static_cast<KeyType>(-1);
     const TestAccount account(
@@ -266,19 +266,19 @@ GTEST_TEST(AccountTestInvalidArgs, get_account_key)
     ErrorPtr error;
     KeyPtr key;
 
-    error.reset(get_account_key(nullptr, KEY_TYPE_PRIVATE, reset_sp(key)));
+    error.reset(account_get_key(nullptr, KEY_TYPE_PRIVATE, reset_sp(key)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, key);
 
-    error.reset(get_account_key(&account, INVALID_KEY_TYPE, reset_sp(key)));
+    error.reset(account_get_key(&account, INVALID_KEY_TYPE, reset_sp(key)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, key);
 
-    error.reset(get_account_key(&account, KEY_TYPE_PRIVATE, nullptr));
+    error.reset(account_get_key(&account, KEY_TYPE_PRIVATE, nullptr));
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(AccountTestInvalidArgs, get_account_address_string)
+GTEST_TEST(AccountTestInvalidArgs, account_get_address_string)
 {
     ErrorPtr error;
     ConstCharPtr address_str;
@@ -287,15 +287,15 @@ GTEST_TEST(AccountTestInvalidArgs, get_account_address_string)
             CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(get_account_address_string(nullptr, reset_sp(address_str)));
+    error.reset(account_get_address_string(nullptr, reset_sp(address_str)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, address_str);
 
-    error.reset(get_account_address_string(&account, nullptr));
+    error.reset(account_get_address_string(&account, nullptr));
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(AccountTestInvalidArgs, get_account_address_path)
+GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
 {
     ErrorPtr error;
     ConstCharPtr path_str;
@@ -304,15 +304,15 @@ GTEST_TEST(AccountTestInvalidArgs, get_account_address_path)
             CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(get_account_address_path(nullptr, reset_sp(path_str)));
+    error.reset(account_get_address_path(nullptr, reset_sp(path_str)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, path_str);
 
-    error.reset(get_account_address_path(&account, nullptr));
+    error.reset(account_get_address_path(&account, nullptr));
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(AccountTestInvalidArgs, get_account_currency)
+GTEST_TEST(AccountTestInvalidArgs, account_get_currency)
 {
     ErrorPtr error;
     Currency currency = INVALID_CURRENCY;
@@ -321,11 +321,11 @@ GTEST_TEST(AccountTestInvalidArgs, get_account_currency)
             CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(get_account_currency(nullptr, &currency));
+    error.reset(account_get_currency(nullptr, &currency));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(INVALID_CURRENCY, currency);
 
-    error.reset(get_account_currency(&account, nullptr));
+    error.reset(account_get_currency(&account, nullptr));
     EXPECT_NE(nullptr, error);
 }
 
@@ -361,7 +361,7 @@ TEST_P(AccountTestCurrencySupportP, generic)
 
     {
         Currency actual_currency;
-        error.reset(get_account_currency(account.get(), &actual_currency));
+        error.reset(account_get_currency(account.get(), &actual_currency));
         EXPECT_EQ(nullptr, error);
         EXPECT_EQ(GetParam(), actual_currency);
     }
@@ -370,7 +370,7 @@ TEST_P(AccountTestCurrencySupportP, generic)
         ConstCharPtr address_str;
 
         error.reset(
-                get_account_address_string(
+                account_get_address_string(
                         account.get(), reset_sp(address_str)));
         EXPECT_EQ(nullptr, error);
         EXPECT_NE(nullptr, address_str);
@@ -381,7 +381,7 @@ TEST_P(AccountTestCurrencySupportP, generic)
         ConstCharPtr path_str;
 
         error.reset(
-                get_account_address_path(account.get(), reset_sp(path_str)));
+                account_get_address_path(account.get(), reset_sp(path_str)));
         EXPECT_EQ(nullptr, error);
         EXPECT_NE(nullptr, path_str);
         EXPECT_STRNE("", path_str.get());
@@ -389,12 +389,12 @@ TEST_P(AccountTestCurrencySupportP, generic)
 
     {
         KeyPtr private_key;
-        error.reset(get_account_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
+        error.reset(account_get_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
         EXPECT_EQ(nullptr, error);
         EXPECT_NE(nullptr, private_key);
 
         KeyPtr public_key;
-        error.reset(get_account_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
+        error.reset(account_get_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
         EXPECT_EQ(nullptr, error);
         EXPECT_NE(nullptr, public_key);
 
@@ -403,7 +403,7 @@ TEST_P(AccountTestCurrencySupportP, generic)
 
     //    {
     //        ConstCharPtr path_str;
-    //        error.reset(get_account_address_path(account.get(),
+    //        error.reset(account_get_address_path(account.get(),
     //        ADDRESS_EXTERNAL, 0, reset_sp(address_str)));
     //        EXPECT_EQ(nullptr, error);
     //        EXPECT_EQ(nullptr, address_str);

@@ -7,16 +7,16 @@
 #include "serialized_keys_test_base.h"
 
 #include "multy_core/account.h"
-#include "multy_core/keys.h"
+#include "multy_core/key.h"
 
-#include "multy_core/internal/u_ptr.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/u_ptr.h"
+#include "multy_core/src/utility.h"
 
 #include "multy_test/value_printers.h"
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 } // namespace
 
 void PrintTo(const SerializedKeyTestCase& c, std::ostream* out)
@@ -43,7 +43,7 @@ TEST_P(SerializedKeyTestP, private_key_to_address)
 
 //    KeyPtr private_key;
 //    error.reset(
-//            get_account_key(
+//            account_get_key(
 //                    account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
 //    EXPECT_EQ(nullptr, error);
 //    ASSERT_NE(nullptr, private_key);
@@ -57,7 +57,7 @@ TEST_P(SerializedKeyTestP, private_key_to_address)
     ConstCharPtr public_key_string;
     KeyPtr public_key;
     error.reset(
-            get_account_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
+            account_get_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
     EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, public_key);
 
@@ -70,7 +70,7 @@ TEST_P(SerializedKeyTestP, private_key_to_address)
     }
 
     ConstCharPtr address;
-    error.reset(get_account_address_string(account.get(), reset_sp(address)));
+    error.reset(account_get_address_string(account.get(), reset_sp(address)));
     EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, address);
     ASSERT_STREQ(test_data.address, address.get());

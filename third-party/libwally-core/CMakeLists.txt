@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
 
-set(SOURCES
+add_library(libwally-core
     src/aes.c
     src/base58.c
     src/bip32.c
@@ -19,8 +19,7 @@ set(SOURCES
     src/ccan/ccan/crypto/sha256/sha256.c
     src/ccan/ccan/crypto/sha512/sha512.c
     src/ccan/ccan/str/hex/hex.c
- )
-add_library(libwally-core SHARED ${SOURCES})
+)
 target_include_directories(libwally-core
     PUBLIC
         .
@@ -32,11 +31,7 @@ target_include_directories(libwally-core
 target_link_libraries(libwally-core PUBLIC secp256k1)
 target_compile_definitions(libwally-core PRIVATE SECP256K1_BUILD)
 
-
 if (DEFINED IOS_PLATFORM)
-    add_library(secp256k1 SHARED
-        src/secp256k1/src/secp256k1.c
-    )
     target_compile_options(libwally-core
         PRIVATE
             -W -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes
@@ -45,13 +40,11 @@ if (DEFINED IOS_PLATFORM)
             -flax-vector-conversions -Wno-unused-function -Wno-long-long
             -Wno-overlength-strings -Wno-variadic-macros  -MP
     )
-else()
-    add_library(secp256k1 STATIC
-         src/secp256k1/contrib/lax_der_parsing.c
-         src/secp256k1/contrib/lax_der_privatekey_parsing.c
-         src/secp256k1/src/secp256k1.c
-    )
 endif()
+
+add_library(secp256k1
+    src/secp256k1/src/secp256k1.c
+)
 
 target_include_directories(secp256k1
     PUBLIC
@@ -59,28 +52,17 @@ target_include_directories(secp256k1
         src/secp256k1/src
         src/secp256k1/include
 )
+
 target_compile_options(secp256k1
     PRIVATE
         -std=c89
 )
-#if(LINUX_DESKTOP)
-#    target_compile_definitions(secp256k1
-#        PUBLIC
-#            -DUSE_NUM_NONE=1 -DUSE_FIELD_5X52=1 -DUSE_FIELD_INV_BUILTIN=1
-#            -DUSE_SCALAR_4X64=1 -DUSE_SCALAR_INV_BUILTIN=1
-#            -DHAVE___INT128=1 -DVERIFY=1
-#        PRIVATE
-#            -DENABLE_MODULE_ECDH -DENABLE_MODULE_RECOVERY
-#            -DENABLE_MODULE_GENERATOR -DENABLE_MODULE_RANGEPROOF
-#            -DENABLE_MODULE_SURJECTIONPROOF
-#    )
-#else()
-    target_compile_definitions(secp256k1
-            PUBLIC
-              -DHAVE_CONFIG_H
-            PRIVATE
-              -DENABLE_MODULE_RANGEPROOF -DENABLE_MODULE_SURJECTIONPROOF
-              -DENABLE_MODULE_ECDH -DENABLE_MODULE_GENERATOR -DENABLE_MODULE_RECOVERY
-              -DENABLE_MODULE_RECOVERY
-    )
-#endif()
+
+target_compile_definitions(secp256k1
+        PUBLIC
+          -DHAVE_CONFIG_H
+        PRIVATE
+          -DENABLE_MODULE_RANGEPROOF -DENABLE_MODULE_SURJECTIONPROOF
+          -DENABLE_MODULE_ECDH -DENABLE_MODULE_GENERATOR -DENABLE_MODULE_RECOVERY
+          -DENABLE_MODULE_RECOVERY
+)

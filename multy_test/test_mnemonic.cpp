@@ -18,7 +18,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 typedef std::vector<unsigned char> bytes;
 

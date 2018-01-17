@@ -5,8 +5,8 @@
  */
 
 #include "multy_core/common.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/keys.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/key.h"
 
 #include "multy_test/bip39_test_cases.h"
 #include "multy_test/utility.h"
@@ -27,7 +27,7 @@ S& operator<<(S& s, const BinaryData& binary_data)
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 
 class KeysTestValidCasesP : public ::testing::TestWithParam<BIP39TestCase>

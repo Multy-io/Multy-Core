@@ -1,33 +1,63 @@
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(multy_core
-    SHARED
+if (MULTY_MORE_WARNINGS)
+    add_definitions(
+        -Wall -Weffc++ -Wpedantic -Wextra -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings
+    )
+endif()
 
+if (MULTY_WARNINGS_AS_ERRORS)
+    add_definitions(-Werror)
+endif()
+
+add_library(multy_core
+    # API headers
+    api.h
     account.h
+    big_int.h
     common.h
     error.h
-    keys.h
+    key.h
     mnemonic.h
     sha3.h
+    properties.h
+    transaction.h
 
-    src/account.cpp
-    src/common.cpp
-    src/error.cpp
-    src/sha3.cpp
-    src/keys.cpp
-    src/mnemonic.cpp
+    # implementation of API functions
+    src/api/account.cpp
+    src/api/account_impl.cpp
+    src/api/big_int.cpp
+    src/api/big_int_impl.cpp
+    src/api/common.cpp
+    src/api/error.cpp
+    src/api/key.cpp
+    src/api/key_impl.cpp
+    src/api/mnemonic.cpp
+    src/api/properties.cpp
+    src/api/properties_impl.cpp
+    src/api/sha3.cpp
+    src/api/sha3_impl.cpp
+    src/api/transaction.cpp
+    src/api/transaction_impl.cpp
 
-    internal/account_base.cpp
-    internal/account.cpp
-    internal/bitcoin_account.cpp
-    internal/ethereum_account.cpp
-    internal/exception.cpp
-    internal/hd_path.cpp
-    internal/sha3.cpp
-    internal/key.cpp
-    internal/u_ptr.cpp
-    internal/utility.cpp
+    # Common stuff
+    src/account_base.cpp
+
+    src/exception.cpp
+    src/hd_path.cpp
+    src/object.cpp
+    src/transaction_base.cpp
+    src/u_ptr.cpp
+    src/utility.cpp
+
+    # Bitcoin
+    src/bitcoin/bitcoin_account.cpp
+    src/bitcoin/bitcoin_transaction.cpp
+
+    # Ethereum
+    src/ethereum/ethereum_account.cpp
+    src/ethereum/ethereum_transaction.cpp
 )
 
 target_compile_definitions(multy_core PRIVATE BUILDING_MULTY_CORE=1)
@@ -50,6 +80,7 @@ target_link_libraries(multy_core
     PUBLIC
     libwally-core
     keccak-tiny
+    mini-gmp
 )
 
 set_target_properties(multy_core PROPERTIES CXX_VISIBILITY_PRESET hidden)

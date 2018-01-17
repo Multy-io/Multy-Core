@@ -8,7 +8,7 @@
 
 #include "multy_core/common.h"
 #include "multy_core/error.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/utility.h"
 
 #include "multy_test/run_tests.h"
 
@@ -39,13 +39,13 @@ size_t feed_silly_entropy(void*, size_t size, void* dest)
     return size;
 }
 
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 
 } // namespace
 
 int main(int argc, char** argv)
 {
-#ifdef WITH_TESTS
+#ifdef MULTY_WITH_TESTS
     return run_tests(argc, argv);
 #else
     try
