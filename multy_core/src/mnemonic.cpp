@@ -22,27 +22,16 @@ namespace
 {
 using namespace wallet_core::internal;
 
-size_t round_to_supported_entropy_size(size_t entropy_size)
+size_t max_supported_entropy_size(size_t entropy_size)
 {
     static const size_t supported_entropy_sizes[] = {
             BIP39_ENTROPY_LEN_128, BIP39_ENTROPY_LEN_160, BIP39_ENTROPY_LEN_192,
             BIP39_ENTROPY_LEN_224, BIP39_ENTROPY_LEN_256, BIP39_ENTROPY_LEN_288,
             BIP39_ENTROPY_LEN_320,
     };
+    static const size_t default_value = 0;
 
-    size_t result = BIP39_ENTROPY_LEN_320;
-    for (size_t i = 0; i < array_size(supported_entropy_sizes); ++i)
-    {
-        if (entropy_size >= supported_entropy_sizes[i])
-        {
-            result = supported_entropy_sizes[i];
-        }
-        else
-        {
-            break;
-        }
-    }
-    return result;
+    return find_max_value(supported_entropy_sizes, default_value, entropy_size);
 }
 } // namespace
 
@@ -56,7 +45,7 @@ Error* make_mnemonic(EntropySource entropy_source, const char** mnemonic)
 
     try
     {
-        const size_t entropy_size = round_to_supported_entropy_size(
+        const size_t entropy_size = max_supported_entropy_size(
                 entropy_source.fill_entropy(
                         entropy_source.data, max_entropy_size, &entropy[0]));
         if (entropy_size == 0)

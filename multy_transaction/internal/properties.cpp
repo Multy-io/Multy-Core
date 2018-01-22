@@ -10,6 +10,7 @@
 
 #include "multy_core/common.h"
 #include "multy_core/internal/exception.h"
+#include "multy_core/internal/exception_stream.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/utility.h"
 
@@ -289,7 +290,9 @@ struct BinderT : public BinderBase
 
 } // namespace
 
-Property::Property(Properties& properties) : m_properties(properties)
+Property::Property(Properties& properties, Trait trait)
+    : m_properties(properties),
+      m_trait(trait)
 {
 }
 
@@ -304,7 +307,7 @@ void Property::throw_exception(std::string message, const CodeLocation& location
 
 void Property::throw_if_unset(const void* property_var) const
 {
-    if (!is_set(property_var))
+    if ( m_trait == REQUIRED && !is_set(property_var))
     {
         const Properties::Binder& b
                 = m_properties.get_property_by_value(property_var);

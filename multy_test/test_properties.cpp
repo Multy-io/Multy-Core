@@ -39,7 +39,7 @@ using namespace test_utility;
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_int32_value)
 {
     //    ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_property = 0;
 
     ASSERT_ERROR(properties_set_int32_value(&properties, "v", 2));
@@ -59,7 +59,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_int32_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_string_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     std::string value_property = "2";
 
     error.reset(properties_set_string_value(&properties, "v", "1"));
@@ -87,7 +87,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_string_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_amount_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     Amount amount_property(0);
     const Amount invalid_amount(1);
 
@@ -113,7 +113,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_amount_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_binary_data_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     const unsigned char data_2_vals[] = {4U, 2U};
     BinaryDataPtr binaty_data_property;
     BinaryData binary_data2{data_2_vals, 2};
@@ -147,7 +147,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_binary_data_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     PrivateKeyPtr priv_key_property;
     PrivateKeyPtr priv_key_property1;
 
@@ -189,7 +189,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_reset_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_property = 1;
 
     properties.bind_property("v", &int_property);
@@ -218,7 +218,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_validate)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_get_specification)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     ConstCharPtr specification;
 
     error.reset(properties_get_specification(&properties, nullptr));
@@ -231,7 +231,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_get_specification)
 GTEST_TEST(PropertiesTestInvalidValue, properties_validate)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_property = 1;
 
     properties.bind_property("v", &int_property);
@@ -244,7 +244,7 @@ GTEST_TEST(PropertiesTestInvalidValue, properties_validate)
 GTEST_TEST(PropertiesTestInvalidType, int32_properties)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_value = 1;
     const std::string str = "0";
     const Amount amount(0);
@@ -288,7 +288,7 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
 GTEST_TEST(PropertiesTestInvalidType, String_properties)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     const int32_t int_value = 1;
     std::string str = "0";
     const Amount amount(0);
@@ -332,7 +332,7 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
 GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
     Amount amount(2);
@@ -376,7 +376,7 @@ GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
 GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
     const Amount amount(2);
@@ -419,7 +419,7 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
 GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
     const Amount amount(2);
@@ -454,7 +454,7 @@ GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
 GTEST_TEST(PropertiesTest, properties_set_int32_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_property = 0;
 
     properties.bind_property("v", &int_property);
@@ -467,7 +467,7 @@ GTEST_TEST(PropertiesTest, properties_set_int32_value)
 GTEST_TEST(PropertiesTest, properties_set_string_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     std::string str = "2";
 
     properties.bind_property("v", &str);
@@ -480,7 +480,7 @@ GTEST_TEST(PropertiesTest, properties_set_string_value)
 GTEST_TEST(PropertiesTest, properties_set_amount_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     Amount amount(0);
     const Amount amount1(1);
 
@@ -494,7 +494,7 @@ GTEST_TEST(PropertiesTest, properties_set_amount_value)
 GTEST_TEST(PropertiesTest, properties_set_binary_data_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const unsigned char data_2_vals[] = {4U, 2U};
     const BinaryData reference_data_2_value{data_2_vals, 2};
@@ -521,7 +521,7 @@ GTEST_TEST(PropertiesTest, properties_set_binary_data_value)
 GTEST_TEST(PropertiesTest, properties_set_private_key_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     PrivateKeyPtr priv_key_property;
 
     AccountPtr account1;
@@ -544,7 +544,7 @@ GTEST_TEST(PropertiesTest, properties_set_private_key_value)
 GTEST_TEST(PropertiesTest, properties_reset_value)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_property = 1;
     properties.bind_property("v", &int_property);
 
@@ -556,7 +556,7 @@ GTEST_TEST(PropertiesTest, properties_reset_value)
 GTEST_TEST(PropertiesTest, properties_validate)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     int32_t int_property = 1;
 
     error.reset(properties_validate(&properties));
@@ -576,7 +576,7 @@ GTEST_TEST(PropertiesTest, properties_validate)
 GTEST_TEST(PropertiesTest, properties_get_specification)
 {
     ErrorPtr error;
-    Properties properties("");
+    Properties properties("TEST");
     ConstCharPtr specification;
     int int_property = 3;
 

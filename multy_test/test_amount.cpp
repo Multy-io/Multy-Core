@@ -7,12 +7,14 @@
 #include "multy_transaction/internal/amount.h"
 #include "multy_transaction/amount.h"
 
+#include "multy_transaction/internal/u_ptr.h"
+
 #include "multy_core/internal/u_ptr.h"
 #include "multy_core/internal/utility.h"
 
-#include "multy_transaction/internal/u_ptr.h"
 
 #include "multy_test/value_printers.h"
+#include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
 
@@ -23,6 +25,7 @@ namespace
 
 using namespace wallet_core::internal;
 using namespace multy_transaction::internal;
+using namespace test_utility;
 
 enum ArithmeticOperation {
     ADD,
@@ -270,4 +273,72 @@ GTEST_TEST(AmountTest, free_amount)
     make_amount("1", &amount);
 
     EXPECT_NO_THROW(free_amount(amount));
+}
+
+struct BinaryExportTestCase
+{
+    const char* amount_string;
+    const bytes expected_data;
+};
+
+const BinaryExportTestCase SIMPLE_CASES[] =
+{
+    {
+        "0",
+        {}
+    },
+    {
+        "21001",
+        {0x52, 0x09}
+    },
+    {
+        "11259375",
+        {0xab, 0xcd, 0xef}
+    },
+    {
+        "81985529216486895",
+        {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}
+    },
+    {
+        "255",
+        {0xff}
+    },
+    {
+        "65535",
+        {0xff, 0xff}
+    },
+    {
+        "16777215",
+        {0xff, 0xff, 0xff}
+    },
+    {
+        "4294967295",
+        {0xff, 0xff, 0xff, 0xff}
+    },
+    {
+        "1606938044258990275541962092341162602522202993782792835301375",
+        {
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff
+        }
+    }
+};
+
+class AmountExportTestP: public ::testing::TestWithParam<BinaryExportTestCase>
+{};
+
+INSTANTIATE_TEST_CASE_P(Simple, AmountExportTestP,
+        ::testing::ValuesIn(SIMPLE_CASES));
+
+TEST_P(AmountExportTestP, export_as_binary_data)
+{
+    const auto& param = GetParam();
+    const BinaryData expected = to_binary_data(param.expected_data);
+
+    Amount amount(param.amount_string);
+    BinaryDataPtr exported = amount.export_as_binary_data(Amount::EXPORT_BIG_ENDIAN);
+
+    EXPECT_EQ(expected, *exported);
 }

@@ -56,6 +56,17 @@ MULTY_CORE_API struct Error* make_version_string(const char** out_version_string
 /** Frees BinaryData, can take null. **/
 MULTY_CORE_API void free_binarydata(struct BinaryData*);
 
+/** Create new BinaryData with data of given size, data is zeroed. **/
+MULTY_CORE_API struct Error* make_binary_data(
+        size_t size, struct BinaryData** new_binary_data);
+
+MULTY_CORE_API struct Error* make_binary_data_from_bytes(
+        const unsigned char* data, size_t size,
+        struct BinaryData** new_binary_data);
+
+MULTY_CORE_API struct Error* make_binary_data_from_hex(
+        const char* hex_str, struct BinaryData** new_binary_data);
+
 /** Copies BinaryData. **/
 MULTY_CORE_API struct Error* make_binary_data(
         size_t size, struct BinaryData** new_binary_data);

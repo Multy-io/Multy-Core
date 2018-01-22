@@ -7,7 +7,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(WITH_TESTS "Build tests shared library (DLL)" NO)
 set(PATH_TO_JNI_WRAPPER "" CACHE PATH "Path to jni wrapper source file.")
 
-project(multy)
+project(multy C CXX)
 
 add_executable(
     multy
@@ -34,6 +34,7 @@ if (ANDROID)
     set_target_properties(core_jni PROPERTIES
         CXX_STANDARD 11
         LANGUAGE CXX
+        LINKER_LANGUAGE CXX
     )
 endif()
 

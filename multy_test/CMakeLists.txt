@@ -36,4 +36,5 @@ target_link_libraries(
     gtest
     multy_core
     multy_transaction
+    libwally-core
 )

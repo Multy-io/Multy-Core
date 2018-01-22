@@ -51,7 +51,7 @@ public:
     using Predicate = std::function<void(typename PredicateArgTraits<U>::ArgumentType const&)>;
 
 protected:
-    explicit Property(Properties& properties);
+    Property(Properties& properties, Trait trait);
     virtual ~Property();
 
     void throw_exception(std::string message, const CodeLocation& location) const;
@@ -62,6 +62,7 @@ protected:
 
 protected:
     Properties& m_properties;
+    const Trait m_trait;
 };
 
 /* Properties system, allows to bind existing variable to the string name and
@@ -245,10 +246,11 @@ public:
             const std::string& name,
             Trait trait = Property::REQUIRED,
             Predicate<T> predicate = Predicate<T>())
-        : Property(props),
+        : Property(props, trait),
           m_value(std::move(initial_value))
     {
         props.bind_property(name, &m_value, trait, std::move(predicate));
+        // TODO: set value through props.set_value();
     }
 
     // Disallowing copying and moving.

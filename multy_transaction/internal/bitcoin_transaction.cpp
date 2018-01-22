@@ -12,6 +12,7 @@
 #include "multy_core/internal/account.h"
 #include "multy_core/internal/bitcoin_account.h"
 #include "multy_core/internal/exception.h"
+#include "multy_core/internal/exception_stream.h"
 #include "multy_core/internal/key.h"
 #include "multy_core/internal/u_ptr.h"
 #include "multy_core/internal/utility.h"
@@ -34,7 +35,7 @@ using namespace multy_transaction::internal;
 uint32_t bitcoin_traits()
 {
     return 1 << TRANSACTION_REQUIRES_EXPLICIT_SOURCE
-            // || 1 << TRANSACTION_SUPPORTS_MULTIPLE_SOURCES,
+            | 1 << TRANSACTION_SUPPORTS_MULTIPLE_SOURCES
             | 1 << TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS
             | 1 << TRANSACTION_SUPPORTS_FEE;
 }
@@ -361,12 +362,12 @@ struct BitcoinTransactionFee
                 * transaction_size);
         if (leftover < min_fee)
         {
-            THROW_EXCEPTION("Transaction total fee is too low: ")
+            THROW_EXCEPTION("Transaction total fee is too low. ")
                     << leftover.get_value() << " < " << min_fee.get_value();
         }
         if (leftover > max_fee)
         {
-            THROW_EXCEPTION("Transaction total fee is too high: ")
+            THROW_EXCEPTION("Transaction total fee is too high. ")
                     << leftover.get_value() << " > " + max_fee.get_value();
         }
     }

@@ -18,6 +18,7 @@ extern "C" {
 #include "keccak-tiny/keccak-tiny.h"
 #include "libwally-core/src/internal.h"
 } // extern "C"
+#include "secp256k1_recovery.h"
 
 #include "secp256k1/include/secp256k1_recovery.h"
 
@@ -43,7 +44,7 @@ public:
     {
         if (m_data.size() != DATA_SIZE)
         {
-            THROW_EXCEPTION("invalid public key length.");
+            THROW_EXCEPTION("Invalid public key length.");
         }
     }
 
@@ -126,7 +127,7 @@ struct EthereumPrivateKey : public PrivateKey
     {
         std::array<unsigned char, SHA256_LEN> data_hash;
         THROW_IF_WALLY_ERROR(
-                keccak_256(data_hash.data(), data_hash.size(),
+                ::keccak_256(data_hash.data(), data_hash.size(),
                          data.data, data.len),
                 "Failed to hash data.");
 
@@ -149,7 +150,6 @@ struct EthereumPrivateKey : public PrivateKey
                         signature_data.data(), signature_data.size(),
                         reset_sp(result)));
         return result;
-
     }
 
     const KeyData& get_data() const
@@ -166,7 +166,7 @@ EthereumAddressValue make_address(const EthereumPublicKey& key)
     const BinaryData key_data = key.get_content();
     std::array<unsigned char, SHA256_LEN> address_hash;
     THROW_IF_WALLY_ERROR(
-            keccak_256(
+            ::keccak_256(
                     address_hash.data(), address_hash.size(),
                     key_data.data, key_data.len),
             "Failed to compute keccak hash of public key");

@@ -9,6 +9,7 @@
 #include "multy_core/error.h"
 
 #include "multy_core/internal/exception.h"
+#include "multy_core/internal/exception_stream.h"
 
 #include "wally_core.h"
 
@@ -105,12 +106,36 @@ char* copy_string(const char* str)
     char* new_message = static_cast<char*>(wally_ops.malloc_fn(len + 1));
     if (!new_message)
     {
-        THROW_EXCEPTION("Failed to allocate memory.");
+        THROW_EXCEPTION("Failed to allocate memory.")
+                << " requested: " << len + 1;
     }
 
     memcpy(new_message, str, len);
     new_message[len] = '\0';
     return new_message;
+}
+
+BinaryData slice(const BinaryData& data, size_t offset, size_t size)
+{
+    if (!data.data)
+    {
+        THROW_EXCEPTION("Can't slice BinaryData: data is nullptr.");
+    }
+    if (offset > data.len)
+    {
+        THROW_EXCEPTION("Can't slice BinaryData: offset > data length.")
+                << " data length: " << data.len
+                << " offset: " << offset;
+    }
+    if (offset + size > data.len)
+    {
+        THROW_EXCEPTION("Can't slice BinaryData: offset + size > data length.")
+                << " data length: " << data.len
+                << " offset: " << offset
+                << " size: " << size;
+    }
+
+    return BinaryData{data.data + offset, size};
 }
 
 void throw_if_error(Error* error)
@@ -141,16 +166,11 @@ void throw_if_wally_error(int err_code, const char* message, const CodeLocation&
         throw_if_error(internal_make_error(err_code, message, location));
     }
 }
-
 Error* exception_to_error(const CodeLocation& location)
 {
     try
     {
         throw;
-    }
-    catch (const Exception* exception)
-    {
-        return exception->make_error();
     }
     catch (const wallet_core::internal::Exception& exception)
     {
