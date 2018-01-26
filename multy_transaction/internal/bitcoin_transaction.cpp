@@ -542,8 +542,9 @@ size_t BitcoinTransaction::estimate_transaction_size() const
     // Note that this estimation is valid only for non-segwit transactions.
     const size_t sources_count = m_sources.size();
     const size_t destinations_count = get_non_zero_destinations().size();
+    // look function estimate_total_fee
     return static_cast<int64_t>(
-            sources_count * 147 + destinations_count * 34 + 5);
+            sources_count * (147 + 32) + destinations_count * 34 + 10);
 }
 
 Amount BitcoinTransaction::get_total_fee() const
@@ -554,8 +555,10 @@ Amount BitcoinTransaction::get_total_fee() const
 Amount BitcoinTransaction::estimate_total_fee(
         size_t sources_count, size_t destinations_count) const
 {
+    //change size input because public key may be in uncompressed format
+    //compressed and uncompressed format differs in 32 byte
     const int64_t transaction_size
-            = sources_count * 147 + destinations_count * 34 + 10;
+            = sources_count * (147 + 32) + destinations_count * 34 + 10;
     return transaction_size * m_fee->get_amount_per_byte();
 }
 void BitcoinTransaction::update_state()

@@ -233,7 +233,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
 
     const Amount available(Amount(1000) * 1000 * 1000 * 1000 * 1000);
     const Amount dest_amount(Amount(129) * 1000 * 1000);
-    const Amount fee_value(Amount(1) * 1000 * 1000);
+    const Amount fee_per_byte(Amount(1) * 1000 * 1000);
 
     {
         Properties& source = transaction->add_source();
@@ -257,7 +257,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
 
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property("amount_per_byte", fee_value);
+        fee.set_property("amount_per_byte", fee_per_byte);
         //Ridicuosly high fee just to pass the checks.
         fee.set_property("max_amount_per_byte", available);
     }
@@ -268,12 +268,15 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     const BinaryDataPtr serialied = transaction->serialize();
 
     {
-        Amount total_fee = transaction->estimate_total_fee(1,1);
+        //Multy-core don't return excess fee to change addres
+        //This test check what estimated fee falls into between +25% -5% real size
+        Amount estimated_fee = transaction->estimate_total_fee(1,1);
 
-        uint64_t max_total_fee = serialied->len * fee_value.get_value_as_uint64() * 1.05;
-        uint64_t min_total_fee = serialied->len * fee_value.get_value_as_uint64() * 0.95;
-        ASSERT_LE(min_total_fee, total_fee.get_value_as_uint64());
-        ASSERT_GE(max_total_fee, total_fee.get_value_as_uint64());
+        // if we have uncompressed format public key, mistake about +25%
+        uint64_t max_total_fee = serialied->len * fee_per_byte.get_value_as_uint64() * 1.25;
+        uint64_t min_total_fee = serialied->len * fee_per_byte.get_value_as_uint64() * 0.95;
+        EXPECT_LE(min_total_fee, estimated_fee.get_value_as_uint64());
+        EXPECT_GE(max_total_fee, estimated_fee.get_value_as_uint64());
     }
 
     // TODO: should re-signing produce same result ?
