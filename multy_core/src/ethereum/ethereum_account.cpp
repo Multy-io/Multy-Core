@@ -7,15 +7,17 @@
 #include "multy_core/src/ethereum/ethereum_account.h"
 
 #include "multy_core/common.h"
+
+#include "multy_core/src/ec_key_utils.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/hash.h"
 
 extern "C" {
 // TODO: Fix issue with not exported symbols from libwally-core for iOS builds,
 //   and then re-enable using hex-converting functions from CCAN.
 //#include "ccan/str/hex/hex.h"
-#include "keccak-tiny/keccak-tiny.h"
 #include "libwally-core/src/internal.h"
 } // extern "C"
 #include "secp256k1_recovery.h"
@@ -94,28 +96,19 @@ struct EthereumPrivateKey : public PrivateKey
 
     PublicKeyPtr make_public_key() const override
     {
-        unsigned char public_key_data[EC_PUBLIC_KEY_LEN];
-        THROW_IF_WALLY_ERROR(
-                wally_ec_public_key_from_private_key(
-                        m_data.data(), m_data.size(),
-                        public_key_data, sizeof(public_key_data)),
-                "Failed to derive public key from private key");
+        EthereumPublicKey::KeyData key_data(EC_PUBLIC_KEY_UNCOMPRESSED_LEN, 0);
+        BinaryData public_key_data = as_binary_data(key_data);
 
-        EthereumPublicKey::KeyData uncompressed(EC_PUBLIC_KEY_UNCOMPRESSED_LEN, 0);
-        THROW_IF_WALLY_ERROR(
-                wally_ec_public_key_decompress(
-                        public_key_data, sizeof(public_key_data),
-                        uncompressed.data(), uncompressed.size()),
-                "Failed to uncompress public key");
+        ec_private_to_public_key(as_binary_data(m_data),
+                EC_PUBLIC_KEY_UNCOMPRESSED,
+                &public_key_data);
 
-        if (uncompressed[0] != 0x04)
+        if (key_data[0] != 0x04)
         {
             THROW_EXCEPTION("Invalid uncompressed public key prefix.");
         }
-        uncompressed.erase(uncompressed.begin());
-
-        return EthereumPublicKeyPtr(
-                new EthereumPublicKey(std::move(uncompressed)));
+        key_data.erase(key_data.begin());
+        return PublicKeyPtr(new EthereumPublicKey(std::move(key_data)));
     }
 
     PrivateKeyPtr clone() const override
@@ -125,11 +118,7 @@ struct EthereumPrivateKey : public PrivateKey
 
     BinaryDataPtr sign(const BinaryData& data) const override
     {
-        std::array<unsigned char, SHA256_LEN> data_hash;
-        THROW_IF_WALLY_ERROR(
-                ::keccak_256(data_hash.data(), data_hash.size(),
-                         data.data, data.len),
-                "Failed to hash data.");
+        const auto& data_hash = do_hash<KECCAK, 256>(data);
 
         secp256k1_ecdsa_recoverable_signature signature;
         if (!secp256k1_ecdsa_sign_recoverable(secp_ctx(), &signature,
@@ -164,16 +153,11 @@ private:
 EthereumAddressValue make_address(const EthereumPublicKey& key)
 {
     const BinaryData key_data = key.get_content();
-    std::array<unsigned char, SHA256_LEN> address_hash;
-    THROW_IF_WALLY_ERROR(
-            ::keccak_256(
-                    address_hash.data(), address_hash.size(),
-                    key_data.data, key_data.len),
-            "Failed to compute keccak hash of public key");
+    const auto& address_hash = do_hash<KECCAK, 256>(key_data);
 
     EthereumAddressValue result;
     static_assert(
-            address_hash.size() - result.size() == 12,
+            sizeof(address_hash) - result.size() == 12,
             "Invalid EthereumAddressValue size");
 
     // Copy right 20 bytes
@@ -218,7 +202,9 @@ namespace multy_core
 namespace internal
 {
 
-EthereumHDAccount::EthereumHDAccount(BlockchainType blockchain_type, const ExtendedKey& bip44_master_key, uint32_t index)
+EthereumHDAccount::EthereumHDAccount(BlockchainType blockchain_type,
+        const ExtendedKey& bip44_master_key,
+        uint32_t index)
     : HDAccountBase(blockchain_type, bip44_master_key, index)
 {
 }

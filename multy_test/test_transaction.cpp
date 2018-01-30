@@ -175,6 +175,7 @@ GTEST_TEST(TransactionTest, transaction_get_blockchain)
 
     HANDLE_ERROR(transaction_get_blockchain_type(&transaction, &blockchain_type));
 }
+
 GTEST_TEST(TransactionTest, transaction_add_source)
 {
     TestTransaction transaction;

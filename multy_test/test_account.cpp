@@ -30,7 +30,6 @@ using namespace test_utility;
 const char* TEST_ADDRESS = "TEST_ADDRESS";
 const HDPath TEST_PATH = {1, 2, 3};
 const char* TEST_PATH_STRING = "m/1/2/3";
-
 const Blockchain INVALID_BLOCKCHAIN = static_cast<Blockchain>(-1);
 const BlockchainType INVALID_BLOCKCHAIN_TYPE{INVALID_BLOCKCHAIN, BLOCKCHAIN_NET_TYPE_MAINNET};
 
@@ -229,6 +228,18 @@ const BlockchainType SUPPORTED_BLOCKCHAINS[] =
     {
         BLOCKCHAIN_ETHEREUM,
         BLOCKCHAIN_NET_TYPE_MAINNET
+    },
+    {
+        BLOCKCHAIN_ETHEREUM,
+        BLOCKCHAIN_NET_TYPE_TESTNET
+    },
+    {
+        BLOCKCHAIN_GOLOS,
+        BLOCKCHAIN_NET_TYPE_MAINNET
+    },
+    {
+        BLOCKCHAIN_GOLOS,
+        BLOCKCHAIN_NET_TYPE_TESTNET
     }
 };
 
@@ -258,6 +269,7 @@ TEST_P(AccountTestBlockchainSupportP, generic)
 
     {
         BlockchainType actual_blockchain;
+
         error.reset(account_get_blockchain_type(account.get(), &actual_blockchain));
         EXPECT_EQ(nullptr, error);
         EXPECT_EQ(GetParam(), actual_blockchain);
@@ -269,9 +281,17 @@ TEST_P(AccountTestBlockchainSupportP, generic)
         error.reset(
                 account_get_address_string(
                         account.get(), reset_sp(address_str)));
-        EXPECT_EQ(nullptr, error);
-        EXPECT_NE(nullptr, address_str);
-        EXPECT_STRNE("", address_str.get());
+        if (blockchain_can_derive_address_from_private_key(GetParam().blockchain))
+        {
+            EXPECT_EQ(nullptr, error);
+            EXPECT_NE(nullptr, address_str);
+            EXPECT_STRNE("", address_str.get());
+        }
+        else
+        {
+            EXPECT_NE(nullptr, error);
+            EXPECT_EQ(nullptr, address_str);
+        }
     }
 
     {

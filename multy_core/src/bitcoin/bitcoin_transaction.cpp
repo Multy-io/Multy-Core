@@ -14,6 +14,7 @@
 #include "multy_core/src/api/properties_impl.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 #include "multy_core/src/exception.h"
+#include "multy_core/src/hash.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
@@ -111,19 +112,13 @@ public:
 
     BinaryData get_hash() const
     {
-        const BinaryData data = m_stream.get_content();
-
-        THROW_IF_WALLY_ERROR(
-                wally_sha256d(
-                        data.data, data.len, m_hash.data(), m_hash.size()),
-                "Failed to compute SHA256");
-
-        return BinaryData{m_hash.data(), m_hash.size()};
+        m_hash = do_hash<SHA2_DOUBLE, 256>(m_stream.get_content());
+        return as_binary_data(m_hash);
     }
 
 private:
     BitcoinDataStream m_stream;
-    mutable std::array<uint8_t, SHA256_LEN> m_hash;
+    mutable hash<256> m_hash;
 };
 
 // Does no writing, only counting how many bytes would have been written.

@@ -52,6 +52,9 @@ std::ostream& operator<<(std::ostream& ostr, Blockchain blockchain)
         case BLOCKCHAIN_ETHEREUM:
             ostr << "BLOCKCHAIN_ETHEREUM";
             break;
+        case BLOCKCHAIN_GOLOS:
+            ostr << "BLOCKCHAIN_GOLOS";
+            break;
         default:
             ostr << "unknown Blockchain " << static_cast<uint32_t>(blockchain);
             break;
@@ -67,7 +70,7 @@ std::ostream& operator<<(std::ostream& ostr, BlockchainNetType net_type)
     }
     else
     {
-        return ostr << "TestNet" << static_cast<size_t>(net_type);
+        return ostr << "TestNet(" << static_cast<size_t>(net_type) << ")";
     }
 }
 
@@ -134,7 +137,7 @@ void PrintTo(const Account& a, std::ostream* out)
 void PrintTo(const HDAccount& a, std::ostream* out)
 {
     *out << "HDAccount{\n"
-         << "\tblockchain: " << a.get_blockchain_type() << ",\n"
+         << "\tBlockchain: " << a.get_blockchain_type() << ",\n"
          << "\tpath: " << a.get_path() << "\n"
          << "}";
 }

@@ -54,7 +54,6 @@ public:
 
     virtual HDPath get_path() const = 0;
     virtual BlockchainType get_blockchain_type() const = 0;
-
     virtual AccountPtr make_leaf_account(AddressType type, uint32_t index) const = 0;
 
     static const void* get_object_magic();

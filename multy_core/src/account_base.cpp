@@ -86,34 +86,34 @@ BlockchainType AccountBase::get_blockchain_type() const
     return m_blockchain_type;
 }
 
-HDAccountBase::HDAccountBase(BlockchainType blockchain_type,
-        const ExtendedKey& master_key,
+HDAccountBase::HDAccountBase(
+        BlockchainType blockchain_type,
+        const ExtendedKey& bip44_master_key,
         uint32_t index)
     : m_blockchain_type(blockchain_type),
-      m_account_key(),
       m_bip44_path(BIP44_ACCOUNT_PATH_DEPTH)
 {
     // BIP44 derive account key:
     // master key -> blockchain key -> account key.
-    ExtendedKeyPtr purpose_key, chain_key;
-    const uint32_t chain_index = to_chain_code(blockchain_type);
+    ExtendedKeyPtr purpose_key, blockchain_key;
+    const uint32_t blockchain_index = to_chain_code(m_blockchain_type);
     const uint32_t account_index = hardened_index(index);
 
     throw_if_error(
             make_child_key(
-                    &master_key, BIP44_PURPOSE_CHAIN_CODE,
+                    &bip44_master_key, BIP44_PURPOSE_CHAIN_CODE,
                     reset_sp(purpose_key)));
     throw_if_error(
             make_child_key(
-                    purpose_key.get(), chain_index,
-                    reset_sp(chain_key)));
+                    purpose_key.get(), blockchain_index,
+                    reset_sp(blockchain_key)));
     throw_if_error(
             make_child_key(
-                    chain_key.get(), account_index,
+                    blockchain_key.get(), account_index,
                     reset_sp(m_account_key)));
 
     m_bip44_path[BIP44_PURPOSE] = BIP44_PURPOSE_CHAIN_CODE;
-    m_bip44_path[BIP44_COIN_TYPE] = chain_index;
+    m_bip44_path[BIP44_COIN_TYPE] = blockchain_index;
     m_bip44_path[BIP44_ACCOUNT] = account_index;
 }
 
