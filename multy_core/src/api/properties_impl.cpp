@@ -70,10 +70,12 @@ constexpr ValueType deduce_value_type<PrivateKey>()
     return VALUE_TYPE_PRIVATE_KEY;
 }
 
-// Property::ValueType deduce_value_type(const PrivateKey&)
-//{
-//    return Property::VALUE_TYPE_PRIVATE_KEY;
-//}
+template <typename T>
+constexpr ValueType deduce_value_type()
+{
+    // effectively, strip std::unique_ptr<T> to T
+    return deduce_value_type<typename Property::PredicateArgTraits<T>::ArgumentType>();
+}
 
 std::string get_value_type_string(ValueType type)
 {
@@ -125,7 +127,7 @@ struct BinderBase : public Binder
     }
 
     template <typename T>
-    void throw_unexpected_type(const T&) const
+    void throw_unexpected_type(const T*) const
     {
         THROW_PROPERTY_EXCEPTION("Invalid value type \""
                 + ::get_value_type_string(deduce_value_type<T>())
@@ -133,32 +135,53 @@ struct BinderBase : public Binder
                 + ::get_value_type_string(m_type));
     }
 
-    void set_value(const int32_t& value)
+    void set_value(const int32_t& value) override
+    {
+        throw_unexpected_type(&value);
+    }
+
+    void set_value(const BigInt& value) override
+    {
+        throw_unexpected_type(&value);
+    }
+
+    void set_value(const std::string& value) override
+    {
+        throw_unexpected_type(&value);
+    }
+
+    void set_value(const BinaryData& value) override
+    {
+        throw_unexpected_type(&value);
+    }
+
+    void set_value(const PrivateKey& value) override
+    {
+        throw_unexpected_type(&value);
+    }
+
+    void get_value(int32_t* value) const override
+    {
+        throw_unexpected_type(value);
+    }
+    void get_value(BigInt* value) const override
+    {
+        throw_unexpected_type(value);
+    }
+    void get_value(std::string* value) const override
+    {
+        throw_unexpected_type(value);
+    }
+    void get_value(multy_core::internal::BinaryDataPtr* value) const override
+    {
+        throw_unexpected_type(value);
+    }
+    void get_value(multy_core::internal::PrivateKeyPtr* value) const  override
     {
         throw_unexpected_type(value);
     }
 
-    void set_value(const BigInt& value)
-    {
-        throw_unexpected_type(value);
-    }
-
-    void set_value(const std::string& value)
-    {
-        throw_unexpected_type(value);
-    }
-
-    void set_value(const BinaryData& value)
-    {
-        throw_unexpected_type(value);
-    }
-
-    void set_value(const PrivateKey& value)
-    {
-        throw_unexpected_type(value);
-    }
-
-    std::string get_name() const
+    std::string get_name() const override
     {
         return m_name;
     }
@@ -167,9 +190,13 @@ struct BinderBase : public Binder
     {
         return m_type;
     }
-    Property::Trait get_trait() const
+    Property::Trait get_trait() const override
     {
         return m_trait;
+    }
+    void set_trait(Property::Trait new_trait) override
+    {
+        m_trait = new_trait;
     }
 
     std::string get_value_type_string() const
@@ -177,23 +204,23 @@ struct BinderBase : public Binder
         return ::get_value_type_string(m_type);
     }
 
-    std::string get_property_spec() const
+    std::string get_property_spec() const override
     {
         return m_name + " : " + get_value_type_string() + " "
                 + (m_trait == Property::REQUIRED ? "mandatory" : "optional");
     }
 
-    bool is_set() const
+    bool is_set() const override
     {
         return m_is_set;
     }
 
-    const void* get_value() const
+    const void* get_value() const override
     {
         return m_value;
     }
 
-    void handle_exception(const char* action, const CodeLocation& location)
+    void handle_exception(const char* action, const CodeLocation& location) const
     {
         try
         {
@@ -212,14 +239,12 @@ struct BinderBase : public Binder
         }
     }
 
-    virtual void reset_value() = 0;
-
 protected:
     const Properties& m_properties;
     const std::string m_name;
     const void* m_value;
     const ValueType m_type;
-    const Property::Trait m_trait;
+    Property::Trait m_trait;
     bool m_is_set;
 };
 
@@ -243,6 +268,22 @@ template <typename T, typename D>
 void copy_value(const T& from, std::unique_ptr<T, D>* to)
 {
     make_clone(from).swap(*to);
+}
+
+template <typename T>
+const T& to_argument_type(const T& value)
+{
+    return value;
+}
+
+template <typename T, typename D>
+const T& to_argument_type(const std::unique_ptr<T, D>& value)
+{
+    if (!value)
+    {
+        THROW_EXCEPTION("value is nullptr");
+    }
+    return *value;
 }
 
 template <typename T, typename ValuePredicate>
@@ -270,6 +311,11 @@ struct BinderT : public BinderBase
     {
         try
         {
+            if (m_trait == Property::READONLY)
+            {
+                THROW_EXCEPTION("property is read-only");
+            }
+
             if (m_predicate)
             {
                 m_predicate(new_value);
@@ -282,6 +328,22 @@ struct BinderT : public BinderBase
         catch (...)
         {
             handle_exception("set value", MULTY_CODE_LOCATION);
+        }
+    }
+
+    void get_value(T* out_value) const override
+    {
+        try
+        {
+            if (!out_value)
+            {
+                THROW_EXCEPTION("out_value must not be nullptr");
+            }
+            copy_value(to_argument_type(*m_value), out_value);
+        }
+        catch(...)
+        {
+            handle_exception("get value", MULTY_CODE_LOCATION);
         }
     }
 
@@ -301,10 +363,9 @@ struct BinderT : public BinderBase
 
 } // namespace
 
-Property::Property(Properties& properties, const void* value_ptr, Trait trait)
+Property::Property(Properties& properties, const void* value_ptr)
     : m_properties(properties),
-      m_value_ptr(value_ptr),
-      m_trait(trait)
+      m_value_ptr(value_ptr)
 {
 }
 
@@ -322,28 +383,46 @@ void Property::throw_exception(std::string message, const CodeLocation& location
     return get_properties().throw_exception(message, location);
 }
 
-void Property::throw_if_unset(const void* property_var) const
+void Property::throw_if_unset() const
 {
-    if ( m_trait == REQUIRED && !is_set(property_var))
+    if (!is_set())
     {
         const Properties::Binder& b
-                = get_properties().get_property_by_value(property_var);
+                = get_properties().get_property_by_value(m_value_ptr);
+        if (b.get_trait() == Property::REQUIRED)
+        {
         THROW_PROPERTY_EXCEPTION(m_properties.get_name() + " property \""
                 + b.get_name() + "\" is not set.");
+        }
     }
 }
-bool Property::is_set(const void* property_var) const
+bool Property::is_set() const
 {
-    return get_properties().is_set(property_var);
+    return get_properties().is_set(m_value_ptr);
 }
 
-const Properties& Property::get_properties() const
+void Property::set_trait(Trait new_trait)
+{
+    get_properties().get_property_by_value(m_value_ptr).set_trait(new_trait);
+}
+
+Property::Trait Property::get_trait() const
+{
+    return get_properties().get_property_by_value(m_value_ptr).get_trait();
+}
+
+Properties& Property::get_properties()
 {
     if (!m_properties.is_valid())
     {
         THROW_EXCEPTION("Properties object is unavaliable");
     }
     return m_properties;
+}
+
+const Properties& Property::get_properties() const
+{
+    return const_cast<Property*>(this)->get_properties();
 }
 
 Properties::Binder::~Binder()
@@ -361,6 +440,7 @@ Properties::Properties(const std::string& name)
 void Properties::reset_property(const std::string& name)
 {
     get_property(name).reset_value();
+    set_dirty();
 }
 
 std::vector<const Binder*> Properties::get_all_properties() const
@@ -523,7 +603,7 @@ const Binder& Properties::get_property(const std::string& name) const
     return *i->second;
 }
 
-Binder& Properties::get_property_by_value(void* value)
+Binder& Properties::get_property_by_value(const void* value)
 {
     return const_cast<Binder&>(
             const_cast<const Properties*>(this)->get_property_by_value(value));

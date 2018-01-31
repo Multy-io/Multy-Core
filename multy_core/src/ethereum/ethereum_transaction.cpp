@@ -37,7 +37,7 @@ const uint8_t RLP_DATA_IND_LEN_ZERO = RLP_DATA_IMM_LEN_START + RLP_DATA_IMM_LEN_
 const uint8_t RLP_LIST_IMM_LEN_COUNT = 256 - RLP_LIST_START - RLP_MAX_LENGTH_BYTES;
 const uint8_t RLP_LIST_IND_LEN_ZERO = RLP_LIST_START + RLP_LIST_IMM_LEN_COUNT - 1;
 
-const int PRE_EIP155_CHAIN_ID = -4;
+const int32_t PRE_EIP155_CHAIN_ID = -4;
 
 #define LV(x) (#x " : ") << std::hex << static_cast<int>(x)
 

@@ -564,7 +564,7 @@ GTEST_TEST(PropertiesTest, properties_validate)
     EXPECT_EQ(nullptr, error);
 
     properties.bind_property("v", &int_property);
-    properties.set_property("v", 5);
+    properties.set_property_value("v", 5);
 
     error.reset(properties_validate(&properties));
     EXPECT_EQ(nullptr, error);
@@ -582,7 +582,7 @@ GTEST_TEST(PropertiesTest, properties_get_specification)
     int int_property = 3;
 
     properties.bind_property("MANY_LONG_STRING_FOR_CHECKING", &int_property);
-    properties.set_property("MANY_LONG_STRING_FOR_CHECKING", 5);
+    properties.set_property_value("MANY_LONG_STRING_FOR_CHECKING", 5);
 
     error.reset(
             properties_get_specification(&properties, reset_sp(specification)));
@@ -594,13 +594,256 @@ GTEST_TEST(PropertiesTest, properties_get_specification)
 }
 
 
-GTEST_TEST(PropertiesTest, PropertyT)
+template <typename T>
+T get_test_data();
+
+template <>
+int32_t get_test_data<int32_t>()
 {
-    Properties properties("Dynamic properties");
+    return 100;
+}
+
+template <>
+std::string get_test_data<std::string>()
+{
+    return "std::string";
+}
+
+template <>
+BigInt get_test_data<BigInt>()
+{
+    return BigInt(100);
+}
+
+template <>
+BinaryDataPtr get_test_data<BinaryDataPtr>()
+{
+    const char data[] = "BinaryData";
+    BinaryDataPtr new_value;
+    throw_if_error(make_binary_data_from_bytes(reinterpret_cast<const unsigned char*>(data),
+            array_size(data), reset_sp(new_value)));
+    return new_value;
+}
+
+template <>
+PrivateKeyPtr get_test_data<PrivateKeyPtr>()
+{
+    struct TestPrivateKey : public ::PrivateKey
     {
-        PropertyT<int32_t> int_property(properties, "int_prop");
-        properties.set_property("int_prop", -1);
+        std::string to_string() const
+        {
+            return "test_key";
+        }
+
+        multy_core::internal::PublicKeyPtr make_public_key() const
+        {
+            throw std::runtime_error("not implemented");
+        }
+
+        PrivateKeyPtr clone() const
+        {
+            return PrivateKeyPtr(new TestPrivateKey);
+        }
+        BinaryDataPtr sign(const BinaryData& /*data*/) const
+        {
+            throw std::runtime_error("not implemented");
+        }
+    };
+
+    return PrivateKeyPtr(new TestPrivateKey);
+}
+
+template<typename>
+struct is_unique_ptr_helper : public std::false_type
+{};
+
+template<typename T, typename D>
+struct is_unique_ptr_helper<std::unique_ptr<T, D>> : public std::true_type
+{};
+
+template<typename T>
+struct is_unique_ptr : public ::is_unique_ptr_helper<typename std::remove_cv<T>::type>::type
+{};
+
+template <typename T>
+const T& strip_unique_ptr(const T& value)
+{
+    return value;
+}
+
+template <typename T, typename D>
+const T& strip_unique_ptr(const std::unique_ptr<T, D>& value)
+{
+    if (!value)
+    {
+        THROW_EXCEPTION("value is nullptr");
     }
 
-    EXPECT_THROW(properties.set_property("int_prop", -1), Exception);
+    return *value;
 }
+
+template <typename T>
+struct PropertyT_TestP : public ::testing::Test
+{
+    /** It would be a good idea to put all common stuff here, like:
+     *      static T INIT_VALUE = T();
+     *      static const T DATA = get_test_data<T>();
+     *      Properties properties
+     *      const char* property_name = "p";
+     * but for some reason that makes it impossible to refer to above variables in test body without 'this':
+     *      this->NEW_VALUE
+     * which feels clumsy and too verbose.
+     */
+};
+
+TYPED_TEST_CASE_P(PropertyT_TestP);
+
+TYPED_TEST_P(PropertyT_TestP, Properties_SmokeTest)
+{
+    const TypeParam INIT_VALUE = TypeParam();
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const auto& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+
+    TypeParam out;
+    if (is_unique_ptr<TypeParam>::value)
+    {
+        // default value for std::unique_ptr-based values is nullptr, which causes an exception.
+        EXPECT_THROW(properties.get_property_value(property_name, &out), Exception);
+    }
+    else
+    {
+        properties.get_property_value(property_name, &out);
+    }
+    EXPECT_EQ(INIT_VALUE, out);
+
+    properties.set_property_value(property_name, NEW_VALUE);
+    properties.get_property_value(property_name, &out);
+    EXPECT_EQ(NEW_VALUE, strip_unique_ptr(out));
+}
+
+TYPED_TEST_P(PropertyT_TestP, DynamicProperty)
+{
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const auto& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    {
+        // Testing that PropertyT unbinds itself when it gets out of scope.
+        PropertyT<TypeParam> property(properties, property_name);
+        properties.set_property_value(property_name, NEW_VALUE);
+        EXPECT_TRUE(property.is_set());
+        EXPECT_EQ(NEW_VALUE, strip_unique_ptr(*property));
+    }
+
+    // property is unbound now, setting a value throws an exception rather than corrupting some
+    // random piece of memory.
+    EXPECT_THROW(properties.set_property_value(property_name, NEW_VALUE), Exception);
+}
+
+TYPED_TEST_P(PropertyT_TestP, is_dirty)
+{
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const auto& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+
+    // it is dirty initially
+    EXPECT_TRUE(properties.is_dirty());
+
+    EXPECT_FALSE(properties.validate(nullptr));
+    // still dirty since validation failed
+    EXPECT_TRUE(properties.is_dirty());
+
+    properties.set_property_value(property_name, NEW_VALUE);
+    // value was set, but validation wasn't performed - still dirty.
+    EXPECT_TRUE(properties.is_dirty());
+    EXPECT_TRUE(properties.validate(nullptr));
+    // value is set, and validation succeed - not dirty.
+    EXPECT_FALSE(properties.is_dirty());
+
+    properties.set_property_value(property_name, NEW_VALUE);
+    // value was set, dirty again.
+    EXPECT_TRUE(properties.is_dirty());
+}
+
+TYPED_TEST_P(PropertyT_TestP, set_value)
+{
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const auto& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+
+    EXPECT_FALSE(property.is_set());
+    property.set_value(NEW_VALUE);
+
+    EXPECT_TRUE(property.is_set());
+    EXPECT_EQ(NEW_VALUE, strip_unique_ptr(property.get_value()));
+}
+
+TYPED_TEST_P(PropertyT_TestP, get_value)
+{
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const auto& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+
+    EXPECT_FALSE(property.is_set());
+    EXPECT_THROW(property.get_value(), multy_core::internal::Exception);
+
+    properties.set_property_value(property_name, NEW_VALUE);
+    EXPECT_EQ(NEW_VALUE, strip_unique_ptr(property.get_value()));
+}
+
+TYPED_TEST_P(PropertyT_TestP, operator_star)
+{
+    // testing 'operator*' which is shorthand for 'get_value()'
+
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const auto& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+
+    EXPECT_FALSE(property.is_set());
+    EXPECT_THROW(*property, multy_core::internal::Exception);
+
+    properties.set_property_value(property_name, NEW_VALUE);
+    EXPECT_EQ(NEW_VALUE, strip_unique_ptr(*property));
+}
+
+TYPED_TEST_P(PropertyT_TestP, get_default_value)
+{
+    const TypeParam& DATA = get_test_data<TypeParam>();
+    const char* property_name = "p";
+    Properties properties("Test");
+
+    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+
+    EXPECT_FALSE(property.is_set());
+    EXPECT_EQ(DATA, property.get_default_value(DATA));
+    EXPECT_FALSE(property.is_set());
+}
+
+REGISTER_TYPED_TEST_CASE_P(PropertyT_TestP,
+        Properties_SmokeTest,
+        DynamicProperty,
+        is_dirty,
+        set_value,
+        get_value,
+        operator_star,
+        get_default_value);
+
+typedef ::testing::Types<int32_t, std::string, BigInt, BinaryDataPtr, PrivateKeyPtr> PropertyT_Types;
+INSTANTIATE_TYPED_TEST_CASE_P(PropertiesTest, PropertyT_TestP, PropertyT_Types);
