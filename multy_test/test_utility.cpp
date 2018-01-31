@@ -4,7 +4,7 @@
  * See LICENSE for details
  */
 
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/utility.h"
 
 #include "gtest/gtest.h"
 
@@ -12,7 +12,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 
 struct A
 {

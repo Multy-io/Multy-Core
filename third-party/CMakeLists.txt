@@ -12,8 +12,7 @@ add_library(mini-gmp STATIC
     ./mini-gmp/mini-gmp.c
 )
 
-if(DEFINED WITH_TESTS)
-    set(BUILD_SHARED_LIBS YES)
+if(DEFINED MULTY_WITH_TESTS)
     add_subdirectory(googletest)
     set_target_properties(gtest PROPERTIES
         POSITION_INDEPENDENT_CODE ON
@@ -21,4 +20,4 @@ if(DEFINED WITH_TESTS)
     set_target_properties(gmock PROPERTIES
         POSITION_INDEPENDENT_CODE ON
     )
-endif(DEFINED WITH_TESTS)
+endif(DEFINED MULTY_WITH_TESTS)

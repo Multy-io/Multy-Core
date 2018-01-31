@@ -6,8 +6,8 @@
 
 #include "multy_core/sha3.h"
 
-#include "multy_core/internal/u_ptr.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/u_ptr.h"
+#include "multy_core/src/utility.h"
 
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
@@ -21,7 +21,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 
 const size_t SHA3_SIZES[] = {

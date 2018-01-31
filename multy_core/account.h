@@ -84,7 +84,7 @@ MULTY_CORE_API struct Error* make_account(
  * @param key_type - either KEY_TYPE_PUBLIC or KEY_TYPE_PRIVTAE.
  * @param out_key - resulting key, must be freed by caller with free_key().
  */
-MULTY_CORE_API struct Error* get_account_key(
+MULTY_CORE_API struct Error* account_get_key(
         const struct Account* account,
         enum KeyType key_type,
         struct Key** out_key);
@@ -93,7 +93,7 @@ MULTY_CORE_API struct Error* get_account_key(
  * @param account - account.
  * @param out_address - address string, must be feed by caller with free_string().
  */
-MULTY_CORE_API struct Error* get_account_address_string(
+MULTY_CORE_API struct Error* account_get_address_string(
         const struct Account* account,
         const char** out_address);
 
@@ -103,7 +103,7 @@ MULTY_CORE_API struct Error* get_account_address_string(
  * @param account - account.
  * @param out_address_path - HD path string, must be feed by caller with free_string().
  */
-MULTY_CORE_API struct Error* get_account_address_path(
+MULTY_CORE_API struct Error* account_get_address_path(
         const struct Account* account,
         const char** out_address_path);
 
@@ -111,12 +111,12 @@ MULTY_CORE_API struct Error* get_account_address_path(
  * @param account - account.
  * @param out_currency - where to store the currency value.
  */
-MULTY_CORE_API struct Error* get_account_currency(
+MULTY_CORE_API struct Error* account_get_currency(
         const struct Account* account,
         enum Currency* out_currency);
 
 /** Frees HDAccount instance, can accept nullptr. **/
-MULTY_CORE_API void free_hdaccount(struct HDAccount*);
+MULTY_CORE_API void free_hd_account(struct HDAccount*);
 
 /** Frees Account instance, can accept nullptr. **/
 MULTY_CORE_API void free_account(struct Account*);

@@ -4,16 +4,17 @@
  * See LICENSE for details
  */
 
-#include "multy_transaction/internal/amount.h"
-#include "multy_transaction/internal/properties.h"
-#include "multy_transaction/properties.h"
+#include "multy_core/src/api/properties_impl.h"
+#include "multy_core/properties.h"
 
 #include "multy_core/common.h"
 #include "multy_core/error.h"
-#include "multy_core/internal/account.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/internal/u_ptr.h"
-#include "multy_core/internal/utility.h"
+#include "multy_core/src/api/account_impl.h"
+#include "multy_core/src/api/big_int_impl.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/exception.h"
+#include "multy_core/src/u_ptr.h"
+#include "multy_core/src/utility.h"
 
 #include "multy_test/utility.h"
 
@@ -24,7 +25,7 @@
 struct BinaryData;
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 using namespace test_utility;
 }
 
@@ -84,28 +85,28 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_string_value)
     EXPECT_STREQ("2", value_property.c_str());
 }
 
-GTEST_TEST(PropertiesTestInvalidArgs, properties_set_amount_value)
+GTEST_TEST(PropertiesTestInvalidArgs, properties_set_big_int_value)
 {
     ErrorPtr error;
     Properties properties("TEST");
-    Amount amount_property(0);
-    const Amount invalid_amount(1);
+    BigInt amount_property(0);
+    const BigInt invalid_amount(1);
 
-    error.reset(properties_set_amount_value(&properties, "v", &invalid_amount));
+    error.reset(properties_set_big_int_value(&properties, "v", &invalid_amount));
     EXPECT_NE(nullptr, error);
 
     properties.bind_property("v", &amount_property);
 
-    error.reset(properties_set_amount_value(&properties, "", &invalid_amount));
+    error.reset(properties_set_big_int_value(&properties, "", &invalid_amount));
     EXPECT_NE(nullptr, error);
     EXPECT_STREQ("0", amount_property.get_value().c_str());
 
     error.reset(
-            properties_set_amount_value(&properties, nullptr, &invalid_amount));
+            properties_set_big_int_value(&properties, nullptr, &invalid_amount));
     EXPECT_NE(nullptr, error);
     EXPECT_STREQ("0", amount_property.get_value().c_str());
 
-    error.reset(properties_set_amount_value(nullptr, "v", &invalid_amount));
+    error.reset(properties_set_big_int_value(nullptr, "v", &invalid_amount));
     EXPECT_NE(nullptr, error);
     EXPECT_STREQ("0", amount_property.get_value().c_str());
 }
@@ -247,7 +248,7 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
     Properties properties("TEST");
     int32_t int_value = 1;
     const std::string str = "0";
-    const Amount amount(0);
+    const BigInt amount(0);
 
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const BinaryDataPtr binaty_data_4_property(
@@ -268,7 +269,7 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(1, int_value);
 
-    error.reset(properties_set_amount_value(&properties, "v", &amount));
+    error.reset(properties_set_big_int_value(&properties, "v", &amount));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(1, int_value);
 
@@ -291,7 +292,7 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
     Properties properties("TEST");
     const int32_t int_value = 1;
     std::string str = "0";
-    const Amount amount(0);
+    const BigInt amount(0);
 
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const BinaryDataPtr binaty_data_4_property(
@@ -312,7 +313,7 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
     EXPECT_NE(nullptr, error);
     EXPECT_EQ("0", str);
 
-    error.reset(properties_set_amount_value(&properties, "v", &amount));
+    error.reset(properties_set_big_int_value(&properties, "v", &amount));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ("0", str);
 
@@ -335,7 +336,7 @@ GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
     Properties properties("TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
-    Amount amount(2);
+    BigInt amount(2);
 
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const BinaryDataPtr binaty_data_4_property(
@@ -379,7 +380,7 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
     Properties properties("TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
-    const Amount amount(2);
+    const BigInt amount(2);
 
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const BinaryData reference_value{data_4_vals, 4};
@@ -405,7 +406,7 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(reference_value, *binaty_data_4_property);
 
-    error.reset(properties_set_amount_value(&properties, "v", &amount));
+    error.reset(properties_set_big_int_value(&properties, "v", &amount));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(reference_value, *binaty_data_4_property);
 
@@ -422,7 +423,7 @@ GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
     Properties properties("TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
-    const Amount amount(2);
+    const BigInt amount(2);
 
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const BinaryDataPtr binaty_data_4_property(
@@ -440,7 +441,7 @@ GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, priv_key_property);
 
-    error.reset(properties_set_amount_value(&properties, "v", &amount));
+    error.reset(properties_set_big_int_value(&properties, "v", &amount));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, priv_key_property);
 
@@ -477,16 +478,16 @@ GTEST_TEST(PropertiesTest, properties_set_string_value)
     EXPECT_STREQ("42", str.c_str());
 }
 
-GTEST_TEST(PropertiesTest, properties_set_amount_value)
+GTEST_TEST(PropertiesTest, properties_set_big_int_value)
 {
     ErrorPtr error;
     Properties properties("TEST");
-    Amount amount(0);
-    const Amount amount1(1);
+    BigInt amount(0);
+    const BigInt amount1(1);
 
     properties.bind_property("v", &amount);
 
-    error.reset(properties_set_amount_value(&properties, "v", &amount1));
+    error.reset(properties_set_big_int_value(&properties, "v", &amount1));
     EXPECT_EQ(nullptr, error);
     EXPECT_STREQ("1", amount.get_value().c_str());
 }
@@ -590,4 +591,16 @@ GTEST_TEST(PropertiesTest, properties_get_specification)
     EXPECT_NE(
             nullptr,
             strstr(specification.get(), "MANY_LONG_STRING_FOR_CHECKING"));
+}
+
+
+GTEST_TEST(PropertiesTest, PropertyT)
+{
+    Properties properties("Dynamic properties");
+    {
+        PropertyT<int32_t> int_property(properties, "int_prop");
+        properties.set_property("int_prop", -1);
+    }
+
+    EXPECT_THROW(properties.set_property("int_prop", -1), Exception);
 }

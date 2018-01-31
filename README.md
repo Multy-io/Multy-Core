@@ -1,12 +1,12 @@
 # Multy-Core
-Coming soon..
+Cross-platform mobile-first library for HD wallets and creating raw transactions of Bitcoin and Ethereum (and many more to come).
 
+# How to build for iOS:
+```
+$ cmake ../Multy-Core  -GXcode -DCMAKE_TOOLCHAIN_FILE=../Multy-Core/tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=9.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DMULTY_MULTY_WITH_TESTS=1
+$ cmake --build . # or `open ./multy.xcodeproj` and do a build with Xcode
+```
 
-# For run on iOS:
-"""
-$ cmake ../Multy-Core  -GXcode -DCMAKE_TOOLCHAIN_FILE=../Multy-Core/tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=10.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DWITH_TESTS=1
-"""
-# For make on Android:
-add to gradle file:
-1) arguments "-DPATH_TO_JNI_WRAPPER=/Users/pavel/AndroidStudioProjects/Multi/app/src/main/cpp/scratch.cpp"
-2) path "/Users/pavel/Documents/project/multy/MUL_fix_android/Multy-Core/CMakeLists.txt"
+# How to build for Android:
+Link the root CMakeLists.txt to your gradle file and set arguments to:
+"-DMULTY_ANDROID_PATH_TO_JNI_WRAPPER=/Users/pavel/AndroidStudioProjects/Multi/app/src/main/cpp/scratch.cpp"

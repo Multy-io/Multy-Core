@@ -6,10 +6,10 @@
 
 #include "multy_core/account.h"
 
-#include "multy_core/internal/account.h"
-#include "multy_core/internal/utility.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/internal/sha3.h"
+#include "multy_core/src/api/account_impl.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/api/sha3_impl.h"
+#include "multy_core/src/utility.h"
 
 #include "multy_test/serialized_keys_test_base.h"
 #include "multy_test/utility.h"
@@ -18,7 +18,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 
 SerializedKeyTestCase TEST_CASES[] = {
     {

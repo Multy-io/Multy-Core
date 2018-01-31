@@ -12,18 +12,18 @@
 #include "multy_core/common.h"
 #include "multy_core/error.h"
 
-#include "multy_core/internal/account_base.h"
-#include "multy_core/internal/key.h"
-#include "multy_core/internal/utility.h"
-#include "multy_transaction/internal/amount.h"
-#include "multy_transaction/internal/transaction.h"
+#include "multy_core/src/account_base.h"
+#include "multy_core/src/api/big_int_impl.h"
+#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/api/transaction_impl.h"
+#include "multy_core/src/utility.h"
 
 #include "wally_elements.h"
 
 namespace
 {
 using namespace test_utility;
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 
 std::ostream& operator<<(std::ostream& ostr, HDPath const& path)
 {
@@ -147,7 +147,7 @@ void PrintTo(const Transaction& t, std::ostream* out)
     *out << "Transaction {" << t.get_currency() << "}";
 }
 
-void PrintTo(const Amount& a, std::ostream* out)
+void PrintTo(const BigInt& a, std::ostream* out)
 {
-    *out << "Amount {" << a.get_value() << "}";
+    *out << "BigInt {" << a.get_value() << "}";
 }

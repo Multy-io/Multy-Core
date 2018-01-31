@@ -7,7 +7,7 @@
 #include "multy_test/utility.h"
 
 #include "multy_core/common.h"
-#include "multy_core/internal/key.h"
+#include "multy_core/src/api/key_impl.h"
 #include "wally_core.h"
 
 #include <exception>
@@ -17,7 +17,7 @@
 
 namespace
 {
-using namespace wallet_core::internal;
+using namespace multy_core::internal;
 
 size_t dummy_fill_entropy(void*, size_t size, void* dest)
 {
