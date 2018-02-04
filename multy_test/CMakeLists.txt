@@ -1,3 +1,11 @@
+
+if (MULTY_MORE_WARNINGS)
+    # Set of warnings is maller than for multy_core to make life easier.
+    add_definitions(
+        -Wall -Wunused -Wfloat-equal -Wwrite-strings
+    )
+endif()
+
 # Explicitly building multy_test as shared library, otherwise test cases would be thrown away by
 # linker as symbols with internal linkage with is never referenced.
 # That means that test cases can't be discovered by gtest runtime and hence not run.

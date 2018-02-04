@@ -19,7 +19,7 @@ Error* properties_set_int32_value(
     ARG_CHECK(name);
     try
     {
-        properties->set_property(name, value);
+        properties->set_property_value(name, value);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
@@ -34,7 +34,7 @@ Error* properties_set_string_value(
     ARG_CHECK(value);
     try
     {
-        properties->set_property(name, value);
+        properties->set_property_value(name, value);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
@@ -49,7 +49,7 @@ Error* properties_set_big_int_value(
     ARG_CHECK(value);
     try
     {
-        properties->set_property(name, *value);
+        properties->set_property_value(name, *value);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
@@ -64,7 +64,7 @@ Error* properties_set_binary_data_value(
     ARG_CHECK(value);
     try
     {
-        properties->set_property(name, *value);
+        properties->set_property_value(name, *value);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
@@ -79,7 +79,7 @@ Error* properties_set_private_key_value(
     ARG_CHECK(value);
     try
     {
-        properties->set_property(name, *value);
+        properties->set_property_value(name, *value);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 

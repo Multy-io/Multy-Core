@@ -126,6 +126,25 @@ private:
     mutable std::array<uint8_t, SHA256_LEN> m_hash;
 };
 
+// Does no writing, only counting how many bytes would have been written.
+class BitcoinBytesCountStream : public BitcoinStream
+{
+public:
+    BitcoinStream& write_data(const uint8_t* /*data*/, uint32_t len)
+    {
+        bytes_count += len;
+        return *this;
+    }
+
+    size_t get_bytes_count() const
+    {
+        return bytes_count;
+    }
+
+private:
+    size_t bytes_count = 0;
+};
+
 void write_compact_size(uint64_t size, BitcoinStream* stream);
 
 template <typename T>
@@ -278,6 +297,14 @@ public:
                  Property::REQUIRED,
                  verify_non_negative_amount),
           address(properties, "address", Property::REQUIRED),
+          is_change(false, properties, "is_change", Property::OPTIONAL,
+                  [this](int32_t new_value) {
+                      if (new_value < 0)
+                      {
+                          THROW_EXCEPTION("is_change can't be negative");
+                      }
+                      this->on_change_set(new_value);
+                  }),
           sig_script()
     {
     }
@@ -308,6 +335,12 @@ public:
         sig_script = make_clone(sig_stream.get_content());
     }
 
+    void on_change_set(bool new_value)
+    {
+        // amount is optional for change-address destination.
+        amount.set_trait(new_value ? Property::READONLY : Property::REQUIRED);
+    }
+
     friend BitcoinStream& operator<<(
             BitcoinStream& stream,
             const BitcoinTransactionDestination& destination)
@@ -330,6 +363,7 @@ public:
 
     PropertyT<BigInt> amount;
     PropertyT<std::string> address;
+    PropertyT<int32_t> is_change;
 
     BinaryDataPtr sig_script;
 };
@@ -535,13 +569,13 @@ bool BitcoinTransaction::is_segwit() const
                        });
 }
 
-BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations()
-        const
+BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations() const
 {
+    // TODO: include also change destination and payload-only destination.
     Destinations result;
     for (const auto& dest : m_destinations)
     {
-        if (*dest->amount > BigInt(0))
+        if (*dest->amount > BigInt(0) || *dest->is_change)
         {
             result.push_back(dest.get());
         }
@@ -618,8 +652,6 @@ void BitcoinTransaction::verify() const
                 "inputs")
                 << " : available - spent = "<< diff.get_value();
     }
-
-    m_fee->validate_fee(diff, estimate_transaction_size());
 }
 
 
@@ -630,9 +662,39 @@ void BitcoinTransaction::update_state()
         s->update();
     }
 
+    size_t change_destinations_count = 0;
+    BitcoinTransactionDestination* change_destination = nullptr;
     for (const auto& d : m_destinations)
     {
         d->update();
+        if (*d->is_change)
+        {
+            change_destination = d.get();
+            ++change_destinations_count;
+        }
+    }
+    if (change_destinations_count > 1)
+    {
+        THROW_EXCEPTION("Transaction should have only one change address.")
+                << " Currenctly there are: " << change_destinations_count;
+    }
+
+    // In order to compute transaction total cost we'll have to serialize tx.
+    if (change_destination)
+    {
+        sign();
+        BitcoinBytesCountStream counter_stream;
+        serialize_to_stream(&counter_stream);
+        const uint64_t tx_size = counter_stream.get_bytes_count();
+
+        const BigInt tx_cost = tx_size * *m_fee->amount_per_byte;
+        const BigInt current_fee = calculate_diff();
+        const BigInt remainder = current_fee - tx_cost;
+        if (remainder > 0)
+        {
+            // not setting value with set_value(), since that would fail for read-only property.
+            change_destination->amount.get_value() += remainder;
+        }
     }
 
     m_fee->validate_fee(calculate_diff(), estimate_transaction_size());

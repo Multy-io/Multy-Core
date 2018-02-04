@@ -34,6 +34,7 @@ public:
     {
         OPTIONAL,
         REQUIRED,
+        READONLY
     };
 
     template <typename T>
@@ -51,6 +52,11 @@ public:
     template <typename U>
     using Predicate = std::function<void(typename PredicateArgTraits<U>::ArgumentType const&)>;
 
+    bool is_set() const;
+
+    void set_trait(Trait new_trait);
+    Trait get_trait() const;
+
 protected:
     // Disallowing copying and moving.
     // Moving is dangerous since in Properties we bind to a specific variable address.
@@ -60,24 +66,23 @@ protected:
     Property& operator=(const Property&&) = delete;
 
 protected:
-    explicit Property(Properties& properties, const void* value_ptr, Trait trait);
+    explicit Property(Properties& properties, const void* value_ptr);
     virtual ~Property();
 
     void throw_exception(std::string message, const CodeLocation& location) const;
 
     // throws exception if value is unset.
-    void throw_if_unset(const void*) const;
-    bool is_set(const void*) const;
+    void throw_if_unset() const;
 
+    Properties& get_properties();
     const Properties& get_properties() const;
 
 protected:
     Properties& m_properties;
     const void* m_value_ptr;
-    const Trait m_trait;
 };
 
-/* Properties system, allows to bind existing variable to the string name and
+/** Properties system, allows to bind existing variable to the string name and
  * set it's value in type-safe manner via API.
  */
 // TODO: split into PropertiesClient (no binding\unbinding) and Properties (as
@@ -95,10 +100,19 @@ public:
         virtual void set_value(const std::string& /*value*/) = 0;
         virtual void set_value(const BinaryData& /*value*/) = 0;
         virtual void set_value(const PrivateKey& /*value*/) = 0;
+
+        virtual void get_value(int32_t* /*value*/) const = 0;
+        virtual void get_value(BigInt* /*value*/) const = 0;
+        virtual void get_value(std::string* /*value*/) const = 0;
+        virtual void get_value(multy_core::internal::BinaryDataPtr* /*value*/) const = 0;
+        virtual void get_value(multy_core::internal::PrivateKeyPtr* /*value*/) const = 0;
+
         virtual void reset_value() = 0;
 
         virtual std::string get_property_spec() const = 0;
         virtual Property::Trait get_trait() const = 0;
+        virtual void set_trait(Property::Trait) = 0;
+
         virtual bool is_set() const = 0;
         virtual const void* get_value() const = 0;
         virtual std::string get_name() const = 0;
@@ -118,9 +132,16 @@ public:
      *         - value copying routine throws an exception.
      */
     template <typename T>
-    void set_property(const std::string& name, const T& value)
+    void set_property_value(const std::string& name, const T& value)
     {
         get_property(name).set_value(value);
+        set_dirty();
+    }
+
+    template <typename T>
+    void get_property_value(const std::string& name, T* out_value) const
+    {
+        get_property(name).get_value(out_value);
     }
 
     void reset_property(const std::string& name);
@@ -131,6 +152,7 @@ public:
      * @param unset_properties_names - optional, names of required properties that
      * was not set.
      * @return true if all required properties was set, false otherwise.
+     * side-effect: on success causes is_dirty() to return false until any property is modified or reset.
      */
     bool validate(std::vector<std::string>* unset_properties_names) const;
 
@@ -213,7 +235,7 @@ public:
     Binder& get_property(const std::string& name);
     const Binder& get_property(const std::string& name) const;
 
-    Binder& get_property_by_value(void*);
+    Binder& get_property_by_value(const void*);
     const Binder& get_property_by_value(const void*) const;
 
     /** Get all properties.
@@ -265,7 +287,7 @@ public:
             const std::string& name,
             Trait trait = Property::REQUIRED,
             Predicate<T> predicate = Predicate<T>())
-        : Property(props, &m_value, trait),
+        : Property(props, &m_value),
           m_value(std::move(initial_value))
     {
         props.bind_property(name, &m_value, trait, std::move(predicate));
@@ -294,14 +316,19 @@ public:
 
     const T& get_value() const
     {
-        throw_if_unset(&m_value);
+        throw_if_unset();
         return m_value;
     }
 
     T& get_value()
     {
-        throw_if_unset(&m_value);
+        throw_if_unset();
         return m_value;
+    }
+
+    void set_value(const typename PredicateArgTraits<T>::ArgumentType& new_value)
+    {
+        m_properties.get_property_by_value(&m_value).set_value(new_value);
     }
 
     const T& get_default_value(const T& default_value) const
@@ -311,11 +338,6 @@ public:
             return default_value;
         }
         return m_value;
-    }
-
-    bool is_set() const
-    {
-        return Property::is_set(&m_value);
     }
 
 private:

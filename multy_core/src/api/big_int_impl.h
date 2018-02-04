@@ -50,6 +50,9 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     // Returns value as uint64_t, throws exception if value is too big.
     uint64_t get_value_as_uint64() const;
 
+    template <typename T>
+    T get() const;
+
     size_t get_exported_size_in_bytes() const;
 
     typedef multy_core::internal::BinaryDataPtr BinaryDataPtr;
@@ -90,6 +93,24 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
 private:
     mpz_t m_value;
 };
+
+template <>
+inline uint64_t BigInt::get<uint64_t>() const
+{
+    return get_value_as_uint64();
+}
+
+template <>
+inline int64_t BigInt::get<int64_t>() const
+{
+    return get_value_as_int64();
+}
+
+template <>
+inline std::string BigInt::get<std::string>() const
+{
+    return get_value();
+}
 
 // TODO: Those perform not-so-obvious conversion to BigInt, get rid of it.
 #define MULTY_BIG_INT_DEFINE_OP(op)                                                   \

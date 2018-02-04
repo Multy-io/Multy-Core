@@ -118,26 +118,26 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
 
     {
         Properties& properties = transaction->get_transaction_properties();
-        properties.set_property("nonce", BigInt("0"));
-        properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
+        properties.set_property_value("nonce", BigInt("0"));
+        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
     {
         Properties& source = transaction->add_source();
-        source.set_property("amount", balance);
+        source.set_property_value("amount", balance);
     }
 
     {
         const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property("address", to_binary_data(address));
-        destination.set_property("amount", value);
+        destination.set_property_value("address", to_binary_data(address));
+        destination.set_property_value("amount", value);
     }
 
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property("gas_price", gas_price);
-        fee.set_property("gas_limit", gas_limit);
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
     }
     BinaryDataPtr serialied = transaction->serialize();  
     ASSERT_EQ(to_binary_data(from_hex(
@@ -166,26 +166,26 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
 
     {
         Properties& properties = transaction->get_transaction_properties();
-        properties.set_property("nonce", BigInt("4"));
-        properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
+        properties.set_property_value("nonce", BigInt("4"));
+        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
     {
         Properties& source = transaction->add_source();
-        source.set_property("amount", balance);
+        source.set_property_value("amount", balance);
     }
 
     {
         const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property("address", to_binary_data(address));
-        destination.set_property("amount", value);
+        destination.set_property_value("address", to_binary_data(address));
+        destination.set_property_value("amount", value);
     }
 
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property("gas_price", gas_price);
-        fee.set_property("gas_limit", gas_limit);
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
     }
 
     BigInt estimated_fee = transaction->estimate_total_fee(1, 1);
@@ -222,27 +222,27 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     {
         const bytes payload = from_hex("ffff");
         Properties& properties = transaction->get_transaction_properties();
-        properties.set_property("nonce", BigInt("3"));
-        properties.set_property("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
-        properties.set_property("payload", to_binary_data(payload));
+        properties.set_property_value("nonce", BigInt("3"));
+        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
+        properties.set_property_value("payload", to_binary_data(payload));
     }
 
     {
         Properties& source = transaction->add_source();
-        source.set_property("amount", balance);
+        source.set_property_value("amount", balance);
     }
 
     {
         const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property("address", to_binary_data(address));
-        destination.set_property("amount", value);
+        destination.set_property_value("address", to_binary_data(address));
+        destination.set_property_value("amount", value);
     }
 
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property("gas_price", gas_price);
-        fee.set_property("gas_limit", gas_limit);
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
     }
 
     BigInt estimated_fee = transaction->estimate_total_fee(1, 1);

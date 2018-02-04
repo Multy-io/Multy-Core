@@ -37,6 +37,12 @@ void PrintTo(const AddressType& e, std::ostream* out);
 void PrintTo(const Transaction& e, std::ostream* out);
 void PrintTo(const BigInt& a, std::ostream* out);
 
+inline std::ostream& operator<<(std::ostream& out, const BigInt& value)
+{
+    PrintTo(value, &out);
+    return out;
+}
+
 template <typename T, typename D>
 inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)
 {
