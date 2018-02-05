@@ -23,6 +23,30 @@ namespace
 using namespace multy_core::internal;
 using namespace test_utility;
 
+const char* TEST_CASES_ADDRESS[] = {
+    "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwU",
+    "1fjRrB4XXJWeiw1686zCKYGSNjFqLchYQ",
+    "14kHzG9194ojtiXFdbcdTkUCUsFbEfu5MW",
+    "15XSfkydZEYkWyQGSUp9gGrC1dTi6wM2Ei",
+    "15prjQSoMX5cCKhxSAgcdz47bZRN2ge2th",
+    "18NpPnJfTaDyAPaz36m3TUHcT77dGHRnoK",
+    "19cmiDmj4FwJVvcfDZXhC8kYeJLZytisZ8",
+    "1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ",
+    "1M9TbQnXzESQZjR1J3pMooQUpHEqUnrKZh",
+    "1Mh7iAQstKFJDePMJ5MG1C1ztsnmuLV5Y6",
+    "1Mu8765kCAuP5NaoKZUMgBieTT7KqcUBbZ",
+    "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ",
+    "12T6zBkXZT5Tyg1W7ssXL27MLoE3c8NmwX",
+    "3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX",
+    "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+    "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM",
+    "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
+    "mk6a6qeXNXuQDpA4DPxuouTJJTeFYJAkep",
+    "n2Mm3o7uQ9QibAnMPi3rjoXAjkVXikyRpj",
+    "n4jX2S4iL9eNknDL3ELCTZtupqxswDxK9x",
+    "n1ZE4fDzH5usehyo52XUGsz3DjK6YBZPue"
+};
+
 SerializedKeyTestCase TEST_CASES[] = {
         {
             "L5GRrPvFZswYD74UdHWsg1yVbZqvMDe9jj6frutVx8Y6Y2mgWtEk",
@@ -100,6 +124,14 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Combine(
                 ::testing::Values(CURRENCY_BITCOIN),
                 ::testing::ValuesIn(TEST_CASES)));
+
+INSTANTIATE_TEST_CASE_P(
+        Bitcoin,
+        CheckAddressTestP,
+        ::testing::Combine(
+            ::testing::Values(CURRENCY_BITCOIN),
+            ::testing::ValuesIn(TEST_CASES_ADDRESS)));
+
 
 struct SignTestCase
 {

@@ -115,6 +115,15 @@ MULTY_CORE_API struct Error* account_get_currency(
         const struct Account* account,
         enum Currency* out_currency);
 
+/** Validate an address for given blockchain
+ *  @param address - address
+ *  @param currency - currency to use address for.
+ *  @return null ptr if address is valid, Error if it is not.
+ */
+MULTY_CORE_API struct Error* validate_address(
+        enum Currency currency,
+        const char* address);
+
 /** Frees HDAccount instance, can accept nullptr. **/
 MULTY_CORE_API void free_hd_account(struct HDAccount*);
 

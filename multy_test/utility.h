@@ -18,14 +18,14 @@
 #define HANDLE_ERROR(statement)                                                \
     do                                                                         \
     {                                                                          \
-        multy_core::internal::ErrorPtr error(statement);                      \
+        multy_core::internal::ErrorPtr error(statement);                       \
         ASSERT_EQ(nullptr, error);                                             \
     } while (0)
 
 #define EXPECT_ERROR(statement)                                                \
     do                                                                         \
     {                                                                          \
-        multy_core::internal::ErrorPtr error(statement);                      \
+        multy_core::internal::ErrorPtr error(statement);                       \
         EXPECT_NE(nullptr, error);                                             \
     } while (0)
 
