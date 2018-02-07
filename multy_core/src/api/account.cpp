@@ -11,9 +11,10 @@
 #include "multy_core/key.h"
 
 #include "multy_core/src/account_base.h"
+#include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 #include "multy_core/src/ethereum/ethereum_account.h"
-#include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/exception.h"
 #include "multy_core/src/utility.h"
 
 #include <memory>
@@ -197,6 +198,41 @@ Error* account_get_currency(const Account* account, Currency* out_currency)
 
     return nullptr;
 }
+
+struct Error* validate_address(enum Currency currency, const char* address)
+{
+    ARG_CHECK(address);
+    ARG_CHECK(currency == CURRENCY_BITCOIN || currency == CURRENCY_ETHEREUM);
+
+    try
+    {
+        switch (currency)
+        {
+            case CURRENCY_BITCOIN:
+            {
+                BitcoinAddressType address_type;
+                BitcoinNetType net_type;
+                parse_bitcoin_address(address, &net_type, &address_type);
+                if (address_type != BITCOIN_ADDRESS_P2PKH)
+                {
+                    THROW_EXCEPTION("BTC: Only P2PKH addresses are supported for now.");
+                }
+                break;
+            }
+            case CURRENCY_ETHEREUM:
+            {
+                THROW_EXCEPTION("ETH addresses are not supported yet.");
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
+
 
 void free_hd_account(HDAccount* account)
 {

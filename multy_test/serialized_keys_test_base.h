@@ -27,6 +27,10 @@ class SerializedKeyTestP : public ::testing::TestWithParam<
 {
 };
 
+class CheckAddressTestP : public ::testing::TestWithParam<
+        ::testing::tuple<Currency, const char*>>
+{
+};
 
 
 #endif // MULTY_TEST_SERIALIZED_KEYS_TEST_BASE_H

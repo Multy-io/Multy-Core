@@ -315,19 +315,15 @@ public:
         sig_stream << OpCode(0x76); // OP_DUP
         sig_stream << OpCode(0xA9); // OP_HASH160
 
-        size_t binary_size = address->length();
-        std::vector<uint8_t> decoded(binary_size, 0);
-        THROW_IF_WALLY_ERROR(
-                wally_base58_to_bytes(
-                        address->c_str(), BASE58_FLAG_CHECKSUM, decoded.data(),
-                        decoded.size(), &binary_size),
-                "Failed to convert address to public key hash");
-        decoded.resize(binary_size);
-        // remove the prefix.
-        decoded.erase(decoded.begin());
 
-        sig_stream << as_compact_size(decoded.size());
-        sig_stream.write_data(decoded.data(), decoded.size());
+        BitcoinNetType net_type;
+        BitcoinAddressType address_type;
+        BinaryDataPtr decoded_ptr = parse_bitcoin_address(
+                                            address->c_str(),
+                                            &net_type, &address_type);
+
+        sig_stream << as_compact_size(decoded_ptr->len);
+        sig_stream.write_data(decoded_ptr->data, decoded_ptr->len);
 
         sig_stream << OpCode(0x88); // OP_EQUALVERIFY
         sig_stream << OpCode(0xAC); // OP_CHECKSIG

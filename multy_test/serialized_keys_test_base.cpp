@@ -12,6 +12,7 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
+#include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
 namespace
@@ -74,4 +75,13 @@ TEST_P(SerializedKeyTestP, private_key_to_address)
     EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, address);
     ASSERT_STREQ(test_data.address, address.get());
+}
+
+
+TEST_P(CheckAddressTestP, validate_address)
+{
+    const auto& param = GetParam();
+    const Currency currency = ::testing::get<0>(param);
+    const char* test_data = ::testing::get<1>(param);
+    HANDLE_ERROR(validate_address(currency, test_data));
 }

@@ -20,6 +20,24 @@ namespace
 {
 using namespace multy_core::internal;
 
+const char* TEST_CASES_ADDRESS[] = {
+    "54f46318d8f83c28b719ccf01ab4628e1e8f65fa",
+    "256c6f6e7ccb5a6c2d7328a8ab9b79333beba1e1",
+    "841d6a3c7854d3250433b4fddd6ce8b4093e7172",
+    "23d0033fb9717563cb6d8b1e257a9d6027b48953",
+    "2f87c0482c8d8490b3afb68cfe48bea81510a195",
+    "6ef90e7dfec25f5b74a2c40eb05fce94cefe52a1",
+    "390c61b3bee479ba9db509fb2277c16458553299",
+    "60898387644b70c3d74999b30766947c09b2a9c6",
+    "7a965b0a45a786ce9249e92ac1746053aa84a690",
+    "8405b8c046b94deb5ca5adf81660164b853bbda4",
+    "7b098532d8bffb846357e209094d122da98c5ad1",
+    "b01f82aabacaa0ed45d041c227b55f0e2f78e897",
+    "3f135cb1f425aed875b29e94153c0ccf9cec9f3f",
+    "1d90a440b8faff514cfb8b0143df13ccd5b8a7e1",
+    "01c7189e7580a75f07fdc4dbf3fee09a85cd9373"
+};
+
 SerializedKeyTestCase TEST_CASES[] = {
     {
         "6bd05118bf92e4236232db724a64abbf709f01b4f37041c88ae3ebf3eeed5596",
@@ -103,6 +121,13 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Combine(
                 ::testing::Values(CURRENCY_ETHEREUM),
                 ::testing::ValuesIn(TEST_CASES)));
+
+INSTANTIATE_TEST_CASE_P(
+        Ethereum,
+        CheckAddressTestP,
+        ::testing::Combine(
+            ::testing::Values(CURRENCY_ETHEREUM),
+            ::testing::ValuesIn(TEST_CASES_ADDRESS)));
 
 GTEST_TEST(EtheremAccountTest, PrivateKeySig)
 {

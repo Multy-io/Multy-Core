@@ -7,15 +7,17 @@
 
 #include "multy_core/common.h"
 
+#include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/hd_path.h"
-#include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/exception_stream.h"
 
 #include "secp256k1.h"
 #include "wally_core.h"
 #include "wally_crypto.h"
 
+#include <sstream>
 #include <string.h>
 #include <string>
 
@@ -33,6 +35,14 @@ bool is_testnet(BitcoinNetType net_type)
         net_type = DEFAULT_NET_TYPE;
     }
     return net_type == BITCOIN_TESTNET;
+}
+
+std::string to_hex_string(const uint8_t value)
+{
+    std::stringstream stream;
+    stream << std::hex;
+    stream <<value;
+    return stream.str();
 }
 
 } // namespace
@@ -295,6 +305,64 @@ AccountPtr make_bitcoin_account(const char* private_key)
     key->set_use_compressed_public_key(use_compressed_public_key);
 
     return AccountPtr(new BitcoinAccount(std::move(key), HDPath(), net_type));
+}
+
+BinaryDataPtr parse_bitcoin_address(const char* address,
+                                    BitcoinNetType* net_type,
+                                    BitcoinAddressType* address_type)
+{
+    BinaryDataPtr out_binary_data;
+    size_t binary_size = 0;
+    THROW_IF_WALLY_ERROR(
+                wally_base58_get_length(address, &binary_size),
+                "Can not get the len");
+    std::vector<uint8_t> decoded(binary_size, 0);
+
+    THROW_IF_WALLY_ERROR(
+                wally_base58_to_bytes(
+                    address, BASE58_FLAG_CHECKSUM, decoded.data(),
+                    decoded.size(), &binary_size),
+                "Invalid address");
+
+    decoded.resize(binary_size);
+    if (decoded.empty())
+    {
+        THROW_EXCEPTION("Failed to decode address.");
+    }
+
+    // save type address and remove from decode
+    const uint8_t address_version = decoded[0];
+    decoded.erase(decoded.begin());
+
+    throw_if_error(make_binary_data_from_bytes(
+                       decoded.data(), decoded.size(),
+                       reset_sp(out_binary_data)));
+
+    switch (address_version) {
+    case BITCOIN_ADDRESS_VERSION_MAIN_NET_P2PKH:
+        *net_type = BITCOIN_MAINNET;
+        *address_type = BITCOIN_ADDRESS_P2PKH;
+        break;
+    case BITCOIN_ADDRESS_VERSION_MAIN_NET_P2SH:
+        *net_type = BITCOIN_MAINNET;
+        *address_type = BITCOIN_ADDRESS_P2SH;
+        break;
+    case BITCOIN_ADDRESS_VERSION_TEST_NET_P2PKH:
+        *net_type = BITCOIN_TESTNET;
+        *address_type = BITCOIN_ADDRESS_P2PKH;
+        break;
+    case BITCOIN_ADDRESS_VERSION_TEST_NET_P2SH:
+        *net_type = BITCOIN_TESTNET;
+        *address_type = BITCOIN_ADDRESS_P2SH;
+        break;
+    default:
+        THROW_EXCEPTION("Unknown address type.")
+                << " Address type prefix: "
+                << to_hex_string(address_version);
+        break;
+    }
+
+    return out_binary_data;
 }
 
 } // namespace internal

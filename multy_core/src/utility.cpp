@@ -14,8 +14,8 @@
 #include "wally_core.h"
 
 #include <cassert>
-#include <string.h>
 #include <string>
+#include <string.h>
 
 namespace
 {

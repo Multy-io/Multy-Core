@@ -22,11 +22,38 @@ enum BitcoinNetType
     BITCOIN_MAINNET,
     BITCOIN_TESTNET,
 };
+enum BitcoinAddressType
+{
+    BITCOIN_ADDRESS_P2PKH,
+    BITCOIN_ADDRESS_P2SH,
+};
+enum BITCON_ADDRESS_VERSION {
+    BITCOIN_ADDRESS_VERSION_MAIN_NET_P2PKH = 0x0,
+    BITCOIN_ADDRESS_VERSION_MAIN_NET_P2SH = 0x05,
+    BITCOIN_ADDRESS_VERSION_TEST_NET_P2PKH = 0x6F,
+    BITCOIN_ADDRESS_VERSION_TEST_NET_P2SH = 0xC4
+};
 
 struct BitcoinPublicKey;
 struct BitcoinPrivateKey;
 typedef UPtr<BitcoinPrivateKey> BitcoinPrivateKeyPtr;
 typedef UPtr<BitcoinPublicKey> BitcoinPublicKeyPtr;
+
+AccountPtr make_bitcoin_account(const char* private_key);
+
+/** Parse given base58 encoded address and verify it's checksumm.
+ *
+ * @param address - input address in base58 format
+ * @param net_type - (out) resulting net type adress
+ * @param address_type - (out) resulting Bitcoin Address Type
+ * @return address in binary form, with no checksum and address version prefix.
+ *
+ * @throw Exception if something went wrong.
+ */
+BinaryDataPtr parse_bitcoin_address(const char*,
+                                    enum BitcoinNetType*,
+                                    enum BitcoinAddressType*);
+
 
 class MULTY_CORE_API BitcoinHDAccount : public HDAccountBase
 {
@@ -39,8 +66,6 @@ public:
             AddressType type,
             uint32_t index) const override;
 };
-
-AccountPtr make_bitcoin_account(const char* private_key);
 
 class MULTY_CORE_API BitcoinAccount : public AccountBase
 {

@@ -329,6 +329,23 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_currency)
     EXPECT_NE(nullptr, error);
 }
 
+GTEST_TEST(AccountTestInvalidArgs, validate_address)
+{
+    EXPECT_ERROR(validate_address(CURRENCY_BITCOIN, nullptr));
+    EXPECT_ERROR(validate_address(INVALID_CURRENCY, "test"));
+}
+
+GTEST_TEST(AccountTestInvalidAddress, validate_address)
+{
+    // Invalid Checksum
+    EXPECT_ERROR(validate_address(CURRENCY_BITCOIN, "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
+    EXPECT_ERROR(validate_address(CURRENCY_BITCOIN, "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
+
+    // Invalid address
+    EXPECT_ERROR(validate_address(CURRENCY_ETHEREUM, "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
+}
+
+
 class AccountTestCurrencySupportP : public ::testing::TestWithParam<Currency>
 {
 };
