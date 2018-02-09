@@ -3,7 +3,7 @@ Cross-platform mobile-first library for HD wallets and creating raw transactions
 
 # How to build for iOS:
 ```
-$ cmake ../Multy-Core  -GXcode -DCMAKE_TOOLCHAIN_FILE=../Multy-Core/tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=9.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DMULTY_MULTY_WITH_TESTS=1
+$ cmake ../Multy-Core  -G'Unix Makefiles' -DCMAKE_TOOLCHAIN_FILE=../Multy-Core/tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=9.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DMULTY_WITH_TESTS=1
 $ cmake --build . # or `open ./multy.xcodeproj` and do a build with Xcode
 ```
 
