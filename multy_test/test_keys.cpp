@@ -81,7 +81,6 @@ GTEST_TEST(KeysTestInvalidArgs, make_master_key)
 
 GTEST_TEST(KeysTestInvalidArgs, make_child_key)
 {
-    const KeyType INVALID_KEY_TYPE = static_cast<KeyType>(-1);
     const ExtendedKey parent_key = make_dummy_extended_key();
 
     ErrorPtr error;

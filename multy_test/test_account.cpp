@@ -28,11 +28,8 @@ using namespace test_utility;
 const char* TEST_ADDRESS = "TEST_ADDRESS";
 const HDPath TEST_PATH = {1, 2, 3};
 const char* TEST_PATH_STRING = "m/1/2/3";
-const Currency TEST_CURRENCY = CURRENCY_BITCOIN;
 
-const uint32_t INVALID_INDEX = HARDENED_INDEX_BASE + 1;
 const Currency INVALID_CURRENCY = static_cast<Currency>(-1);
-const AddressType INVALID_ADDRESS = static_cast<AddressType>(-1);
 
 struct TestPublicKey : public PublicKey
 {
