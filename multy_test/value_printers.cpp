@@ -81,8 +81,7 @@ void PrintTo(const Error& e, std::ostream* out)
 
 void PrintTo(const BinaryData& data, std::ostream* out)
 {
-    *out << "BinaryData{ " << (data.data ? to_hex(data) : std::string("<null>"))
-         << ", " << data.len << " }";
+    *out << "BinaryData{ " << data << " }";
 }
 
 void PrintTo(const Key& key, std::ostream* out)

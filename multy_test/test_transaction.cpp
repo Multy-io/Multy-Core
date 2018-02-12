@@ -26,7 +26,7 @@ using namespace multy_core::internal;
 
 struct TestTransaction: Transaction
 {
-    TestTransaction(): m_properties(""), m_total("5"){}
+    TestTransaction(): m_total("5"), m_properties("") {}
     Currency get_currency() const override
     {
         return m_currency;
@@ -44,12 +44,12 @@ struct TestTransaction: Transaction
 
     BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override
     {
-        return (m_total-1);
+        return (m_total - 1);
     }
 
     BigInt get_total_fee() const override
     {
-        return (m_total-2);
+        return (m_total - 2);
     }
 
     Properties& add_source() override
@@ -66,7 +66,6 @@ struct TestTransaction: Transaction
     {
         return m_properties;
     }
-
 
     Properties& get_transaction_properties() override
     {

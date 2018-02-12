@@ -1,8 +1,11 @@
 
 if (MULTY_MORE_WARNINGS)
-    # Set of warnings is maller than for multy_core to make life easier.
+    # Set of warnings is smaller than for multy_core to make life easier.
     add_definitions(
         -Wall -Wunused -Wfloat-equal -Wwrite-strings
+
+        # Disabled warnings:
+        -Wno-missing-braces # false-positive on std::array initialization.
     )
 endif()
 

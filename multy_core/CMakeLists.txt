@@ -4,6 +4,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MULTY_MORE_WARNINGS)
     add_definitions(
         -Wall -Weffc++ -Wpedantic -Wextra -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings
+
+        # Disabled warnings:
+         -Wno-missing-braces # false-positive on std::array initialization.
     )
 endif()
 
