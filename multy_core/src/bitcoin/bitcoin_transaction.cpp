@@ -374,8 +374,6 @@ public:
                   "amount_per_byte",
                   Property::OPTIONAL,
                   verify_non_negative_amount),
-          max_amount_per_byte(
-                  properties, "max_amount_per_byte", Property::OPTIONAL),
           min_amount_per_byte(
                   properties, "min_amount_per_byte", Property::OPTIONAL)
     {
@@ -388,10 +386,6 @@ public:
 
     void validate_fee(const BigInt& leftover, size_t transaction_size) const
     {
-        const BigInt max_fee(
-                max_amount_per_byte.get_default_value(get_amount_per_byte())
-                        .get_value_as_uint64()
-                * transaction_size);
         const BigInt min_fee(
                 min_amount_per_byte.get_default_value(BigInt(1))
                         .get_value_as_uint64()
@@ -401,18 +395,12 @@ public:
             THROW_EXCEPTION("Transaction total fee is too low. ")
                     << leftover.get_value() << " < " << min_fee.get_value();
         }
-        if (leftover > max_fee)
-        {
-            THROW_EXCEPTION("Transaction total fee is too high. ")
-                    << leftover.get_value() << " > " + max_fee.get_value();
-        }
     }
 
 public:
     Properties properties;
 
     PropertyT<BigInt> amount_per_byte;
-    PropertyT<BigInt> max_amount_per_byte;
     PropertyT<BigInt> min_amount_per_byte;
 };
 
