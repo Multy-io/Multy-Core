@@ -293,8 +293,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
     {
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_value);
-        //Ridicuosly high fee just to pass the checks.
-        fee.set_property_value("max_amount_per_byte", available);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -349,8 +347,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     {
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_per_byte);
-        //Ridicuosly high fee just to pass the checks.
-        fee.set_property_value("max_amount_per_byte", available);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -432,8 +428,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
     {
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_value);
-        //Ridicuosly high fee just to pass the checks.
-        fee.set_property_value("max_amount_per_byte", available);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -506,8 +500,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
     {
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_value);
-        //Ridicuosly high fee just to pass the checks.
-        fee.set_property_value("max_amount_per_byte", available1);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -593,8 +585,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     {
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_value);
-        //Ridicuosly high fee just to pass the checks.
-        fee.set_property_value("max_amount_per_byte", available1);
     }
     const BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(to_binary_data(from_hex("01000000024889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1010000006a47304402200efd6929fcf32210e32194fc8468354deaf67060466710441075dab31afa31b30220350c72e95803ad14ce3fe3baa73e0a2288bf46df44e8c3d686e9692e7689cb7301210217fc7a7cc7f8b41b8e886703b95f087cd6e82ccbe6ee2ff27101b6d69ca2e868ffffffff4889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1000000006a473044022063a2925d2693033aa9735f412258c93f80f9bf980c688fbe5634b7fd6af958f40220506064007962d15ed0473ec617f1c38c80bd82af864050bf5e406ed4cf2951cf012102a6492c6dd74e49c4b7a4bd507baac3abf25fb26b97e362c3c0cb28b91a043da2ffffffff02802b530b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac40548900000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00000000")),
