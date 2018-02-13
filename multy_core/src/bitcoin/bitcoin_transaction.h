@@ -16,6 +16,12 @@ namespace multy_core
 {
 namespace internal
 {
+enum DestinationsToUse
+{
+    WITHOUT_ZERO_CHANGE,
+    WITH_ZERO_CHANGE
+};
+
 class BitcoinAccount;
 class BitcoinTransactionDestination;
 class BitcoinTransactionFee;
@@ -46,11 +52,11 @@ private:
     void sign();
 
     template <typename T>
-    void serialize_to_stream(T* stream) const;
+    void serialize_to_stream(T* stream, DestinationsToUse destinations_to_use) const;
     bool is_segwit() const;
 
     typedef std::vector<const BitcoinTransactionDestination*> Destinations;
-    Destinations get_non_zero_destinations() const;
+    Destinations get_non_zero_destinations(DestinationsToUse destinations_to_use) const;
 
     size_t estimate_transaction_size() const;
 

@@ -133,7 +133,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
 
     const BigInt available(BigInt(1000) * 1000 * 1000 * 1000 * 1000);
     const BigInt out_1(BigInt(500) * 1000 * 1000 * 1000 * 1000);
-    const BigInt fee_value(BigInt(1000) * 1000 * 1000 * 1000);
     {
         Properties& source = transaction->add_source();
         source.set_property_value("amount", available);
@@ -249,6 +248,83 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
             available - out_1 - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 - delta_factor)));
 
     ASSERT_GE(available - out_1 - expected_total_fee, change_amount);
+}
+
+GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
+{
+    AccountPtr account;
+    HANDLE_ERROR(
+            make_account(
+                    CURRENCY_BITCOIN,
+                    "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
+                    reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt available("10000");
+    const BigInt out_without_change("9709");
+    const BigInt out_with_change("9000");
+    const BigInt fee_per_byte("1");
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", available);
+        source.set_property_value("prev_tx_hash",
+                to_binary_data(from_hex("6e555ea9f989b755802ee69b3b7cf83777f1248fb2a678f148f71e674951cffa")));
+        source.set_property_value("prev_tx_out_index", 1u);
+        source.set_property_value("prev_tx_out_script_pubkey",
+                to_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
+        source.set_property_value("private_key",
+                *account->get_private_key());
+    }
+
+    Properties& Recipient = transaction->add_destination();
+    Recipient.set_property_value("address",
+                                   "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM");
+    Recipient.set_property_value("amount", out_without_change);
+
+    Properties& change = transaction->add_destination();
+    change.set_property_value("address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
+    change.set_property_value("is_change", 1);
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("amount_per_byte", fee_per_byte);
+    }
+
+    BinaryDataPtr serialized_without_change = transaction->serialize();
+    ASSERT_NE(nullptr, serialized_without_change);
+    EXPECT_NE(0, serialized_without_change->len);
+    EXPECT_NE(nullptr, serialized_without_change->data);
+
+    BigInt change_amount;
+    change.get_property_value("amount", &change_amount);
+    ASSERT_EQ("0", change_amount);
+
+    //NOTE: if change address amount == 0 serialize without change address
+    //      TXid: d58e823d1d34c610bdaa561fc342c17a007615b1e0e01a7628cdcb2e1d91b965
+    ASSERT_EQ(to_binary_data(from_hex(
+            "0100000001facf5149671ef748f178a6b28f24f17737f87c3b9be62e8055b789f9a95e556e010000006b483045022100cea16d07d1b421e612d9a9656ec3a1207adf171039c315eca9e6d54337a8da1002206e95cfa55bb38167726e1c915f8121fdbaf9b310fb2137e2970684f4ea6a5861012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff01ed250000000000001976a91460505d4554b5f7b939142cf1efa566d95a31268788ac00000000")),
+            *serialized_without_change);
+    const BigInt fee_without_change = transaction->get_total_fee();
+
+    // Change destination amount for core lib create Tx with change destination
+    Recipient.set_property_value("amount", out_with_change);
+    BinaryDataPtr serialized_with_change = transaction->serialize();
+
+    change.get_property_value("amount", &change_amount);
+    ASSERT_NE("0", change_amount);
+
+    const BigInt fee_with_change = transaction->get_total_fee();
+    std::cerr << "fee difference: " << (fee_without_change-fee_with_change).get_value() << std::endl;
+
+    ASSERT_GT(serialized_with_change->len, serialized_without_change->len);
+    ASSERT_GT(fee_without_change, fee_with_change);
+
+    // TODO: Add serrialize check. Add checking amount per byte > 1 satoshi
 }
 
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
