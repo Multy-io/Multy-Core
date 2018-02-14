@@ -512,7 +512,7 @@ BinaryDataPtr BitcoinTransaction::serialize()
 
     BitcoinDataStream data_stream;
 
-    serialize_to_stream(&data_stream);
+    serialize_to_stream(&data_stream, WITHOUT_ZERO_CHANGE);
 
     const BinaryData stream_content = data_stream.get_content();
     BinaryDataPtr result;
@@ -521,7 +521,7 @@ BinaryDataPtr BitcoinTransaction::serialize()
 }
 
 template <typename T>
-void BitcoinTransaction::serialize_to_stream(T* stream) const
+void BitcoinTransaction::serialize_to_stream(T* stream, DestinationsToUse destinations_to_use) const
 {
     T& dest_stream = *stream;
 
@@ -532,7 +532,7 @@ void BitcoinTransaction::serialize_to_stream(T* stream) const
         dest_stream << *source;
     }
 
-    const auto destinations = get_non_zero_destinations();
+    const auto destinations = get_non_zero_destinations(destinations_to_use);
     dest_stream << as_compact_size(destinations.size());
     for (const auto& destination : destinations)
     {
@@ -553,13 +553,14 @@ bool BitcoinTransaction::is_segwit() const
                        });
 }
 
-BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations() const
+BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations(DestinationsToUse destinations_to_use) const
 {
     // TODO: include also change destination and payload-only destination.
     Destinations result;
     for (const auto& dest : m_destinations)
     {
-        if (*dest->amount > BigInt(0) || *dest->is_change)
+        if ( *dest->amount > BigInt(0) ||
+             (destinations_to_use == WITH_ZERO_CHANGE ? *dest->is_change : 0) )
         {
             result.push_back(dest.get());
         }
@@ -573,7 +574,7 @@ size_t BitcoinTransaction::estimate_transaction_size() const
     // destinations.
     // Note that this estimation is valid only for non-segwit transactions.
     const size_t sources_count = m_sources.size();
-    const size_t destinations_count = get_non_zero_destinations().size();
+    const size_t destinations_count = get_non_zero_destinations(WITH_ZERO_CHANGE).size();
     // look function estimate_total_fee
     return static_cast<int64_t>(
             sources_count * (147 + 32) + destinations_count * 34 + 10);
@@ -668,20 +669,33 @@ void BitcoinTransaction::update_state()
     {
         sign();
         BitcoinBytesCountStream counter_stream;
-        serialize_to_stream(&counter_stream);
+        serialize_to_stream(&counter_stream, WITH_ZERO_CHANGE);
         const uint64_t tx_size = counter_stream.get_bytes_count();
 
         const BigInt tx_cost = tx_size * *m_fee->amount_per_byte;
         const BigInt current_fee = calculate_diff();
         const BigInt remainder = current_fee - tx_cost;
-        if (remainder > 0)
+
+
+        // NOTE: Not adding a change if cost of spending money from that output exceeds its value.
+        //
+        // Most of the nodes reject TX with fee less than 1 Satoshi per byte.
+        // So we assume that cost of spending an output is roughly equivalent
+        // to byte length of corresponding input in serialized TX.
+        // Average input size is:
+        //  * 150 bytes for non-SegWit TX
+        //  * 100 bytes for SegWit TX
+        //
+        // Not adding change for leftovers less than said limits increases fee for this TX.
+
+        const int64_t avarage_input_size = is_segwit() ? 100 : 150;
+        const int64_t min_tx_cost_per_byte = 1;
+        if (remainder > avarage_input_size * min_tx_cost_per_byte)
         {
             // not setting value with set_value(), since that would fail for read-only property.
             change_destination->amount.get_value() += remainder;
         }
     }
-
-    m_fee->validate_fee(calculate_diff(), estimate_transaction_size());
 }
 
 void BitcoinTransaction::sign()
@@ -713,7 +727,7 @@ void BitcoinTransaction::sign()
 
         {
             BitcoinDataStream hash_stream;
-            serialize_to_stream(&hash_stream);
+            serialize_to_stream(&hash_stream, WITHOUT_ZERO_CHANGE);
             hash_stream << uint32_t(1); // signature version
 
             const PrivateKeyPtr& private_key = source->private_key.get_value();
