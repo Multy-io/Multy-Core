@@ -541,19 +541,16 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
 {
     AccountPtr account;
-    ErrorPtr error;
 
-    error.reset(make_account(
+    HANDLE_ERROR(make_account(
                     CURRENCY_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
     TransactionPtr transaction;
-    error.reset(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
     const BigInt available(BigInt(12) * 1000 * 1000 * 100);
@@ -610,18 +607,15 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_testnet)
 {
     AccountPtr account;
-    ErrorPtr error;
-    error.reset(make_account(
+    HANDLE_ERROR(make_account(
                     CURRENCY_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
     TransactionPtr transaction;
-    error.reset(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
     const BigInt available1("229999999");
@@ -682,28 +676,25 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
 {
     AccountPtr account1;
     AccountPtr account;
-    ErrorPtr error;
-    error.reset(
+
+    HANDLE_ERROR(
             make_account(
                     CURRENCY_BITCOIN,
                     "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
                     reset_sp(account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mfgq7S1Va1GREFgN66MVoxX35X6juKov6A", account->get_address());
 
-    error.reset(
+    HANDLE_ERROR(
             make_account(
                     CURRENCY_BITCOIN,
                     "cVbMJKcfEGi4wgsN39rMPkYVAaLeRaPPbrPpJfcH9B9dZCPbS7kT",
                     reset_sp(account1)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account1);
     EXPECT_EQ("mk6a6qeXNXuQDpA4DPxuouTJJTeFYJAkep", account1->get_address());
 
     TransactionPtr transaction;
-    error.reset(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
     const BigInt available1(BigInt(1) * 1000 * 1000 * 100);

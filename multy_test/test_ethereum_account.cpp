@@ -117,17 +117,18 @@ SerializedKeyTestCase TEST_CASES[] = {
 };
 
 INSTANTIATE_TEST_CASE_P(
-        Ethereum, SerializedKeyTestP,
+        Ethereum,
+        SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(CURRENCY_ETHEREUM),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
-        Ethereum,
+        DISABLED_Ethereum,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(CURRENCY_ETHEREUM),
-            ::testing::ValuesIn(TEST_CASES_ADDRESS)));
+                ::testing::Values(CURRENCY_ETHEREUM),
+                ::testing::ValuesIn(TEST_CASES_ADDRESS)));
 
 GTEST_TEST(EtheremAccountTest, PrivateKeySig)
 {

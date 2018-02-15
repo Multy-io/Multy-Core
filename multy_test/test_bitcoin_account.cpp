@@ -23,7 +23,7 @@ namespace
 using namespace multy_core::internal;
 using namespace test_utility;
 
-const char* TEST_CASES_ADDRESS[] = {
+const char* TEST_CASES_P2PKH_ADDRESSES[] = {
     "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwU",
     "1fjRrB4XXJWeiw1686zCKYGSNjFqLchYQ",
     "14kHzG9194ojtiXFdbcdTkUCUsFbEfu5MW",
@@ -37,7 +37,6 @@ const char* TEST_CASES_ADDRESS[] = {
     "1Mu8765kCAuP5NaoKZUMgBieTT7KqcUBbZ",
     "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ",
     "12T6zBkXZT5Tyg1W7ssXL27MLoE3c8NmwX",
-    "3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX",
     "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
     "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM",
     "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
@@ -45,6 +44,10 @@ const char* TEST_CASES_ADDRESS[] = {
     "n2Mm3o7uQ9QibAnMPi3rjoXAjkVXikyRpj",
     "n4jX2S4iL9eNknDL3ELCTZtupqxswDxK9x",
     "n1ZE4fDzH5usehyo52XUGsz3DjK6YBZPue"
+};
+
+const char* TEST_CASES_P2SH_ADDRESSES[] = {
+    "3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX",
 };
 
 SerializedKeyTestCase TEST_CASES[] = {
@@ -130,8 +133,14 @@ INSTANTIATE_TEST_CASE_P(
         CheckAddressTestP,
         ::testing::Combine(
             ::testing::Values(CURRENCY_BITCOIN),
-            ::testing::ValuesIn(TEST_CASES_ADDRESS)));
+            ::testing::ValuesIn(TEST_CASES_P2PKH_ADDRESSES)));
 
+INSTANTIATE_TEST_CASE_P(
+        DISABLED_Bitcoin,
+        CheckAddressTestP,
+        ::testing::Combine(
+            ::testing::Values(CURRENCY_BITCOIN),
+            ::testing::ValuesIn(TEST_CASES_P2SH_ADDRESSES)));
 
 struct SignTestCase
 {
