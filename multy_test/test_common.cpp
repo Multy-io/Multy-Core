@@ -68,7 +68,7 @@ TEST_P(BinaryDataTestValidHex, make_binary_data_from_hex)
     HANDLE_ERROR(make_binary_data_from_hex(param.hex_string, reset_sp(result)));
     ASSERT_NE(nullptr, result);
 
-    ASSERT_EQ(to_binary_data(param.hex_data), *result);
+    ASSERT_EQ(as_binary_data(param.hex_data), *result);
 }
 
 TEST_P(BinaryDataTestValidHex, make_binary_data_from_bytes)
@@ -80,7 +80,7 @@ TEST_P(BinaryDataTestValidHex, make_binary_data_from_bytes)
             param.hex_data.data(), param.hex_data.size(), reset_sp(result)));
     ASSERT_NE(nullptr, result);
 
-    ASSERT_EQ(to_binary_data(param.hex_data), *result);
+    ASSERT_EQ(as_binary_data(param.hex_data), *result);
 }
 
 TEST_P(BinaryDataTestInvalidHex, make_binary_data_from_hex)

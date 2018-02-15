@@ -69,6 +69,20 @@ void do_sha3(const BinaryData& input, BinaryData* output)
     }
 }
 
+template <size_t N>
+size_t get_biggest_of_supported_sizes(size_t size, const size_t (&supported_sizes)[N])
+{
+    const size_t default_value = std::numeric_limits<size_t>::max();
+    const size_t hash_size = find_max_value(
+            supported_sizes, default_value, size);
+    if (hash_size == default_value)
+    {
+        THROW_EXCEPTION("output BinaryData has not enough space available.")
+                << " Need at least " << supported_sizes[0] << " bytes.";
+    }
+    return hash_size;
+}
+
 } // namespace
 
 namespace multy_core
@@ -96,33 +110,41 @@ BinaryDataPtr keccak_256(const BinaryData& input)
 {
     BinaryDataPtr result;
     throw_if_error(make_binary_data(256 / 8, reset_sp(result)));
-
-    THROW_IF_WALLY_ERROR(
-            ::keccak_256(const_cast<unsigned char*>(result->data), result->len,
-                    input.data, input.len),
-            "Failed to hash input with keccack_256");
-
+    keccak_256(input, result.get());
     return result;
 }
 
 void sha3(const BinaryData& input, BinaryData* output)
 {
-    static const size_t default_value = 0;
-
     if (!output)
     {
         THROW_EXCEPTION("output BinaryData is nullprt");
     }
 
-    const size_t hash_size = find_max_value(
-            HASH_SIZES, default_value, output->len);
-    if (hash_size == default_value)
+    // Copy to keep output intact in case of exception.
+    BinaryData tmp = *output;
+    tmp.len = get_biggest_of_supported_sizes(output->len , HASH_SIZES);
+
+    do_sha3(input, &tmp);
+    *output = tmp;
+}
+
+void keccak_256(const BinaryData& input, BinaryData* output)
+{
+    if (!output)
     {
-        THROW_EXCEPTION("output BinaryData has not enough space available.")
-                << " Need at least " << output->len << " bytes.";
+        THROW_EXCEPTION("output BinaryData is nullprt");
     }
+
+    const size_t HASH_SIZES[] = {256 / 8};
+    const size_t hash_size = get_biggest_of_supported_sizes(output->len, HASH_SIZES);
+
+    THROW_IF_WALLY_ERROR(
+            ::keccak_256(const_cast<unsigned char*>(output->data), hash_size,
+                    input.data, input.len),
+            "Failed to hash input with keccack_256");
+
     output->len = hash_size;
-    do_sha3(input, output);
 }
 
 } // namespace internale

@@ -6,6 +6,7 @@
 
 #include "multy_core/sha3.h"
 
+#include "multy_core/src/hash.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
@@ -23,6 +24,15 @@ namespace
 {
 using namespace multy_core::internal;
 using namespace test_utility;
+
+template <typename T>
+BinaryDataPtr make_binary_data_from_data(const T& data)
+{
+    const BinaryData origin = as_binary_data(data);
+    BinaryDataPtr clone;
+    throw_if_error(make_binary_data_clone(&origin, reset_sp(clone)));
+    return clone;
+}
 
 const size_t SHA3_SIZES[] = {
     224,
@@ -180,6 +190,39 @@ TEST_P(Sha3TestP, Correctness)
     HANDLE_ERROR(make_binary_data(hash_size / 8, reset_sp(hash)));
 
     HANDLE_ERROR(sha3(input.get(), hash.get()));
+    EXPECT_EQ(*expected_hash, *hash);
+}
+
+TEST_P(Sha3TestP, do_hash)
+{
+    SCOPED_TRACE(hash_size);
+    BinaryDataPtr hash;
+
+    switch (expected_hash->len)
+    {
+        case 224 / 8:
+        {
+            hash = make_binary_data_from_data(do_hash<SHA3, 224>(*input));
+            break;
+        }
+        case 256 / 8:
+        {
+            hash = make_binary_data_from_data(do_hash<SHA3, 256>(*input));
+            break;
+        }
+        case 384 / 8:
+        {
+            hash = make_binary_data_from_data(do_hash<SHA3, 384>(*input));
+            break;
+        }
+        case 512 / 8:
+        {
+            hash = make_binary_data_from_data(do_hash<SHA3, 512>(*input));
+            break;
+        }
+        default:
+            FAIL();
+    }
     EXPECT_EQ(*expected_hash, *hash);
 }
 

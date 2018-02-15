@@ -6,12 +6,15 @@
 
 #include "multy_core/mnemonic.h"
 
+#include "multy_core/src/hash.h"
+
 #include "multy_test/bip39_test_cases.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
 #include "gtest/gtest.h"
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -87,7 +90,7 @@ TEST_P(MnemonicTestValidCasesP, Test)
     BinaryDataPtr seed;
     error.reset(make_seed(expected_mnemonic.c_str(), "TREZOR", reset_sp(seed)));
     ASSERT_NE(nullptr, seed);
-    EXPECT_EQ(to_binary_data(expected_seed), *seed);
+    EXPECT_EQ(as_binary_data(expected_seed), *seed);
 
     ConstCharPtr dictionary;
     error.reset(mnemonic_get_dictionary(reset_sp(dictionary)));
@@ -114,6 +117,17 @@ GTEST_TEST(MnemonicTest, empty_null_password)
     ASSERT_NE(nullptr, null_pass_seed);
 
     ASSERT_EQ(*null_pass_seed, *empty_pass_seed);
+}
+
+GTEST_TEST(MnemonicTest, mnemonic_get_dictionary)
+{
+    ConstCharPtr dictionary;
+    HANDLE_ERROR(mnemonic_get_dictionary(reset_sp(dictionary)));
+
+    auto dictionary_hash = do_hash<SHA3, 256>(dictionary.get());
+    const bytes expected_hash = from_hex(
+            "fca3543969cb6a75a90f898669c89a5ec85215a09d97bcad71ab6e7fd5d560b4");
+    ASSERT_EQ(as_binary_data(expected_hash), as_binary_data(dictionary_hash));
 }
 
 GTEST_TEST(MnemonicTestInvalidArgs, make_mnemonic)
@@ -177,4 +191,9 @@ GTEST_TEST(MnemonicTestInvalidArgs, seed_to_string)
     error.reset(seed_to_string(&zero_len_data, reset_sp(seed_str)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, seed_str);
+}
+
+GTEST_TEST(MnemonicTestInvalidArgs, mnemonic_get_dictionary)
+{
+    EXPECT_ERROR(mnemonic_get_dictionary(nullptr));
 }
