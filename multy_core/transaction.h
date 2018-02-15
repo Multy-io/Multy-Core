@@ -74,13 +74,23 @@ MULTY_CORE_API struct Error* transaction_estimate_total_fee(
         struct BigInt** out_fee_estimation);
 
 /** Get resulting fee value.
- * In order to update, invoke transaction_update().
+ * Call transaction_update() first to get up to date data.
  *
  * @param transaction - transaction to get fee from.
  * @param out_fee_total - fee value in transaction currency (BTC, ETH, etc.).
  */
 MULTY_CORE_API struct Error* transaction_get_total_fee(
         const struct Transaction* transaction, struct BigInt** out_fee_total);
+
+/** Update transaction state.
+ *
+ * Invoke after modifying transaction internal state (by adding sources\destinations
+ * and\or setting propertie* of any of those and or fee), to get up to date
+ * info from transaction.
+ * @param transaction - transaction to update.
+ */
+MULTY_CORE_API struct Error* transaction_update(
+        struct Transaction* transaction);
 
 MULTY_CORE_API struct Error* transaction_serialize(
         struct Transaction* transaction,

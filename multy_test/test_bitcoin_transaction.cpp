@@ -39,6 +39,101 @@ bool inBetween(const BigInt& left, const BigInt& value, const BigInt& right)
     return (left <= value) && (value <= right);
 }
 
+AccountPtr make_account(
+        Currency currency,
+        const char* serialized_private_key)
+{
+    AccountPtr account;
+    throw_if_error(
+            make_account(currency, serialized_private_key, reset_sp(account)));
+    return account;
+}
+
+struct TransactionFee
+{
+    BigInt amount_per_byte;
+};
+
+struct TransactionSource
+{
+    BigInt available;
+    bytes prev_tx_hash;
+    size_t prev_tx_index;
+    bytes prev_tx_scrip_pubkey;
+    PrivateKey* private_key;
+};
+
+struct TransactionDestination
+{
+    std::string address;
+    BigInt amount;
+    bool is_change = false;
+
+    TransactionDestination(
+            std::string address,
+            BigInt amount)
+        : TransactionDestination(std::move(address), std::move(amount), false)
+    {}
+
+protected:
+    TransactionDestination(
+            std::string address,
+            BigInt amount,
+            bool is_change)
+        : address(std::move(address)),
+          amount(std::move(amount)),
+          is_change(is_change)
+    {}
+};
+
+struct TransactionChangeDestination : public TransactionDestination
+{
+    TransactionChangeDestination(const std::string& address)
+        : TransactionDestination(address, BigInt{}, true)
+    {}
+};
+
+struct TransactionTemplate
+{
+    Account* const account;
+    TransactionFee fee;
+    std::vector<TransactionSource> sources;
+    std::vector<TransactionDestination> destinations;
+};
+
+// Make Transaction from template using non-public API, note that returned value must not outlive the argument.
+TransactionPtr make_transaction_from_template(const TransactionTemplate& tx)
+{
+    TransactionPtr transaction;
+    throw_if_error(make_transaction(tx.account, reset_sp(transaction)));
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("amount_per_byte", tx.fee.amount_per_byte);
+    }
+
+    for (const TransactionDestination& dest : tx.destinations)
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("amount", dest.amount);
+        destination.set_property_value("address", dest.address);
+        destination.set_property_value("is_change", static_cast<int32_t>(dest.is_change));
+    }
+
+    for (const TransactionSource& src : tx.sources)
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", src.available);
+        source.set_property_value("prev_tx_hash",
+                to_binary_data(src.prev_tx_hash));
+        source.set_property_value("prev_tx_out_index", src.prev_tx_index);
+        source.set_property_value("prev_tx_out_script_pubkey",
+                to_binary_data(src.prev_tx_scrip_pubkey));
+        source.set_property_value("private_key", *src.private_key);
+    }
+    return transaction;
+}
+
 } // namespace
 
 GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
@@ -665,4 +760,69 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     const BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(to_binary_data(from_hex("01000000024889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1010000006a47304402200efd6929fcf32210e32194fc8468354deaf67060466710441075dab31afa31b30220350c72e95803ad14ce3fe3baa73e0a2288bf46df44e8c3d686e9692e7689cb7301210217fc7a7cc7f8b41b8e886703b95f087cd6e82ccbe6ee2ff27101b6d69ca2e868ffffffff4889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1000000006a473044022063a2925d2693033aa9735f412258c93f80f9bf980c688fbe5634b7fd6af958f40220506064007962d15ed0473ec617f1c38c80bd82af864050bf5e406ed4cf2951cf012102a6492c6dd74e49c4b7a4bd507baac3abf25fb26b97e362c3c0cb28b91a043da2ffffffff02802b530b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac40548900000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00000000")),
             *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, transaction_update)
+{
+    // Verify that transaction_update() modifies TX internal state.
+    const AccountPtr account = make_account(CURRENCY_BITCOIN, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+    const PrivateKeyPtr private_key = account->get_private_key();
+
+    const TransactionTemplate TEST_TX
+    {
+        account.get(),
+        TransactionFee
+        { // fee:
+            BigInt{100}
+        },
+        { // Sources
+            {
+                BigInt{2000500},
+                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                BigInt{1000000}
+            },
+            TransactionChangeDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX);
+
+    // Single destination spends only portion of data, and the change is not updated
+    // untill you invoke transaction_update(), hence the fee is really high.
+    BigIntPtr total_fee;
+    HANDLE_ERROR(transaction_get_total_fee(transaction.get(), reset_sp(total_fee)));
+    EXPECT_NE("0", *total_fee);
+
+    // Change is going to be updated and next call to transaction_get_total_fee()
+    // should return fee that is much smaller.
+    HANDLE_ERROR(transaction_update(transaction.get()));
+
+    BigIntPtr updated_total_fee;
+    HANDLE_ERROR(transaction_get_total_fee(transaction.get(), reset_sp(updated_total_fee)));
+    EXPECT_NE("0", *updated_total_fee);
+    
+    // Verifying that excess value was moved to the change address and fee is minimized.
+    EXPECT_LT(*updated_total_fee, *total_fee);
+
+    BinaryDataPtr serialized;
+    HANDLE_ERROR(transaction_serialize(transaction.get(), reset_sp(serialized)));
+
+    // Verifying that fee is within some bounds of user set value.
+    const double delta = 0.0001;
+    EXPECT_PRED3(inBetween,
+            TEST_TX.fee.amount_per_byte * static_cast<int64_t>(serialized->len * (1 - delta)),
+            *updated_total_fee,
+            TEST_TX.fee.amount_per_byte * static_cast<int64_t>(serialized->len * (1 + delta))
+    );
 }

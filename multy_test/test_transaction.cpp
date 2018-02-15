@@ -13,6 +13,7 @@
 #include "multy_core/transaction.h"
 #include "multy_core/src/transaction_base.h"
 
+#include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
 
@@ -24,7 +25,7 @@ namespace
 using namespace multy_core::internal;
 } //namespace
 
-struct TestTransaction: Transaction
+struct TestTransaction : public Transaction
 {
     TestTransaction(): m_total("5"), m_properties("") {}
     Currency get_currency() const override
@@ -35,6 +36,10 @@ struct TestTransaction: Transaction
     uint32_t get_traits() const override
     {
         return m_traits;
+    }
+
+    void update() override
+    {
     }
 
     BinaryDataPtr serialize() override
@@ -215,6 +220,11 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize)
 
     error.reset(transaction_serialize(&transaction, nullptr));
     EXPECT_NE(nullptr, error);
+}
+
+GTEST_TEST(TransactionTestInvalidArgs, transaction_update)
+{
+    EXPECT_ERROR(transaction_update(nullptr));
 }
 
 

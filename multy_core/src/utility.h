@@ -90,7 +90,7 @@ namespace internal
 MULTY_CORE_API void throw_if_error(struct Error* err);
 
 #define THROW_IF_WALLY_ERROR(statement, message)                               \
-    throw_if_wally_error(                                                      \
+    multy_core::internal::throw_if_wally_error(                                \
             MULTY_SIMULATE_ERROR(                                              \
                     (statement), #statement, MULTY_CODE_LOCATION),             \
             (message), MULTY_CODE_LOCATION)

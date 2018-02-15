@@ -507,7 +507,7 @@ BitcoinTransaction::BitcoinTransaction()
 BinaryDataPtr BitcoinTransaction::serialize()
 {
     verify();
-    update_state();
+    update();
     sign();
 
     BitcoinDataStream data_stream;
@@ -640,7 +640,7 @@ void BitcoinTransaction::verify() const
 }
 
 
-void BitcoinTransaction::update_state()
+void BitcoinTransaction::update()
 {
     for (auto& s : m_sources)
     {

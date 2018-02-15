@@ -31,6 +31,7 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
     virtual Currency get_currency() const = 0;
     virtual uint32_t get_traits() const = 0;
 
+    virtual void update() = 0;
     /** Serialize transaction to binary form.
      *
      * May verify/update internal state and throw exception if something is wrong.
