@@ -32,6 +32,7 @@ public:
     BitcoinTransaction();
 
     // Transaction
+    void update() override;
     BigInt get_total_fee() const override;
     BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override;
     BinaryDataPtr serialize() override;
@@ -42,7 +43,6 @@ public:
 private:
     BigInt calculate_diff() const;
     void verify() const;
-    void update_state();
     void sign();
 
     template <typename T>

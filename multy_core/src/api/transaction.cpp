@@ -187,6 +187,19 @@ Error* transaction_get_total_fee(const Transaction* transaction, BigInt** out_to
     return nullptr;
 }
 
+Error* transaction_update(Transaction* transaction)
+{
+    ARG_CHECK_OBJECT(transaction);
+
+    try
+    {
+        transaction->update();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
+
 Error* transaction_serialize(
         Transaction* transaction,
         BinaryData** out_serialized_transaction)

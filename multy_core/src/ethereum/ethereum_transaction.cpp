@@ -403,7 +403,7 @@ EthereumTransaction::~EthereumTransaction()
 
 BinaryDataPtr EthereumTransaction::serialize()
 {
-    update_state();
+    update();
     sign();
 
     EthereumDataStream data_stream;
@@ -451,7 +451,7 @@ BigInt EthereumTransaction::get_total_fee() const
     return m_fee->total_fee;
 }
 
-void EthereumTransaction::update_state()
+void EthereumTransaction::update()
 {
     if (!m_source)
     {
