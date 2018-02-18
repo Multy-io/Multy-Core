@@ -18,8 +18,9 @@
 #include "multy_core/src/u_ptr.h"
 
 #include <cassert>
-#include <memory>
+#include <iterator>
 #include <limits>
+#include <memory>
 
 struct Error;
 
@@ -77,10 +78,14 @@ struct Error;
     } while (false)
 
 #define CHECK_OBJECT_BEFORE_FREE(obj)                                          \
-    if ((obj))                                                                 \
+    do                                                                         \
     {                                                                          \
-        assert((obj)->is_valid() && "attempt free non-valid object:" #obj);    \
-    }
+        if ((obj))                                                             \
+        {                                                                      \
+            assert((obj)->is_valid() && "trying to free invalid object:" #obj);\
+            return;                                                            \
+        }                                                                      \
+    } while(false)
 
 namespace multy_core
 {
@@ -219,8 +224,56 @@ UPtr<T> make_clone(const T& original)
 inline BinaryDataPtr make_clone(const BinaryData& other)
 {
     BinaryDataPtr result;
-    throw_if_error(binary_data_clone(&other, reset_sp(result)));
+    throw_if_error(make_binary_data_clone(&other, reset_sp(result)));
     return result;
+}
+
+namespace detail
+{
+
+template <typename T>
+BinaryData do_convert_to_binary_data(const T* data, size_t len)
+{
+    static_assert(1 == sizeof(*data), "Only 1-byte wide types are supported.");
+    return BinaryData{reinterpret_cast<const unsigned char*>(data), len};
+}
+
+} // namespace detail
+
+/** as_binary_data() wraps given argument into BinaryData.
+ *
+ * Note that none of function overloads ever copies nor allocates any memory,
+ * hence returned object MUST NOT outlive function argument.
+ */
+template <typename T, size_t N>
+inline BinaryData as_binary_data(const T (&array)[N])
+{
+    return detail::do_convert_to_binary_data(array, N);
+}
+
+template <typename T, typename A>
+inline BinaryData as_binary_data(const std::vector<T, A>& vector)
+{
+    return detail::do_convert_to_binary_data(vector.data(), vector.size());
+}
+
+template <typename T, size_t N>
+inline BinaryData as_binary_data(const std::array<T, N>& array)
+{
+    return detail::do_convert_to_binary_data(array.data(), array.size());
+}
+
+MULTY_CORE_API BinaryData as_binary_data(const char* str);
+
+inline const BinaryData& as_binary_data(const BinaryData& binary_data)
+{
+    return binary_data;
+}
+
+bool operator==(const BinaryData& left, const BinaryData& right);
+inline bool operator!=(const BinaryData& left, const BinaryData& right)
+{
+    return !(left == right);
 }
 
 // Gets minimum number of bytes required to represent integer value.

@@ -83,7 +83,7 @@ Error* make_version_string(const char** out_version_string)
     return nullptr;
 }
 
-Error* binary_data_clone(const BinaryData* source, BinaryData** new_binary_data)
+Error* make_binary_data_clone(const BinaryData* source, BinaryData** new_binary_data)
 {
     ARG_CHECK(source);
     return make_binary_data_from_bytes(

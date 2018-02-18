@@ -79,7 +79,7 @@ MULTY_CORE_API struct Error* make_binary_data_from_hex(
         const char* hex_str, struct BinaryData** new_binary_data);
 
 /** Copies BinaryData. **/
-MULTY_CORE_API struct Error* binary_data_clone(
+MULTY_CORE_API struct Error* make_binary_data_clone(
         const struct BinaryData* source, struct BinaryData** new_binary_data);
 
 /** Frees a string, can take null. **/

@@ -130,7 +130,7 @@ GTEST_TEST(KeysTest, KeyId)
             bytes test_data = seed_data;
             test_data[byte_index] |= (1 << bit_index);
 
-            SCOPED_TRACE(to_binary_data(test_data));
+            SCOPED_TRACE(as_binary_data(test_data));
             const std::string id = key_id_from_seed(test_data);
 
             auto result = ids.insert(id);

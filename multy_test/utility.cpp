@@ -70,19 +70,6 @@ std::string to_hex(const BinaryData& data)
     return std::string(hex_str.get());
 }
 
-BinaryData to_binary_data(const bytes& data)
-{
-    return BinaryData{data.data(), data.size()};
-}
-
-BinaryData to_binary_data(const char* data)
-{
-    return BinaryData{
-            reinterpret_cast<const unsigned char*>(data),
-            data ? strlen(data) : 0
-    };
-}
-
 ExtendedKey make_dummy_extended_key()
 {
     ExtendedKey result;
@@ -106,11 +93,6 @@ void throw_exception(const char* message)
 }
 
 } // namespace test_utility
-
-bool operator==(const BinaryData& lhs, const BinaryData& rhs)
-{
-    return lhs.len == rhs.len && memcmp(lhs.data, rhs.data, lhs.len) == 0;
-}
 
 bool operator==(const PublicKey& lhs, const PublicKey& rhs)
 {

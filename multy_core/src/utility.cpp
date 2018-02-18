@@ -133,6 +133,12 @@ BinaryData slice(const BinaryData& data, size_t offset, size_t size)
     return BinaryData{data.data + offset, size};
 }
 
+BinaryData as_binary_data(const char* str)
+{
+    const size_t len = str ? strlen(str) : 0;
+    return BinaryData{reinterpret_cast<const unsigned char*>(str), len};
+}
+
 void throw_if_error(Error* error)
 {
     if (error)
@@ -181,6 +187,12 @@ Error* exception_to_error(const CodeLocation& location)
     {
         return make_error(ERROR_GENERAL_ERROR, "Unknown exception", location);
     }
+}
+
+bool operator==(const BinaryData& left, const BinaryData& right)
+{
+    return left.len == right.len
+            && memcmp(left.data, right.data, left.len) == 0;
 }
 
 } // namespace internal

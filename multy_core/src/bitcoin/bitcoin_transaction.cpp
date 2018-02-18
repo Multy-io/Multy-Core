@@ -513,11 +513,7 @@ BinaryDataPtr BitcoinTransaction::serialize()
     BitcoinDataStream data_stream;
 
     serialize_to_stream(&data_stream, WITHOUT_ZERO_CHANGE);
-
-    const BinaryData stream_content = data_stream.get_content();
-    BinaryDataPtr result;
-    throw_if_error(binary_data_clone(&stream_content, reset_sp(result)));
-    return result;
+    return make_clone(data_stream.get_content());
 }
 
 template <typename T>

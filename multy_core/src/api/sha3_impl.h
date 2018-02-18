@@ -42,6 +42,7 @@ MULTY_CORE_API BinaryDataPtr keccak_256(const BinaryData& input);
 // the maximum size that would fit in the output is taken,
 // and then output->len is updated to reflect acutal size.
 MULTY_CORE_API void sha3(const BinaryData& input, BinaryData* output);
+MULTY_CORE_API void keccak_256(const BinaryData& input, BinaryData* output);
 
 } // namespace internale
 } // namespace multy_core

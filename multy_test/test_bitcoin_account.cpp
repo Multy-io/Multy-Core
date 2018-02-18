@@ -195,9 +195,9 @@ TEST_P(BitcoinTestSign, SignWithPrivateKey)
     ASSERT_NE(nullptr, account);
 
     PrivateKeyPtr private_key = account->get_private_key();
-    BinaryDataPtr signature = private_key->sign(to_binary_data(message_data));
+    BinaryDataPtr signature = private_key->sign(as_binary_data(message_data));
 
-    EXPECT_EQ(to_binary_data(from_hex(signature_data)), *signature);
+    EXPECT_EQ(as_binary_data(from_hex(signature_data)), *signature);
 }
 
 INSTANTIATE_TEST_CASE_P(

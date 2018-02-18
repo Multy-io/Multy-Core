@@ -46,6 +46,7 @@ add_library(multy_core
 
     # Common stuff
     src/account_base.cpp
+    src/hash.cpp
 
     src/exception.cpp
     src/hd_path.cpp

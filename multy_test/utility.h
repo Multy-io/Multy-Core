@@ -45,38 +45,18 @@ typedef std::vector<unsigned char> bytes;
 bytes from_hex(const char* hex_str);
 std::string to_hex(const bytes& bytes);
 std::string to_hex(const BinaryData& data);
-BinaryData to_binary_data(const bytes& data);
-BinaryData to_binary_data(const char* data);
 ExtendedKey make_dummy_extended_key();
 multy_core::internal::ExtendedKeyPtr make_dummy_extended_key_ptr();
 EntropySource make_dummy_entropy_source();
-
-template <typename T, size_t N>
-BinaryData to_binary_data(const T (&data)[N])
-{
-    return BinaryData{reinterpret_cast<const unsigned char*>(data),
-                      N * sizeof(data[0])};
-}
-
-template <typename T, size_t N>
-BinaryData to_binary_data(const std::array<T, N>& data)
-{
-    return BinaryData{reinterpret_cast<const unsigned char*>(data.data()),
-                      N * sizeof(data[0])};
-}
 
 void throw_exception(const char* message);
 
 } // test_utility
 
-bool operator==(const BinaryData& lhs, const BinaryData& rhs);
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);
 bool operator==(const PublicKey& lhs, const PublicKey& rhs);
-
-inline bool operator!=(const BinaryData& lhs, const BinaryData& rhs)
-{
-    return !(lhs == rhs);
-}
+using multy_core::internal::operator==;
+using multy_core::internal::operator!=;
 
 inline bool operator!=(const PublicKey& lhs, const PublicKey& rhs)
 {
