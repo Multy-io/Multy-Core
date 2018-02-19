@@ -573,7 +573,7 @@ size_t BitcoinTransaction::estimate_transaction_size() const
     const size_t destinations_count = get_non_zero_destinations(WITH_ZERO_CHANGE).size();
     // look function estimate_total_fee
     return static_cast<int64_t>(
-            sources_count * (147 + 32) + destinations_count * 34 + 10);
+            sources_count * (150 + 32) + destinations_count * 34 + 10);
 }
 
 BigInt BitcoinTransaction::get_total_fee() const
@@ -587,7 +587,7 @@ BigInt BitcoinTransaction::estimate_total_fee(
     //change size input because public key may be in uncompressed format
     //compressed and uncompressed format differs in 32 byte
     const int64_t transaction_size
-            = sources_count * (147 + 32) + destinations_count * 34 + 10;
+            = sources_count * (150 + 32) + destinations_count * 34 + 10;
     return transaction_size * m_fee->get_amount_per_byte();
 }
 
@@ -692,6 +692,7 @@ void BitcoinTransaction::update()
             change_destination->amount.get_value() += remainder;
         }
     }
+    m_fee->validate_fee(calculate_diff(), estimate_transaction_size());
 }
 
 void BitcoinTransaction::sign()
