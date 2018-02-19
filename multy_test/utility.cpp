@@ -6,6 +6,7 @@
 
 #include "multy_test/utility.h"
 
+#include "multy_core/account.h"
 #include "multy_core/common.h"
 #include "multy_core/src/api/key_impl.h"
 #include "wally_core.h"
@@ -102,4 +103,10 @@ bool operator==(const PublicKey& lhs, const PublicKey& rhs)
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs)
 {
     return lhs.to_string() == rhs.to_string();
+}
+
+bool operator==(const BlockchainType& lhs, const BlockchainType& rhs)
+{
+    return lhs.blockchain == rhs.blockchain
+            && lhs.net_type == rhs.net_type;
 }

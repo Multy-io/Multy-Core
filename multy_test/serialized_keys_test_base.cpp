@@ -29,59 +29,68 @@ void PrintTo(const SerializedKeyTestCase& c, std::ostream* out)
          << "}";
 }
 
-TEST_P(SerializedKeyTestP, private_key_to_address)
+void SerializedKeyTestP::SetUp()
 {
-    const auto& param = GetParam();
-    const Currency currency = ::testing::get<0>(param);
-    const SerializedKeyTestCase& test_data = ::testing::get<1>(param);
-    AccountPtr account;
-    ErrorPtr error;
-    error.reset(
+    const BlockchainType blockchain_type = ::testing::get<0>(GetParam());
+    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+
+    HANDLE_ERROR(
             make_account(
-                    currency, test_data.private_key, reset_sp(account)));
-    EXPECT_EQ(nullptr, error);
+                    blockchain_type.blockchain,
+                    test_data.private_key, reset_sp(account)));
     ASSERT_NE(nullptr, account);
+}
 
-//    KeyPtr private_key;
-//    error.reset(
-//            account_get_key(
-//                    account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
-//    EXPECT_EQ(nullptr, error);
-//    ASSERT_NE(nullptr, private_key);
+TEST_P(SerializedKeyTestP, public_key)
+{
+    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
 
-//    ConstCharPtr serialized_private_key;
-//    error.reset(
-//            key_to_string(private_key.get(), reset_sp(serialized_private_key)));
-//    EXPECT_EQ(nullptr, error);
-//    ASSERT_NE(nullptr, serialized_private_key);
-//    ASSERT_STREQ(param.private_key, serialized_private_key.get());
     ConstCharPtr public_key_string;
     KeyPtr public_key;
-    error.reset(
+    HANDLE_ERROR(
             account_get_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
-    EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, public_key);
 
     if (test_data.public_key && strlen(test_data.public_key))
     {
-        error.reset(key_to_string(public_key.get(), reset_sp(public_key_string)));
-        EXPECT_EQ(nullptr, error);
+        HANDLE_ERROR(key_to_string(public_key.get(), reset_sp(public_key_string)));
         ASSERT_NE(nullptr, public_key_string);
         ASSERT_STREQ(test_data.public_key, public_key_string.get());
     }
+}
+
+TEST_P(SerializedKeyTestP, address)
+{
+    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
 
     ConstCharPtr address;
-    error.reset(account_get_address_string(account.get(), reset_sp(address)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(account_get_address_string(account.get(), reset_sp(address)));
     ASSERT_NE(nullptr, address);
     ASSERT_STREQ(test_data.address, address.get());
+}
+
+TEST_P(SerializedKeyTestP, private_key)
+{
+    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+
+    KeyPtr private_key;
+    HANDLE_ERROR(
+            account_get_key(
+                    account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
+    ASSERT_NE(nullptr, private_key);
+
+    ConstCharPtr serialized_private_key;
+    HANDLE_ERROR(
+            key_to_string(private_key.get(), reset_sp(serialized_private_key)));
+    ASSERT_NE(nullptr, serialized_private_key);
+    ASSERT_STREQ(test_data.private_key, serialized_private_key.get());
 }
 
 
 TEST_P(CheckAddressTestP, validate_address)
 {
     const auto& param = GetParam();
-    const Currency currency = ::testing::get<0>(param);
+    const BlockchainType blockchain_type = ::testing::get<0>(param);
     const char* test_data = ::testing::get<1>(param);
-    HANDLE_ERROR(validate_address(currency, test_data));
+    HANDLE_ERROR(validate_address(blockchain_type, test_data));
 }

@@ -164,7 +164,7 @@ MULTY_CORE_API char* copy_string(const std::string& str);
  * Note that returned object points inside original one, so it must not outlive it,
  * also, data pointed by returned object should not be freed.
  *
- * Throws exceptions if offset or size (or offset + size) is too big.
+ * Throws exception if offset or size (or offset + size) is too big.
  */
 MULTY_CORE_API BinaryData slice(const BinaryData& data, size_t offset, size_t size);
 

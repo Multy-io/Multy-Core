@@ -37,8 +37,8 @@ MULTY_CORE_API struct Error* transaction_has_trait(
         enum TransactionTrait trait,
         bool* out_has_capability);
 
-MULTY_CORE_API struct Error* transaction_get_currency(
-        const struct Transaction* transaction, enum Currency* out_currency);
+MULTY_CORE_API struct Error* transaction_get_blockchain_type(
+        const struct Transaction* transaction, struct BlockchainType* out_blockchain_type);
 
 /// @param source - new source, must NOT be freed by the caller.
 MULTY_CORE_API struct Error* transaction_add_source(

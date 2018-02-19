@@ -27,20 +27,31 @@ namespace
 using namespace multy_core::internal;
 using namespace test_utility;
 
-class AccountSmokeTestP : public ::testing::TestWithParam<Currency>
+class AccountSmokeTestP : public ::testing::TestWithParam<BlockchainType>
 {
 };
 
-const Currency ALL_CURRENCIES[] = {
-        CURRENCY_BITCOIN, CURRENCY_ETHEREUM,
+const BlockchainType SUPPORTED_BLOCKCHAINS[] = {
+        {
+            BLOCKCHAIN_BITCOIN,
+            BLOCKCHAIN_NET_TYPE_MAINNET
+        },
+        {
+            BLOCKCHAIN_BITCOIN,
+            BLOCKCHAIN_NET_TYPE_TESTNET
+        },
+        {
+            BLOCKCHAIN_ETHEREUM,
+            BLOCKCHAIN_NET_TYPE_MAINNET
+        }
 };
 
 INSTANTIATE_TEST_CASE_P(
-        Smoke, AccountSmokeTestP, ::testing::ValuesIn(ALL_CURRENCIES));
+        Smoke, AccountSmokeTestP, ::testing::ValuesIn(SUPPORTED_BLOCKCHAINS));
 
 TEST_P(AccountSmokeTestP, AccountFromEntropy)
 {
-    const Currency expected_currency = GetParam();
+    const BlockchainType expected_blockchain = GetParam();
 
     ConstCharPtr mnemonic_str;
     ErrorPtr error;
@@ -69,7 +80,7 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     HDAccountPtr root_account;
     error.reset(
             make_hd_account(
-                    root_key.get(), expected_currency, 0,
+                    root_key.get(), expected_blockchain, 0,
                     reset_sp(root_account)));
     ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, root_account);
@@ -87,14 +98,6 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, address);
     ASSERT_LT(0, strlen(address.get()));
-    if (expected_currency == CURRENCY_BITCOIN && *address != '1' && *address != '3')
-    {
-        std::cerr <<
-        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        "!!!!!        ATTENTION: BITCOIN IS IN THE TESTNET MODE       !!!!!\n"
-        "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        "\nGenerated address: " << address.get() << "\n\n";
-    }
 
     KeyPtr private_key;
     error.reset(
@@ -122,10 +125,10 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
 
     ASSERT_STRNE(public_key_str.get(), private_key_str.get());
 
-    Currency currency = static_cast<Currency>(-1);
-    error.reset(account_get_currency(account.get(), &currency));
+    BlockchainType blockchain;
+    error.reset(account_get_blockchain_type(account.get(), &blockchain));
     ASSERT_EQ(nullptr, error);
-    ASSERT_EQ(expected_currency, currency);
+    ASSERT_EQ(expected_blockchain, blockchain);
 }
 
 } // namespace

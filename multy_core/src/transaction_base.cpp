@@ -55,20 +55,18 @@ Properties& TransactionSourceBase::get_properties()
     return m_properties;
 }
 
-
-
-TransactionBase::TransactionBase(Currency currency, uint32_t traits)
+TransactionBase::TransactionBase(BlockchainType blockchain_type, uint32_t traits)
     : m_properties("Transaction"),
-      m_currency(currency),
+      m_blockchain_type(blockchain_type),
       m_traits(traits),
       m_all_properties()
 {
     register_properties("", m_properties);
 }
 
-Currency TransactionBase::get_currency() const
+BlockchainType TransactionBase::get_blockchain_type() const
 {
-    return m_currency;
+    return m_blockchain_type;
 }
 
 uint32_t TransactionBase::get_traits() const

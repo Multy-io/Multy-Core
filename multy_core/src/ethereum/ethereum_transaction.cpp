@@ -374,7 +374,7 @@ public:
 };
 
 EthereumTransaction::EthereumTransaction(const Account& account)
-    : TransactionBase(CURRENCY_ETHEREUM, get_ethereum_traits()),
+    : TransactionBase(account.get_blockchain_type(), get_ethereum_traits()),
       m_account(account),
       m_nonce(get_transaction_properties(), "nonce", Property::REQUIRED,
               [](const BigInt& new_nonce)

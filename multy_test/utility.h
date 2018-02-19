@@ -37,6 +37,7 @@
 
 struct BinaryData;
 struct ExtendedKey;
+struct BlockchainType;
 
 namespace test_utility
 {
@@ -55,8 +56,7 @@ void throw_exception(const char* message);
 
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);
 bool operator==(const PublicKey& lhs, const PublicKey& rhs);
-using multy_core::internal::operator==;
-using multy_core::internal::operator!=;
+bool operator==(const BlockchainType& lhs, const BlockchainType& rhs);
 
 inline bool operator!=(const PublicKey& lhs, const PublicKey& rhs)
 {
@@ -67,5 +67,13 @@ inline bool operator!=(const PrivateKey& lhs, const PrivateKey& rhs)
 {
     return !(lhs == rhs);
 }
+
+inline bool operator!=(const BlockchainType& lhs, const BlockchainType& rhs)
+{
+    return !(lhs == rhs);
+}
+
+using multy_core::internal::operator==;
+using multy_core::internal::operator!=;
 
 #endif // MULTY_TEST_UTILITY_H

@@ -120,14 +120,14 @@ INSTANTIATE_TEST_CASE_P(
         Ethereum,
         SerializedKeyTestP,
         ::testing::Combine(
-                ::testing::Values(CURRENCY_ETHEREUM),
+                ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET}),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
         DISABLED_Ethereum,
         CheckAddressTestP,
         ::testing::Combine(
-                ::testing::Values(CURRENCY_ETHEREUM),
+                ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET}),
                 ::testing::ValuesIn(TEST_CASES_ADDRESS)));
 
 GTEST_TEST(EtheremAccountTest, PrivateKeySig)
@@ -145,7 +145,7 @@ GTEST_TEST(EtheremAccountTest, PrivateKeySig)
     const char MESSAGE[] = "msg";
 
     AccountPtr account;
-    HANDLE_ERROR(make_account(CURRENCY_ETHEREUM, PRIVATE_KEY, reset_sp(account)));
+    HANDLE_ERROR(make_account(BLOCKCHAIN_ETHEREUM, PRIVATE_KEY, reset_sp(account)));
 
     BinaryDataPtr message;
     HANDLE_ERROR(make_binary_data_from_bytes(
