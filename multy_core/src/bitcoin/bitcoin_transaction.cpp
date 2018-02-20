@@ -373,7 +373,12 @@ public:
                   properties,
                   "amount_per_byte",
                   Property::OPTIONAL,
-                  verify_non_negative_amount),
+                  [this](const BigInt& amount) {
+                      if (amount < BigInt(2))
+                      {
+                          THROW_EXCEPTION("Value should be> 2.");
+                      }
+                  }),
           min_amount_per_byte(
                   properties, "min_amount_per_byte", Property::OPTIONAL)
     {
