@@ -83,7 +83,7 @@ struct Error;
         if ((obj))                                                             \
         {                                                                      \
             assert((obj)->is_valid() && "trying to free invalid object:" #obj);\
-            return;                                                            \
+            (void)(0);                                                         \
         }                                                                      \
     } while(false)
 
