@@ -316,10 +316,7 @@ BinaryDataPtr parse_bitcoin_address(const char* address,
                                     BitcoinAddressType* address_type)
 {
     BinaryDataPtr out_binary_data;
-    size_t binary_size = 0;
-    THROW_IF_WALLY_ERROR(
-                wally_base58_get_length(address, &binary_size),
-                "Can not get the len");
+    size_t binary_size = strlen(address);
     std::vector<uint8_t> decoded(binary_size, 0);
 
     THROW_IF_WALLY_ERROR(

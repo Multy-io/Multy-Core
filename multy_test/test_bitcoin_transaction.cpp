@@ -819,3 +819,22 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update)
     );
 }
 
+GTEST_TEST(BitcoinTransactionTest, destination_address_verification)
+{
+    const AccountPtr account = make_account(CURRENCY_BITCOIN, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    TransactionPtr transaction;
+    make_transaction(account.get(), reset_sp(transaction));
+    {
+        Properties* destination = nullptr;
+        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+
+        EXPECT_ERROR(properties_set_string_value(destination, "address", ""));
+        EXPECT_ERROR(properties_set_string_value(destination, "address", " "));
+        EXPECT_ERROR(properties_set_string_value(destination, "address", "123"));
+        // valid address mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU
+        EXPECT_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5D"));
+
+        HANDLE_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
+    }
+}

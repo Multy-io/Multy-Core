@@ -296,7 +296,13 @@ public:
                  "amount",
                  Property::REQUIRED,
                  verify_non_negative_amount),
-          address(properties, "address", Property::REQUIRED),
+          address(properties, "address", Property::REQUIRED,
+                  [this](const std::string &new_address) {
+                        BitcoinNetType net_type;
+                        BitcoinAddressType address_type;
+                        this->binary_address = parse_bitcoin_address(new_address.c_str(),
+                            &net_type, &address_type);
+                  }),
           is_change(false, properties, "is_change", Property::OPTIONAL,
                   [this](int32_t new_value) {
                       if (new_value < 0)
@@ -315,15 +321,12 @@ public:
         sig_stream << OpCode(0x76); // OP_DUP
         sig_stream << OpCode(0xA9); // OP_HASH160
 
-
-        BitcoinNetType net_type;
-        BitcoinAddressType address_type;
-        BinaryDataPtr decoded_ptr = parse_bitcoin_address(
-                                            address->c_str(),
-                                            &net_type, &address_type);
-
-        sig_stream << as_compact_size(decoded_ptr->len);
-        sig_stream.write_data(decoded_ptr->data, decoded_ptr->len);
+        if (binary_address == nullptr)
+        {
+            THROW_EXCEPTION("Destination address not set.");
+        }
+        sig_stream << as_compact_size(binary_address->len);
+        sig_stream.write_data(binary_address->data, binary_address->len);
 
         sig_stream << OpCode(0x88); // OP_EQUALVERIFY
         sig_stream << OpCode(0xAC); // OP_CHECKSIG
@@ -361,6 +364,7 @@ public:
     PropertyT<std::string> address;
     PropertyT<int32_t> is_change;
 
+    BinaryDataPtr binary_address;
     BinaryDataPtr sig_script;
 };
 
