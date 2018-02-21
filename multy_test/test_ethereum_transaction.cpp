@@ -33,7 +33,7 @@ using namespace test_utility;
 GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
 {
     AccountPtr account;
-    ErrorPtr error;
+
     HANDLE_ERROR(make_account(
                      CURRENCY_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
@@ -101,7 +101,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
 GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
 {
     AccountPtr account;
-    ErrorPtr error;
+
     HANDLE_ERROR(make_account(
                      CURRENCY_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
@@ -148,7 +148,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
 GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
 {
     AccountPtr account;
-    ErrorPtr error;
+
     HANDLE_ERROR(make_account(
                      CURRENCY_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
@@ -203,7 +203,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
 GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
 {
     AccountPtr account;
-    ErrorPtr error;
     HANDLE_ERROR(make_account(
                      CURRENCY_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
@@ -254,5 +253,37 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     ASSERT_EQ(as_binary_data(from_hex(
             "f86a038602ba7def30008301d8a894d1b48a11e2251555c3c6d8b93e13f9aa2f51ea198203e882ffff2ca0122bf1a37f949f0fc34354ca737eec7fd654e2172ecf893497d6e8356217512da05f01213f5d1c25d4b55e8c7219e572f92b00ec74a2662ae93c45928eb5133942")),
             *serialied);
+}
+
+GTEST_TEST(EthereumTransactionTest, transaction_update_empty_tx)
+{
+    // Verify that transaction_update() fails when called on empty TX.
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+                     CURRENCY_ETHEREUM,
+                     "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+                     reset_sp(account)));
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    EXPECT_ERROR(transaction_update(transaction.get()));
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+
+    {
+        Properties* source = nullptr;
+        HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+
+    {
+        Properties* destination = nullptr;
+        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
 }
 

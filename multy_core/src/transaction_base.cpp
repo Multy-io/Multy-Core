@@ -107,8 +107,7 @@ bool TransactionBase::validate_all_properties(
     }
     if (sstr.tellp() > 0)
     {
-        *not_set_properties
-                = "Not all required properties were set:\n" + sstr.str();
+        *not_set_properties = sstr.str();
         return false;
     }
     return true;

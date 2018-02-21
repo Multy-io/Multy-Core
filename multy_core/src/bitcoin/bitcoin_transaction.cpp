@@ -631,8 +631,8 @@ void BitcoinTransaction::verify() const
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        THROW_EXCEPTION("Not all required properties set:\n")
-                << missing_properties;
+        THROW_EXCEPTION("Not all required properties set.")
+                << "\n" << missing_properties;
     }
 
     const BigInt diff = calculate_diff();
@@ -647,6 +647,8 @@ void BitcoinTransaction::verify() const
 
 void BitcoinTransaction::update()
 {
+    verify();
+
     for (auto& s : m_sources)
     {
         s->update();

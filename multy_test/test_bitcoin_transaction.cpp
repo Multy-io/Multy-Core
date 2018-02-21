@@ -757,7 +757,8 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
 GTEST_TEST(BitcoinTransactionTest, transaction_update)
 {
     // Verify that transaction_update() modifies TX internal state.
-    const AccountPtr account = make_account(CURRENCY_BITCOIN, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+    const AccountPtr account = make_account(CURRENCY_BITCOIN,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
     const PrivateKeyPtr private_key = account->get_private_key();
 
     const TransactionTemplate TEST_TX
@@ -836,5 +837,34 @@ GTEST_TEST(BitcoinTransactionTest, destination_address_verification)
         EXPECT_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5D"));
 
         HANDLE_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
+    }
+}
+
+GTEST_TEST(BitcoinTransactionTest, transaction_update_empty_tx)
+{
+    // Verify that transaction_update() fails when called on empty TX.
+    const AccountPtr account = make_account(CURRENCY_BITCOIN,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    EXPECT_ERROR(transaction_update(transaction.get()));
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+
+    {
+        Properties* source = nullptr;
+        HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+
+    {
+        Properties* destination = nullptr;
+        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+        EXPECT_ERROR(transaction_update(transaction.get()));
     }
 }
