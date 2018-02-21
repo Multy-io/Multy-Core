@@ -187,6 +187,10 @@ BitcoinAccount::BitcoinAccount(
 {
 }
 
+BitcoinAccount::~BitcoinAccount()
+{
+}
+
 std::string BitcoinAccount::get_address() const
 {
     // P2PKH address generated from public key.

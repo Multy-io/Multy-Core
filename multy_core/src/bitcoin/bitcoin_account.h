@@ -72,6 +72,8 @@ class MULTY_CORE_API BitcoinAccount : public AccountBase
 public:
     BitcoinAccount(BitcoinPrivateKeyPtr key, HDPath path,
             BitcoinNetType net_type = BITCOIN_NET_DEFAULT);
+    ~BitcoinAccount();
+
     std::string get_address() const override;
     bool is_testnet() const;
 
