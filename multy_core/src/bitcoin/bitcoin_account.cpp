@@ -90,13 +90,14 @@ struct BitcoinPrivateKey : public PrivateKey
     typedef std::vector<uint8_t> KeyData;
 
     BitcoinPrivateKey(KeyData data)
-        : m_data(std::move(data)), m_use_compressed_public_key(false)
+        : m_data(std::move(data)),
+          m_use_compressed_public_key(true)
     {
     }
 
     BitcoinPrivateKey(const BinaryData& data)
         : m_data(data.data, data.data + data.len),
-          m_use_compressed_public_key(false)
+          m_use_compressed_public_key(true)
     {
     }
 
