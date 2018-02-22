@@ -6,12 +6,14 @@
 
 #include "multy_core/account.h"
 
+#include "multy_core/key.h"
 #include "multy_core/common.h"
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/u_ptr.h"
 
 #include "multy_test/bip39_test_cases.h"
+#include "multy_test/mocks.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
@@ -31,152 +33,6 @@ const char* TEST_PATH_STRING = "m/1/2/3";
 
 const Blockchain INVALID_BLOCKCHAIN = static_cast<Blockchain>(-1);
 const BlockchainType INVALID_BLOCKCHAIN_TYPE{INVALID_BLOCKCHAIN, BLOCKCHAIN_NET_TYPE_MAINNET};
-
-struct TestPublicKey : public PublicKey
-{
-    std::string to_string() const override
-    {
-        return "test_public_key_string";
-    }
-
-    const BinaryData get_content() const override
-    {
-
-        return BinaryData{nullptr, 0};
-    }
-
-    PublicKeyPtr clone() const override
-    {
-        return make_clone(*this);
-    }
-};
-
-struct TestPrivateKey : public PrivateKey
-{
-    std::string to_string() const override
-    {
-        return "test_private_key_string";
-    }
-
-    PublicKeyPtr make_public_key() const override
-    {
-        return PublicKeyPtr(new TestPublicKey);
-    }
-
-    PrivateKeyPtr clone() const override
-    {
-        return make_clone(*this);
-    }
-    BinaryDataPtr sign(const BinaryData& data) const override
-    {
-       throw std::runtime_error("Not implemented");
-    }
-};
-
-PrivateKeyPtr make_test_private_key()
-{
-    return PrivateKeyPtr(new TestPrivateKey);
-}
-
-PublicKeyPtr make_test_public_key()
-{
-    return PublicKeyPtr(new TestPublicKey);
-}
-
-struct TestAccount : public Account
-{
-public:
-    TestAccount(
-            BlockchainType blockchain_type,
-            std::string address,
-            HDPath path,
-            PrivateKeyPtr private_key,
-            PublicKeyPtr public_key)
-        : blockchain_type(blockchain_type),
-          address(address),
-          path(std::move(path)),
-          private_key(std::move(private_key)),
-          public_key(std::move(public_key))
-    {
-    }
-
-    HDPath get_path() const
-    {
-        return path;
-    }
-
-    BlockchainType get_blockchain_type() const
-    {
-        return blockchain_type;
-    }
-
-    std::string get_address() const
-    {
-        return address;
-    }
-
-    PrivateKeyPtr get_private_key() const
-    {
-        return private_key->clone();
-    }
-
-    PublicKeyPtr get_public_key() const
-    {
-        return public_key->clone();
-    }
-
-    const BlockchainType blockchain_type;
-    const std::string address;
-    const HDPath path;
-    const PrivateKeyPtr private_key;
-    const PublicKeyPtr public_key;
-};
-
-struct TestHDAccount : public HDAccount
-{
-    TestHDAccount(
-            BlockchainType blockchain_type,
-            std::string address,
-            HDPath path,
-            PrivateKeyPtr private_key,
-            PublicKeyPtr public_key)
-        : m_blockchain_type(blockchain_type),
-          m_address(address),
-          m_path(path),
-          m_private_key(std::move(private_key)),
-          m_public_key(std::move(public_key))
-    {
-    }
-
-    HDPath get_path() const override
-    {
-        return m_path;
-    }
-
-    BlockchainType get_blockchain_type() const override
-    {
-        return m_blockchain_type;
-    }
-
-    AccountPtr make_leaf_account(
-            AddressType type, uint32_t index) const override
-    {
-        return AccountPtr(
-                new TestAccount(
-                        m_blockchain_type,
-                        m_address,
-                        m_path,
-                        m_private_key->clone(),
-                        m_public_key->clone()));
-    }
-
-private:
-    const BlockchainType m_blockchain_type;
-    const std::string m_address;
-    const HDPath m_path;
-    const PrivateKeyPtr m_private_key;
-    const PublicKeyPtr m_public_key;
-};
 
 GTEST_TEST(AccountTest, free_account)
 {

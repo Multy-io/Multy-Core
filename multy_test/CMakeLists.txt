@@ -14,6 +14,8 @@ endif()
 # That means that test cases can't be discovered by gtest runtime and hence not run.
 add_library(multy_test SHARED
     run_tests.cpp
+
+    mocks.cpp
     utility.cpp
     value_printers.cpp
 
@@ -24,6 +26,7 @@ add_library(multy_test SHARED
     test_bitcoin_account.cpp
     test_bitcoin_transaction.cpp
     test_common.cpp
+    test_deletion.cpp
     test_ethereum_account.cpp
     test_ethereum_transaction.cpp
     test_keys.cpp

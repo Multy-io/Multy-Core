@@ -26,6 +26,7 @@ struct MULTY_CORE_API ExtendedKey : public ::multy_core::internal::ObjectBase<Ex
     std::string to_string() const;
 
     static const void* get_object_magic();
+
 public:
     ext_key key;
 };
@@ -42,15 +43,20 @@ struct MULTY_CORE_API Key : public ::multy_core::internal::ObjectBase<Key>
 
 struct MULTY_CORE_API PrivateKey : public Key
 {
-    virtual ~PrivateKey();
+    typedef multy_core::internal::BinaryDataPtr BinaryDataPtr;
+    typedef multy_core::internal::PrivateKeyPtr PrivateKeyPtr;
+    typedef multy_core::internal::PublicKeyPtr PublicKeyPtr;
 
-    virtual multy_core::internal::PublicKeyPtr make_public_key() const = 0;
-    virtual multy_core::internal::PrivateKeyPtr clone() const = 0;
-    virtual multy_core::internal::BinaryDataPtr sign(const BinaryData& data) const = 0;
+    virtual ~PrivateKey();
+    virtual PublicKeyPtr make_public_key() const = 0;
+    virtual PrivateKeyPtr clone() const = 0;
+    virtual BinaryDataPtr sign(const BinaryData& data) const = 0;
 };
 
 struct MULTY_CORE_API PublicKey : public Key
 {
+    typedef multy_core::internal::PublicKeyPtr PublicKeyPtr;
+
     virtual ~PublicKey();
     virtual multy_core::internal::PublicKeyPtr clone() const = 0;
     virtual const BinaryData get_content() const = 0;
