@@ -1,0 +1,51 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        Multy_core_config {
+            keyAlias 'key0'
+            keyPassword 'multytest'
+            storeFile file('../Multy_core_tests')
+            storePassword 'multytest'
+        }
+    }
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "io.multy.android_run_tests"
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11"
+                arguments "-DMULTY_ANDROID_PATH_TO_JNI_WRAPPER=samples/android_run_tests/app/src/main/cpp/native-lib.cpp"
+                arguments "-DANDROID_STL=c++_shared"
+                arguments "-DMULTY_WITH_TESTS=ON"
+                arguments "-DCMAKE_CONFIGURATION_TYPES=Release"
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.Multy_core_config
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "../../../CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+}
