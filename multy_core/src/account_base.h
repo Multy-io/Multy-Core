@@ -31,18 +31,18 @@ class AccountBase : public Account
 {
 public:
     AccountBase(
-            Currency currency,
+            BlockchainType blockchain_type,
             const PrivateKey& private_key_ref,
             const HDPath& path = HDPath());
     virtual ~AccountBase();
 
-    virtual Currency get_currency() const;
+    virtual BlockchainType get_blockchain_type() const;
     virtual HDPath get_path() const;
     virtual PrivateKeyPtr get_private_key() const;
     virtual PublicKeyPtr get_public_key() const;
 
 protected:
-    const Currency m_currency;
+    const BlockchainType m_blockchain_type;
     const HDPath m_path;
 
 private:
@@ -60,10 +60,13 @@ public:
     AccountPtr make_leaf_account(AddressType type, uint32_t index) const override;
 
 protected:
-    HDAccountBase(const ExtendedKey& bip44_master_key, Currency currency, uint32_t index);
+    HDAccountBase(
+            BlockchainType blockchain_type,
+            const ExtendedKey& bip44_master_key,
+            uint32_t index);
 
     HDPath get_path() const override;
-    Currency get_currency() const override;
+    BlockchainType get_blockchain_type() const override;
 
     virtual AccountPtr make_account(
             const ExtendedKey& parent_key,
@@ -71,8 +74,8 @@ protected:
             uint32_t index) const = 0;
 
 private:
+    const BlockchainType m_blockchain_type;
     ExtendedKeyPtr m_account_key;
-    const Currency m_currency;
     HDPath m_bip44_path;
 };
 

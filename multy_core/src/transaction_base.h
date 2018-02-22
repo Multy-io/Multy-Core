@@ -62,9 +62,9 @@ protected:
 class MULTY_CORE_API TransactionBase : public Transaction
 {
 public:
-    TransactionBase(Currency currency, uint32_t traits);
+    TransactionBase(BlockchainType blockchain_type, uint32_t traits);
 
-    Currency get_currency() const override;
+    BlockchainType get_blockchain_type() const override;
     uint32_t get_traits() const override;
     Properties& get_transaction_properties() override;
 
@@ -74,8 +74,8 @@ protected:
     Properties m_properties;
 
 private:
-    Currency m_currency;
-    uint32_t m_traits;
+    const BlockchainType m_blockchain_type;
+    const uint32_t m_traits;
     std::vector<std::pair<std::string, Properties*>> m_all_properties;
 };
 

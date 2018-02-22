@@ -17,7 +17,7 @@ namespace internal
 class EthereumHDAccount : public HDAccountBase
 {
 public:
-    EthereumHDAccount(const ExtendedKey& bip44_master_key, uint32_t index);
+    EthereumHDAccount(BlockchainType blockchain_type, const ExtendedKey& bip44_master_key, uint32_t index);
 
 protected:
     AccountPtr make_account(

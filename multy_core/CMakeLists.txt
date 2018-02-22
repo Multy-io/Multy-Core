@@ -7,6 +7,7 @@ if (MULTY_MORE_WARNINGS)
 
         # Disabled warnings:
          -Wno-missing-braces # false-positive on std::array initialization.
+         -Wno-tautological-constant-out-of-range-compare # false-positive on caution checks
     )
 endif()
 

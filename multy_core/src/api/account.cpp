@@ -15,6 +15,7 @@
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 #include "multy_core/src/ethereum/ethereum_account.h"
 #include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 
 #include <memory>
@@ -27,7 +28,7 @@ using namespace multy_core::internal;
 
 Error* make_hd_account(
         const ExtendedKey* master_key,
-        Currency currency,
+        BlockchainType blockchain_type,
         uint32_t index,
         HDAccount** new_account)
 {
@@ -37,22 +38,22 @@ Error* make_hd_account(
 
     try
     {
-        switch (currency)
+        switch (blockchain_type.blockchain)
         {
-            case CURRENCY_BITCOIN:
+            case BLOCKCHAIN_BITCOIN:
             {
-                *new_account = new BitcoinHDAccount(*master_key, index);
+                *new_account = new BitcoinHDAccount(blockchain_type, *master_key, index);
                 break;
             }
-            case CURRENCY_ETHEREUM:
+            case BLOCKCHAIN_ETHEREUM:
             {
-                *new_account = new EthereumHDAccount(*master_key, index);
+                *new_account = new EthereumHDAccount(blockchain_type, *master_key, index);
                 break;
             }
             default:
             {
                 return MAKE_ERROR(
-                        ERROR_GENERAL_ERROR, "Currency not supported yet");
+                        ERROR_GENERAL_ERROR, "Blockchain not supported yet");
             }
         }
     }
@@ -88,26 +89,26 @@ Error* make_hd_leaf_account(
 }
 
 Error* make_account(
-        Currency currency,
+        Blockchain blockchain,
         const char* serialized_private_key,
         Account** new_account)
 {
-    ARG_CHECK(currency == CURRENCY_BITCOIN || currency == CURRENCY_ETHEREUM);
+    ARG_CHECK(blockchain == BLOCKCHAIN_BITCOIN || blockchain == BLOCKCHAIN_ETHEREUM);
     ARG_CHECK(serialized_private_key);
     ARG_CHECK(new_account);
 
     try
     {
         // TODO: make a factory
-        switch (currency)
+        switch (blockchain)
         {
-            case CURRENCY_BITCOIN:
+            case BLOCKCHAIN_BITCOIN:
             {
                 *new_account = make_bitcoin_account(serialized_private_key)
                                        .release();
                 break;
             }
-            case CURRENCY_ETHEREUM:
+            case BLOCKCHAIN_ETHEREUM:
             {
                 *new_account = make_ethereum_account(serialized_private_key)
                         .release();
@@ -115,8 +116,7 @@ Error* make_account(
             }
             default:
             {
-                return MAKE_ERROR(
-                        ERROR_GENERAL_ERROR, "Currency not supported yet");
+                THROW_EXCEPTION("Blockchain not supported yet.");
             }
         }
     }
@@ -185,54 +185,64 @@ Error* account_get_address_path(
     return nullptr;
 }
 
-Error* account_get_currency(const Account* account, Currency* out_currency)
+Error* account_get_blockchain_type(
+        const Account* account,
+        BlockchainType* out_blockchain_type)
 {
     ARG_CHECK_OBJECT(account);
-    ARG_CHECK(out_currency);
+    ARG_CHECK(out_blockchain_type);
 
     try
     {
-        *out_currency = account->get_currency();
+        *out_blockchain_type = account->get_blockchain_type();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
     return nullptr;
 }
 
-struct Error* validate_address(enum Currency currency, const char* address)
+Error* validate_address(BlockchainType blockchain_type, const char* address)
 {
     ARG_CHECK(address);
-    ARG_CHECK(currency == CURRENCY_BITCOIN || currency == CURRENCY_ETHEREUM);
+    ARG_CHECK(blockchain_type.blockchain == BLOCKCHAIN_BITCOIN
+            || blockchain_type.blockchain == BLOCKCHAIN_ETHEREUM);
 
     try
     {
-        switch (currency)
+        switch (blockchain_type.blockchain)
         {
-            case CURRENCY_BITCOIN:
+            case BLOCKCHAIN_BITCOIN:
             {
                 BitcoinAddressType address_type;
                 BitcoinNetType net_type;
-                parse_bitcoin_address(address, &net_type, &address_type);
+                bitcoin_parse_address(address, &net_type, &address_type);
                 if (address_type != BITCOIN_ADDRESS_P2PKH)
                 {
                     THROW_EXCEPTION("BTC: Only P2PKH addresses are supported for now.");
                 }
+                if (net_type != blockchain_type.net_type)
+                {
+                    THROW_EXCEPTION("Incompatitable net_type.")
+                            << " Requested: " << blockchain_type.net_type
+                            << ", address net type:" << net_type;
+                }
                 break;
             }
-            case CURRENCY_ETHEREUM:
+            case BLOCKCHAIN_ETHEREUM:
             {
                 THROW_EXCEPTION("ETH addresses are not supported yet.");
-                break;
             }
             default:
-                break;
+            {
+                return MAKE_ERROR(
+                        ERROR_GENERAL_ERROR, "Blockchain not supported yet");
+            }
         }
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
     return nullptr;
 }
-
 
 void free_hd_account(HDAccount* account)
 {

@@ -28,7 +28,7 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
     Transaction();
     virtual ~Transaction();
 
-    virtual Currency get_currency() const = 0;
+    virtual BlockchainType get_blockchain_type() const = 0;
     virtual uint32_t get_traits() const = 0;
 
     virtual void update() = 0;

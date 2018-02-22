@@ -40,12 +40,12 @@ bool inBetween(const BigInt& left, const BigInt& value, const BigInt& right)
 }
 
 AccountPtr make_account(
-        Currency currency,
+        Blockchain blockchain,
         const char* serialized_private_key)
 {
     AccountPtr account;
     throw_if_error(
-            make_account(currency, serialized_private_key, reset_sp(account)));
+            make_account(blockchain, serialized_private_key, reset_sp(account)));
     return account;
 }
 
@@ -140,7 +140,7 @@ GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-            CURRENCY_BITCOIN,
+            BLOCKCHAIN_BITCOIN,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
             reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -216,7 +216,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
     AccountPtr account;
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -273,7 +273,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
     AccountPtr account;
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -350,7 +350,7 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
     AccountPtr account;
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -428,7 +428,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
     AccountPtr account;
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -482,7 +482,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     AccountPtr account;
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -544,7 +544,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -609,7 +609,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -680,7 +680,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
 
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -688,7 +688,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
 
     HANDLE_ERROR(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "cVbMJKcfEGi4wgsN39rMPkYVAaLeRaPPbrPpJfcH9B9dZCPbS7kT",
                     reset_sp(account1)));
     ASSERT_NE(nullptr, account1);
@@ -757,7 +757,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
 GTEST_TEST(BitcoinTransactionTest, transaction_update)
 {
     // Verify that transaction_update() modifies TX internal state.
-    const AccountPtr account = make_account(CURRENCY_BITCOIN,
+    const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
     const PrivateKeyPtr private_key = account->get_private_key();
 
@@ -822,7 +822,8 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update)
 
 GTEST_TEST(BitcoinTransactionTest, destination_address_verification)
 {
-    const AccountPtr account = make_account(CURRENCY_BITCOIN, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+    const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
 
     TransactionPtr transaction;
     make_transaction(account.get(), reset_sp(transaction));
@@ -843,7 +844,7 @@ GTEST_TEST(BitcoinTransactionTest, destination_address_verification)
 GTEST_TEST(BitcoinTransactionTest, transaction_update_empty_tx)
 {
     // Verify that transaction_update() fails when called on empty TX.
-    const AccountPtr account = make_account(CURRENCY_BITCOIN,
+    const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
 
     TransactionPtr transaction;

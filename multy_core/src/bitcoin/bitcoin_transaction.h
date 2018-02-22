@@ -35,7 +35,7 @@ typedef std::unique_ptr<BitcoinTransactionSource> BitcoinTransactionSourcePtr;
 class BitcoinTransaction : public TransactionBase
 {
 public:
-    BitcoinTransaction();
+    explicit BitcoinTransaction(BlockchainType blockchain_type);
 
     // Transaction
     void update() override;

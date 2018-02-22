@@ -18,20 +18,6 @@ constexpr uint32_t hardened_index(uint32_t index)
     return index | HARDENED_INDEX_BASE;
 }
 
-uint32_t to_chain_code(Currency currency)
-{
-    // See: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-    static const uint32_t currency_chain_codes[] = {
-            0x80000000, // BITCOIN
-            0x8000003c, // EHTER
-    };
-
-    if (array_size(currency_chain_codes) < static_cast<size_t>(currency))
-    {
-        THROW_EXCEPTION("Can't convert currency to the chain code");
-    }
-    return currency_chain_codes[currency];
-}
 // According to bip 44, complete address path looks like:
 // m / purpose' / coin_type' / account' / change / address_index
 const size_t BIP44_PURPOSE = 0;
@@ -39,10 +25,27 @@ const size_t BIP44_COIN_TYPE = 1;
 const size_t BIP44_ACCOUNT = 2;
 const size_t BIP44_ACCOUNT_PATH_DEPTH = BIP44_ACCOUNT + 1;
 
-const uint32_t BIP44_PURPOSE_CHAIN_CODE = hardened_index(44);
+const uint32_t BIP44_PURPOSE_CHAIN_CODE = hardened_index(0x2C);
+const uint32_t BIP44_TESTNET_CHAIN_CODE = hardened_index(0x1);
+
 static_assert(
         BIP44_PURPOSE_CHAIN_CODE == 0x8000002C,
         "invalid hardened index derivation function implementation");
+
+static_assert(
+        BIP44_TESTNET_CHAIN_CODE == 0x80000001,
+        "invalid hardened index derivation function implementation");
+
+uint32_t to_chain_code(BlockchainType blockchain_type)
+{
+    if (blockchain_type.net_type == BLOCKCHAIN_NET_TYPE_MAINNET)
+    {
+        return blockchain_type.blockchain;
+    }
+
+    return BIP44_TESTNET_CHAIN_CODE;
+}
+
 } // namepace
 
 namespace multy_core
@@ -50,10 +53,10 @@ namespace multy_core
 namespace internal
 {
 AccountBase::AccountBase(
-        Currency currency,
+        BlockchainType blockchain_type,
         const PrivateKey& private_key_ref,
         const HDPath& path)
-    : m_currency(currency),
+    : m_blockchain_type(blockchain_type),
       m_path(path),
       m_private_key_ref(private_key_ref)
 {
@@ -78,21 +81,22 @@ PublicKeyPtr AccountBase::get_public_key() const
     return m_private_key_ref.make_public_key();
 }
 
-Currency AccountBase::get_currency() const
+BlockchainType AccountBase::get_blockchain_type() const
 {
-    return m_currency;
+    return m_blockchain_type;
 }
 
-HDAccountBase::HDAccountBase(
-        const ExtendedKey& master_key, Currency currency, uint32_t index)
-    : m_account_key(),
-      m_currency(currency),
+HDAccountBase::HDAccountBase(BlockchainType blockchain_type,
+        const ExtendedKey& master_key,
+        uint32_t index)
+    : m_blockchain_type(blockchain_type),
+      m_account_key(),
       m_bip44_path(BIP44_ACCOUNT_PATH_DEPTH)
 {
     // BIP44 derive account key:
-    // master key -> currency key -> account key.
-    ExtendedKeyPtr purpose_key, currency_key;
-    const uint32_t currency_index = to_chain_code(currency);
+    // master key -> blockchain key -> account key.
+    ExtendedKeyPtr purpose_key, chain_key;
+    const uint32_t chain_index = to_chain_code(blockchain_type);
     const uint32_t account_index = hardened_index(index);
 
     throw_if_error(
@@ -101,15 +105,15 @@ HDAccountBase::HDAccountBase(
                     reset_sp(purpose_key)));
     throw_if_error(
             make_child_key(
-                    purpose_key.get(), currency_index,
-                    reset_sp(currency_key)));
+                    purpose_key.get(), chain_index,
+                    reset_sp(chain_key)));
     throw_if_error(
             make_child_key(
-                    currency_key.get(), account_index,
+                    chain_key.get(), account_index,
                     reset_sp(m_account_key)));
 
     m_bip44_path[BIP44_PURPOSE] = BIP44_PURPOSE_CHAIN_CODE;
-    m_bip44_path[BIP44_COIN_TYPE] = currency_index;
+    m_bip44_path[BIP44_COIN_TYPE] = chain_index;
     m_bip44_path[BIP44_ACCOUNT] = account_index;
 }
 
@@ -122,9 +126,9 @@ HDPath HDAccountBase::get_path() const
     return m_bip44_path;
 }
 
-Currency HDAccountBase::get_currency() const
+BlockchainType HDAccountBase::get_blockchain_type() const
 {
-    return m_currency;
+    return m_blockchain_type;
 }
 
 AccountPtr HDAccountBase::make_leaf_account(

@@ -24,18 +24,19 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
 
     try
     {
-        switch (account->get_currency())
+        const BlockchainType blockchain_type = account->get_blockchain_type();
+        switch (blockchain_type.blockchain)
         {
             // TODO: use factory to create a transactions.
-            case CURRENCY_BITCOIN:
-                *new_transaction = new BitcoinTransaction();
+            case BLOCKCHAIN_BITCOIN:
+                *new_transaction = new BitcoinTransaction(blockchain_type);
                 break;
-            case CURRENCY_ETHEREUM:
+            case BLOCKCHAIN_ETHEREUM:
                 *new_transaction = new EthereumTransaction(*account);
                 break;
             default:
                 return MAKE_ERROR(
-                        ERROR_GENERAL_ERROR, "Currency not supported yet");
+                        ERROR_GENERAL_ERROR, "Blockchain not supported yet");
         }
     }
     CATCH_EXCEPTION_RETURN_ERROR();
@@ -65,15 +66,15 @@ Error* transaction_has_trait(
     return nullptr;
 }
 
-Error* transaction_get_currency(
-        const Transaction* transaction, Currency* out_currency)
+Error* transaction_get_blockchain_type(
+        const Transaction* transaction, BlockchainType* out_blockchain_type)
 {
     ARG_CHECK_OBJECT(transaction);
-    ARG_CHECK(out_currency);
+    ARG_CHECK(out_blockchain_type);
 
     try
     {
-        *out_currency = transaction->get_currency();
+        *out_blockchain_type = transaction->get_blockchain_type();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 

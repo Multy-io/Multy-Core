@@ -23,7 +23,8 @@ namespace
 using namespace multy_core::internal;
 using namespace test_utility;
 
-const char* TEST_CASES_P2PKH_ADDRESSES[] = {
+const char* BITCOIN_ADDRESSES_MAINNET_P2PKH[] =
+{
     "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwU",
     "1fjRrB4XXJWeiw1686zCKYGSNjFqLchYQ",
     "14kHzG9194ojtiXFdbcdTkUCUsFbEfu5MW",
@@ -37,6 +38,10 @@ const char* TEST_CASES_P2PKH_ADDRESSES[] = {
     "1Mu8765kCAuP5NaoKZUMgBieTT7KqcUBbZ",
     "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ",
     "12T6zBkXZT5Tyg1W7ssXL27MLoE3c8NmwX",
+};
+
+const char* BITCOIN_ADDRESSES_TESTNET_P2PKH[] =
+{
     "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
     "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM",
     "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
@@ -46,7 +51,8 @@ const char* TEST_CASES_P2PKH_ADDRESSES[] = {
     "n1ZE4fDzH5usehyo52XUGsz3DjK6YBZPue"
 };
 
-const char* TEST_CASES_P2SH_ADDRESSES[] = {
+const char* BITCOIN_ADDRESSES_MAINNET_P2SH[] =
+{
     "3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX",
 };
 
@@ -125,22 +131,29 @@ INSTANTIATE_TEST_CASE_P(
         Bitcoin,
         SerializedKeyTestP,
         ::testing::Combine(
-                ::testing::Values(CURRENCY_BITCOIN),
+                ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
-        Bitcoin,
+        Bitcoin_MAINNET_P2PKH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(CURRENCY_BITCOIN),
-            ::testing::ValuesIn(TEST_CASES_P2PKH_ADDRESSES)));
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}),
+            ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2PKH)));
 
 INSTANTIATE_TEST_CASE_P(
-        DISABLED_Bitcoin,
+        Bitcoin_TESTNET_P2PKH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(CURRENCY_BITCOIN),
-            ::testing::ValuesIn(TEST_CASES_P2SH_ADDRESSES)));
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_TESTNET}),
+            ::testing::ValuesIn(BITCOIN_ADDRESSES_TESTNET_P2PKH)));
+
+INSTANTIATE_TEST_CASE_P(
+        DISABLED_Bitcoin_MAINNET_P2SH,
+        CheckAddressTestP,
+        ::testing::Combine(
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}),
+            ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2SH)));
 
 struct SignTestCase
 {
@@ -190,7 +203,7 @@ TEST_P(BitcoinTestSign, SignWithPrivateKey)
     ErrorPtr error;
     error.reset(
             make_account(
-                    CURRENCY_BITCOIN, private_key_data, reset_sp(account)));
+                    BLOCKCHAIN_BITCOIN, private_key_data, reset_sp(account)));
     EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
 

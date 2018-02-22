@@ -27,9 +27,9 @@ using namespace multy_core::internal;
 struct TestTransaction : public Transaction
 {
     TestTransaction(): m_total("5"), m_properties("") {}
-    Currency get_currency() const override
+    BlockchainType get_blockchain_type() const override
     {
-        return m_currency;
+        return m_blockchain;
     }
 
     uint32_t get_traits() const override
@@ -77,11 +77,11 @@ struct TestTransaction : public Transaction
     }
 
 private:
-    Currency m_currency = CURRENCY_BITCOIN;
-    uint32_t m_traits = TRANSACTION_REQUIRES_EXPLICIT_SOURCE;
-    BigInt m_total;
+    const BlockchainType m_blockchain = BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET};
+    const uint32_t m_traits = TRANSACTION_REQUIRES_EXPLICIT_SOURCE;
+    const BigInt m_total;
     Properties m_properties;
-    BinaryDataPtr m_binarydata;
+    const BinaryDataPtr m_binarydata;
 };
 
 
@@ -91,7 +91,7 @@ GTEST_TEST(TransactionTestInvalidArgs, make_transaction)
     TransactionPtr transaction;
 
     HANDLE_ERROR(make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
                     reset_sp(account)));
 
@@ -113,13 +113,13 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_has_trait)
             transaction_has_trait(nullptr, TRANSACTION_SUPPORTS_FEE, &has_capability));
 }
 
-GTEST_TEST(TransactionTestInvalidArgs, transaction_get_currency)
+GTEST_TEST(TransactionTestInvalidArgs, transaction_get_blockchain)
 {
     TestTransaction transaction;
-    Currency currensy;
+    BlockchainType blockchain_type;
 
-    EXPECT_ERROR(transaction_get_currency(&transaction, nullptr));
-    EXPECT_ERROR(transaction_get_currency(nullptr, &currensy));
+    EXPECT_ERROR(transaction_get_blockchain_type(&transaction, nullptr));
+    EXPECT_ERROR(transaction_get_blockchain_type(nullptr, &blockchain_type));
 }
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_add_source)
@@ -199,7 +199,7 @@ GTEST_TEST(TransactionTest, make_transaction)
 
     HANDLE_ERROR(
             make_account(
-                CURRENCY_BITCOIN,
+                BLOCKCHAIN_BITCOIN,
                 "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
                 reset_sp(account_transaction)));
 
@@ -218,12 +218,12 @@ GTEST_TEST(TransactionTest, transaction_has_trait)
                               TRANSACTION_SUPPORTS_FEE, &has_capability));
 }
 
-GTEST_TEST(TransactionTest, transaction_get_currency)
+GTEST_TEST(TransactionTest, transaction_get_blockchain)
 {
     TestTransaction transaction;
-    Currency currensy;
+    BlockchainType blockchain_type;
 
-    HANDLE_ERROR(transaction_get_currency(&transaction, &currensy));
+    HANDLE_ERROR(transaction_get_blockchain_type(&transaction, &blockchain_type));
 }
 GTEST_TEST(TransactionTest, transaction_add_source)
 {

@@ -9,6 +9,7 @@
 #include "multy_test/bip39_test_cases.h"
 #include "multy_test/utility.h"
 
+#include "multy_core/account.h"
 #include "multy_core/common.h"
 #include "multy_core/error.h"
 
@@ -41,20 +42,38 @@ std::ostream& operator<<(std::ostream& ostr, BinaryData const& data)
                 << data.len;
 }
 
-std::ostream& operator<<(std::ostream& ostr, Currency currency)
+std::ostream& operator<<(std::ostream& ostr, Blockchain blockchain)
 {
-    switch (currency)
+    switch (blockchain)
     {
-        case CURRENCY_BITCOIN:
-            ostr << "CURRENCY_BITCOIN";
+        case BLOCKCHAIN_BITCOIN:
+            ostr << "BLOCKCHAIN_BITCOIN";
             break;
-        case CURRENCY_ETHEREUM:
-            ostr << "CURRENCY_ETHEREUM";
+        case BLOCKCHAIN_ETHEREUM:
+            ostr << "BLOCKCHAIN_ETHEREUM";
             break;
         default:
-            ostr << "unknown currency " << static_cast<uint32_t>(currency);
+            ostr << "unknown Blockchain " << static_cast<uint32_t>(blockchain);
             break;
     }
+    return ostr;
+}
+
+std::ostream& operator<<(std::ostream& ostr, BlockchainNetType net_type)
+{
+    if (net_type == BLOCKCHAIN_NET_TYPE_MAINNET)
+    {
+        return ostr << "MainNet";
+    }
+    else
+    {
+        return ostr << "TestNet" << static_cast<size_t>(net_type);
+    }
+}
+
+std::ostream& operator<<(std::ostream& ostr, const BlockchainType& blockchain_type)
+{
+    ostr << blockchain_type.blockchain << "/" << static_cast<BlockchainNetType>(blockchain_type.net_type);
     return ostr;
 }
 
@@ -107,7 +126,7 @@ void PrintTo(const BIP39TestCase& e, std::ostream* out)
 void PrintTo(const Account& a, std::ostream* out)
 {
     *out << "Account{\n"
-         << "\tcurrency: " << a.get_currency() << ",\n"
+         << "\tBlockchain: " << a.get_blockchain_type() << ",\n"
          << "\tpath: " << a.get_path() << "\n"
          << "}";
 }
@@ -115,14 +134,19 @@ void PrintTo(const Account& a, std::ostream* out)
 void PrintTo(const HDAccount& a, std::ostream* out)
 {
     *out << "HDAccount{\n"
-         << "\tcurrency: " << a.get_currency() << ",\n"
+         << "\tblockchain: " << a.get_blockchain_type() << ",\n"
          << "\tpath: " << a.get_path() << "\n"
          << "}";
 }
 
-void PrintTo(const Currency& c, std::ostream* out)
+void PrintTo(const Blockchain& blockchain, std::ostream* out)
 {
-    *out << c;
+    *out << blockchain;
+}
+
+void PrintTo(const BlockchainType& blockchain_type, std::ostream* out)
+{
+    *out << blockchain_type;
 }
 
 void PrintTo(const AddressType& a, std::ostream* out)
@@ -143,7 +167,7 @@ void PrintTo(const AddressType& a, std::ostream* out)
 
 void PrintTo(const Transaction& t, std::ostream* out)
 {
-    *out << "Transaction {" << t.get_currency() << "}";
+    *out << "Transaction {" << t.get_blockchain_type() << "}";
 }
 
 void PrintTo(const BigInt& a, std::ostream* out)

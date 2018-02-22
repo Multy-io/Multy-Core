@@ -18,20 +18,14 @@ namespace internal
 {
 enum BitcoinNetType
 {
-    BITCOIN_NET_DEFAULT = 0, // selected at run time, depending on internal settings.
-    BITCOIN_MAINNET,
-    BITCOIN_TESTNET,
+    BITCOIN_MAINNET = 0,
+    BITCOIN_TESTNET = 1,
 };
+
 enum BitcoinAddressType
 {
-    BITCOIN_ADDRESS_P2PKH,
-    BITCOIN_ADDRESS_P2SH,
-};
-enum BITCON_ADDRESS_VERSION {
-    BITCOIN_ADDRESS_VERSION_MAIN_NET_P2PKH = 0x0,
-    BITCOIN_ADDRESS_VERSION_MAIN_NET_P2SH = 0x05,
-    BITCOIN_ADDRESS_VERSION_TEST_NET_P2PKH = 0x6F,
-    BITCOIN_ADDRESS_VERSION_TEST_NET_P2SH = 0xC4
+    BITCOIN_ADDRESS_P2PKH = 0,
+    BITCOIN_ADDRESS_P2SH = 1,
 };
 
 struct BitcoinPublicKey;
@@ -50,15 +44,19 @@ AccountPtr make_bitcoin_account(const char* private_key);
  *
  * @throw Exception if something went wrong.
  */
-BinaryDataPtr parse_bitcoin_address(const char*,
-                                    enum BitcoinNetType*,
-                                    enum BitcoinAddressType*);
-
+BinaryDataPtr bitcoin_parse_address(
+        const char*,
+        BitcoinNetType*,
+        BitcoinAddressType*);
 
 class MULTY_CORE_API BitcoinHDAccount : public HDAccountBase
 {
 public:
-    BitcoinHDAccount(const ExtendedKey& bip44_master_key, uint32_t index);
+    BitcoinHDAccount(
+            BlockchainType blockchain_type,
+            const ExtendedKey& bip44_master_key,
+            uint32_t index);
+
     ~BitcoinHDAccount();
 
     AccountPtr make_account(
@@ -70,16 +68,13 @@ public:
 class MULTY_CORE_API BitcoinAccount : public AccountBase
 {
 public:
-    BitcoinAccount(BitcoinPrivateKeyPtr key, HDPath path,
-            BitcoinNetType net_type = BITCOIN_NET_DEFAULT);
+    BitcoinAccount(BlockchainType blockchain_type, BitcoinPrivateKeyPtr key, HDPath path);
     ~BitcoinAccount();
 
     std::string get_address() const override;
-    bool is_testnet() const;
 
 private:
     const BitcoinPrivateKeyPtr m_private_key;
-    const bool m_is_testnet;
 };
 
 } // namespace internal

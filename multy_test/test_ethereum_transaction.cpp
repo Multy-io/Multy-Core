@@ -35,7 +35,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     CURRENCY_ETHEREUM,
+                     BLOCKCHAIN_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -103,7 +103,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     CURRENCY_ETHEREUM,
+                     BLOCKCHAIN_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -150,7 +150,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     CURRENCY_ETHEREUM,
+                     BLOCKCHAIN_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -204,7 +204,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     CURRENCY_ETHEREUM,
+                     BLOCKCHAIN_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -260,7 +260,7 @@ GTEST_TEST(EthereumTransactionTest, transaction_update_empty_tx)
     // Verify that transaction_update() fails when called on empty TX.
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     CURRENCY_ETHEREUM,
+                     BLOCKCHAIN_ETHEREUM,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 

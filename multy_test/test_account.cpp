@@ -29,7 +29,8 @@ const char* TEST_ADDRESS = "TEST_ADDRESS";
 const HDPath TEST_PATH = {1, 2, 3};
 const char* TEST_PATH_STRING = "m/1/2/3";
 
-const Currency INVALID_CURRENCY = static_cast<Currency>(-1);
+const Blockchain INVALID_BLOCKCHAIN = static_cast<Blockchain>(-1);
+const BlockchainType INVALID_BLOCKCHAIN_TYPE{INVALID_BLOCKCHAIN, BLOCKCHAIN_NET_TYPE_MAINNET};
 
 struct TestPublicKey : public PublicKey
 {
@@ -86,12 +87,12 @@ struct TestAccount : public Account
 {
 public:
     TestAccount(
-            Currency currency,
+            BlockchainType blockchain_type,
             std::string address,
             HDPath path,
             PrivateKeyPtr private_key,
             PublicKeyPtr public_key)
-        : currency(currency),
+        : blockchain_type(blockchain_type),
           address(address),
           path(std::move(path)),
           private_key(std::move(private_key)),
@@ -104,9 +105,9 @@ public:
         return path;
     }
 
-    Currency get_currency() const
+    BlockchainType get_blockchain_type() const
     {
-        return currency;
+        return blockchain_type;
     }
 
     std::string get_address() const
@@ -124,7 +125,7 @@ public:
         return public_key->clone();
     }
 
-    const Currency currency;
+    const BlockchainType blockchain_type;
     const std::string address;
     const HDPath path;
     const PrivateKeyPtr private_key;
@@ -133,14 +134,13 @@ public:
 
 struct TestHDAccount : public HDAccount
 {
-
     TestHDAccount(
-            Currency currency,
+            BlockchainType blockchain_type,
             std::string address,
             HDPath path,
             PrivateKeyPtr private_key,
             PublicKeyPtr public_key)
-        : m_currency(currency),
+        : m_blockchain_type(blockchain_type),
           m_address(address),
           m_path(path),
           m_private_key(std::move(private_key)),
@@ -153,9 +153,9 @@ struct TestHDAccount : public HDAccount
         return m_path;
     }
 
-    Currency get_currency() const override
+    BlockchainType get_blockchain_type() const override
     {
-        return m_currency;
+        return m_blockchain_type;
     }
 
     AccountPtr make_leaf_account(
@@ -163,16 +163,19 @@ struct TestHDAccount : public HDAccount
     {
         return AccountPtr(
                 new TestAccount(
-                        m_currency, m_address, m_path, m_private_key->clone(),
+                        m_blockchain_type,
+                        m_address,
+                        m_path,
+                        m_private_key->clone(),
                         m_public_key->clone()));
     }
 
 private:
-    Currency m_currency;
-    std::string m_address;
-    HDPath m_path;
-    PrivateKeyPtr m_private_key;
-    PublicKeyPtr m_public_key;
+    const BlockchainType m_blockchain_type;
+    const std::string m_address;
+    const HDPath m_path;
+    const PrivateKeyPtr m_private_key;
+    const PublicKeyPtr m_public_key;
 };
 
 GTEST_TEST(AccountTest, free_account)
@@ -187,12 +190,15 @@ GTEST_TEST(AccountTest, fake_account)
     const char* EXPECTED_ADDRESS = TEST_ADDRESS;
     const HDPath EXPECTED_PATH = TEST_PATH;
     const char* EXPECTED_PATH_STRING = TEST_PATH_STRING;
-    const Currency EXPECTED_CURRENCY = CURRENCY_BITCOIN;
+    const BlockchainType EXPECTED_BLOCKCHAIN_TYPE{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET};
 
     ErrorPtr error;
     TestHDAccount root_account(
-            EXPECTED_CURRENCY, EXPECTED_ADDRESS, EXPECTED_PATH,
-            make_test_private_key(), make_test_public_key());
+            EXPECTED_BLOCKCHAIN_TYPE,
+            EXPECTED_ADDRESS,
+            EXPECTED_PATH,
+            make_test_private_key(),
+            make_test_public_key());
 
     AccountPtr account;
     {
@@ -224,11 +230,11 @@ GTEST_TEST(AccountTest, fake_account)
     }
 
     {
-        Currency currency = INVALID_CURRENCY;
+        BlockchainType blockchain_type;
 
-        error.reset(account_get_currency(account.get(), &currency));
+        error.reset(account_get_blockchain_type(account.get(), &blockchain_type));
         EXPECT_EQ(nullptr, error);
-        ASSERT_EQ(EXPECTED_CURRENCY, currency);
+        ASSERT_EQ(EXPECTED_BLOCKCHAIN_TYPE, blockchain_type);
     }
 }
 
@@ -240,13 +246,13 @@ GTEST_TEST(AccountTestInvalidArgs, make_account)
     ErrorPtr error;
     AccountPtr account;
 
-    error.reset(make_account(INVALID_CURRENCY, "", reset_sp(account)));
+    error.reset(make_account(INVALID_BLOCKCHAIN, "", reset_sp(account)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, account);
 
     error.reset(
             make_account(
-                    CURRENCY_BITCOIN,
+                    BLOCKCHAIN_BITCOIN,
                     INVALID_PRIVATE_KEY,
                     reset_sp(account)));
     EXPECT_NE(nullptr, error);
@@ -257,7 +263,8 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_key)
 {
     const KeyType INVALID_KEY_TYPE = static_cast<KeyType>(-1);
     const TestAccount account(
-            CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
+            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
     ErrorPtr error;
@@ -281,7 +288,8 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_string)
     ConstCharPtr address_str;
 
     const TestAccount account(
-            CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
+            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
     error.reset(account_get_address_string(nullptr, reset_sp(address_str)));
@@ -298,7 +306,8 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
     ConstCharPtr path_str;
 
     const TestAccount account(
-            CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
+            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
     error.reset(account_get_address_path(nullptr, reset_sp(path_str)));
@@ -309,52 +318,70 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(AccountTestInvalidArgs, account_get_currency)
+GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
 {
     ErrorPtr error;
-    Currency currency = INVALID_CURRENCY;
+    BlockchainType blockchain_type = INVALID_BLOCKCHAIN_TYPE;
 
     const TestAccount account(
-            CURRENCY_BITCOIN, TEST_ADDRESS, TEST_PATH, make_test_private_key(),
+            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(account_get_currency(nullptr, &currency));
+    error.reset(account_get_blockchain_type(nullptr, &blockchain_type));
     EXPECT_NE(nullptr, error);
-    EXPECT_EQ(INVALID_CURRENCY, currency);
+    EXPECT_EQ(INVALID_BLOCKCHAIN_TYPE, blockchain_type);
 
-    error.reset(account_get_currency(&account, nullptr));
+    error.reset(account_get_blockchain_type(&account, nullptr));
     EXPECT_NE(nullptr, error);
 }
 
 GTEST_TEST(AccountTestInvalidArgs, validate_address)
 {
-    EXPECT_ERROR(validate_address(CURRENCY_BITCOIN, nullptr));
-    EXPECT_ERROR(validate_address(INVALID_CURRENCY, "test"));
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}, nullptr));
+    EXPECT_ERROR(validate_address(INVALID_BLOCKCHAIN_TYPE, "test"));
 }
 
 GTEST_TEST(AccountTestInvalidAddress, validate_address)
 {
     // Invalid Checksum
-    EXPECT_ERROR(validate_address(CURRENCY_BITCOIN, "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
-    EXPECT_ERROR(validate_address(CURRENCY_BITCOIN, "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
 
     // Invalid address
-    EXPECT_ERROR(validate_address(CURRENCY_ETHEREUM, "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET},
+            "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
 }
 
 
-class AccountTestCurrencySupportP : public ::testing::TestWithParam<Currency>
+class AccountTestBlockchainSupportP : public ::testing::TestWithParam<BlockchainType>
 {
 };
 
-const Currency SUPPORTED_CURRENCIES[] = {CURRENCY_BITCOIN, CURRENCY_ETHEREUM};
+const BlockchainType SUPPORTED_BLOCKCHAINS[] =
+{
+    {
+        BLOCKCHAIN_BITCOIN,
+        BLOCKCHAIN_NET_TYPE_MAINNET
+    },
+    {
+        BLOCKCHAIN_BITCOIN,
+        BLOCKCHAIN_NET_TYPE_TESTNET
+    },
+    {
+        BLOCKCHAIN_ETHEREUM,
+        BLOCKCHAIN_NET_TYPE_MAINNET
+    }
+};
 
 INSTANTIATE_TEST_CASE_P(
-        SupportedCurrencies,
-        AccountTestCurrencySupportP,
-        ::testing::ValuesIn(SUPPORTED_CURRENCIES));
+        SupportedBlockchains,
+        AccountTestBlockchainSupportP,
+        ::testing::ValuesIn(SUPPORTED_BLOCKCHAINS));
 
-TEST_P(AccountTestCurrencySupportP, generic)
+TEST_P(AccountTestBlockchainSupportP, generic)
 {
     const ExtendedKey master_key = make_dummy_extended_key();
 
@@ -374,10 +401,10 @@ TEST_P(AccountTestCurrencySupportP, generic)
                     reset_sp(account)));
 
     {
-        Currency actual_currency;
-        error.reset(account_get_currency(account.get(), &actual_currency));
+        BlockchainType actual_blockchain;
+        error.reset(account_get_blockchain_type(account.get(), &actual_blockchain));
         EXPECT_EQ(nullptr, error);
-        EXPECT_EQ(GetParam(), actual_currency);
+        EXPECT_EQ(GetParam(), actual_blockchain);
     }
 
     {

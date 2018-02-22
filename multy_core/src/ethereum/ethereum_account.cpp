@@ -188,8 +188,10 @@ class EthereumAccount : public AccountBase
 {
 public:
     EthereumAccount(
-            EthereumPrivateKeyPtr private_key, const HDPath& path = HDPath())
-        : AccountBase(CURRENCY_ETHEREUM, *private_key, path),
+            BlockchainType blockchain_type,
+            EthereumPrivateKeyPtr private_key,
+            const HDPath& path = HDPath())
+        : AccountBase(blockchain_type, *private_key, path),
           m_private_key(std::move(private_key))
     {
     }
@@ -216,9 +218,8 @@ namespace multy_core
 namespace internal
 {
 
-EthereumHDAccount::EthereumHDAccount(
-        const ExtendedKey& bip44_master_key, uint32_t index)
-    : HDAccountBase(bip44_master_key, CURRENCY_ETHEREUM, index)
+EthereumHDAccount::EthereumHDAccount(BlockchainType blockchain_type, const ExtendedKey& bip44_master_key, uint32_t index)
+    : HDAccountBase(blockchain_type, bip44_master_key, index)
 {
 }
 
@@ -236,6 +237,7 @@ AccountPtr EthereumHDAccount::make_account(
 
     AccountPtr result(
             new EthereumAccount(
+                    get_blockchain_type(),
                     std::move(private_key),
                     make_child_path(make_child_path(get_path(), type), index)));
 
@@ -263,8 +265,9 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
             "Failed to verify private key");
 
+    const BlockchainType blockchain_type{BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET};
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
-    return AccountPtr(new EthereumAccount(std::move(private_key)));
+    return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
 }
 
 } // namespace internal

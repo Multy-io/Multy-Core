@@ -8,6 +8,7 @@
 #define MULTY_TEST_SERIALIZED_KEYS_TEST_BASE_H
 
 #include "multy_core/account.h"
+#include "multy_core/src/u_ptr.h"
 
 #include "gtest/gtest.h"
 
@@ -23,12 +24,16 @@ struct SerializedKeyTestCase
 void PrintTo(const SerializedKeyTestCase& c, std::ostream* out);
 
 class SerializedKeyTestP : public ::testing::TestWithParam<
-        ::testing::tuple<Currency, SerializedKeyTestCase>>
+        ::testing::tuple<BlockchainType, SerializedKeyTestCase>>
 {
+    void SetUp() override;
+
+public:
+    multy_core::internal::AccountPtr account;
 };
 
 class CheckAddressTestP : public ::testing::TestWithParam<
-        ::testing::tuple<Currency, const char*>>
+        ::testing::tuple<BlockchainType, const char*>>
 {
 };
 

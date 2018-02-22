@@ -300,7 +300,7 @@ public:
                   [this](const std::string &new_address) {
                         BitcoinNetType net_type;
                         BitcoinAddressType address_type;
-                        this->binary_address = parse_bitcoin_address(new_address.c_str(),
+                        this->binary_address = bitcoin_parse_address(new_address.c_str(),
                             &net_type, &address_type);
                   }),
           is_change(false, properties, "is_change", Property::OPTIONAL,
@@ -499,8 +499,8 @@ public:
     PropertyT<BigInt> amount; // Not serialized:
 };
 
-BitcoinTransaction::BitcoinTransaction()
-    : TransactionBase(CURRENCY_BITCOIN, bitcoin_traits()),
+BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
+    : TransactionBase(blockchain_type, bitcoin_traits()),
       m_version(1),
       m_is_segwit_transaction(0),
       m_lock_time(0),

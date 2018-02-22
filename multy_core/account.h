@@ -22,10 +22,23 @@ struct Error;
 struct ExtendedKey;
 struct Key;
 
-enum Currency
+// See: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+enum Blockchain
 {
-    CURRENCY_BITCOIN,
-    CURRENCY_ETHEREUM,
+    BLOCKCHAIN_BITCOIN = 0x80000000,
+    BLOCKCHAIN_ETHEREUM = 0x8000003c,
+};
+
+enum BlockchainNetType
+{
+    BLOCKCHAIN_NET_TYPE_MAINNET = 0,
+    BLOCKCHAIN_NET_TYPE_TESTNET = 1,
+};
+
+struct BlockchainType
+{
+    enum Blockchain blockchain;
+    size_t net_type; // blockchain-specific net type, 0 for MAINNET.
 };
 
 enum AddressType
@@ -40,16 +53,16 @@ enum KeyType
     KEY_TYPE_PUBLIC,
 };
 
-/** Make an account of given currency with given id.
+/** Make an account of given BlockchainType with given id.
  *
  * @param master_key - master key, generated from seed.
- * @param currency - currency to use account for.
+ * @param BlockchainType - Blockchain to use account for.
  * @param index - acccount index
  * @param account - (out) new account
  */
 MULTY_CORE_API struct Error* make_hd_account(
         const struct ExtendedKey* master_key,
-        enum Currency currency,
+        struct BlockchainType blockchain_type,
         uint32_t index,
         struct HDAccount** new_account);
 
@@ -66,14 +79,14 @@ MULTY_CORE_API struct Error* make_hd_leaf_account(
         uint32_t index,
         struct Account** new_account);
 
-/** Make regular account from private key and currency.
- * @param currency - currency to use account for.
+/** Make regular account from private key and Blockchain.
+ * @param Blockchain - Blockchain to use account for.
  * @param serialized_private_key - private key for account.
  * @param new_account - newly created account, must be freed by caller with
  * free_account().
  */
 MULTY_CORE_API struct Error* make_account(
-        enum Currency currency,
+        enum Blockchain Blockchain,
         const char* serialized_private_key,
         struct Account** new_account);
 
@@ -107,21 +120,22 @@ MULTY_CORE_API struct Error* account_get_address_path(
         const struct Account* account,
         const char** out_address_path);
 
-/** Get account currency.
+/** Get account BlockchainType.
  * @param account - account.
- * @param out_currency - where to store the currency value.
+ * @param out_blockchain_type - where to store the Blockchain value.
  */
-MULTY_CORE_API struct Error* account_get_currency(
+MULTY_CORE_API struct Error* account_get_blockchain_type(
         const struct Account* account,
-        enum Currency* out_currency);
+        struct BlockchainType* out_blockchain_type);
 
+// TODO: move to blockchain header, with blockchain_get_string()
 /** Validate an address for given blockchain
  *  @param address - address
- *  @param currency - currency to use address for.
+ *  @param blockchain_type - Blockchain to use address for.
  *  @return null ptr if address is valid, Error if it is not.
  */
 MULTY_CORE_API struct Error* validate_address(
-        enum Currency currency,
+        struct BlockchainType blockchain,
         const char* address);
 
 /** Frees HDAccount instance, can accept nullptr. **/

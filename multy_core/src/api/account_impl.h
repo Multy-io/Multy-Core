@@ -32,7 +32,7 @@ public:
     virtual ~Account();
 
     virtual HDPath get_path() const = 0;
-    virtual Currency get_currency() const = 0;
+    virtual BlockchainType get_blockchain_type() const = 0;
     virtual std::string get_address() const = 0;
     virtual PrivateKeyPtr get_private_key() const = 0;
     virtual PublicKeyPtr get_public_key() const = 0;
@@ -51,7 +51,7 @@ public:
     virtual ~HDAccount();
 
     virtual HDPath get_path() const = 0;
-    virtual Currency get_currency() const = 0;
+    virtual BlockchainType get_blockchain_type() const = 0;
 
     virtual AccountPtr make_leaf_account(AddressType type, uint32_t index) const = 0;
 
