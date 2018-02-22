@@ -45,6 +45,7 @@ public:
     BinaryDataPtr serialize() override;
     BigInt get_total_fee() const override;
 
+    void verify();
     void update() override;
     void sign();
     BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override;

@@ -451,16 +451,29 @@ BigInt EthereumTransaction::get_total_fee() const
     return m_fee->total_fee;
 }
 
-void EthereumTransaction::update()
+void EthereumTransaction::verify()
 {
     if (!m_source)
     {
-        THROW_EXCEPTION("Transaction should have one source set.");
+        THROW_EXCEPTION("Transaction doesn't have a source.");
     }
+
     if (!m_destination)
     {
-        THROW_EXCEPTION("Transaction should have one destination set.");
+        THROW_EXCEPTION("Transaction doesn't have a destination.");
     }
+
+    std::string missing_properties;
+    if (!validate_all_properties(&missing_properties))
+    {
+        THROW_EXCEPTION("Not all required properties set.")
+                << "\n" << missing_properties;
+    }
+}
+
+void EthereumTransaction::update()
+{
+    verify();
 
     BigInt diff = m_source->amount.get_value() - m_destination->amount.get_value();
     const BigInt gas = *m_fee->gas_limit;
