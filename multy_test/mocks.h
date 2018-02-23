@@ -98,6 +98,7 @@ struct TestTransaction : public Transaction
     BinaryDataPtr serialize() override;
     BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override;
     BigInt get_total_fee() const override;
+    BigInt get_total_spent() const override;
     Properties& add_source() override;
     Properties& add_destination() override;
     Properties& get_fee() override;

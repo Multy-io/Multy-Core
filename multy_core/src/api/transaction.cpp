@@ -188,6 +188,25 @@ Error* transaction_get_total_fee(const Transaction* transaction, BigInt** out_to
     return nullptr;
 }
 
+Error* transaction_get_total_spent(
+        const Transaction* transaction,
+        BigInt** out_total_spent)
+{
+    ARG_CHECK_OBJECT(transaction);
+    ARG_CHECK(out_total_spent);
+
+    try
+    {
+        BigIntPtr result(new BigInt);
+        *result = transaction->get_total_spent();
+        *out_total_spent = result.release();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+    OUT_CHECK_OBJECT(*out_total_spent);
+
+    return nullptr;
+}
+
 Error* transaction_update(Transaction* transaction)
 {
     ARG_CHECK_OBJECT(transaction);

@@ -116,6 +116,17 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
     EXPECT_EQ(nullptr, amount);
 }
 
+GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_spent)
+{
+    TestTransaction transaction;
+    BigIntPtr amount;
+
+    EXPECT_ERROR(transaction_get_total_spent(&transaction, nullptr ));
+
+    EXPECT_ERROR(transaction_get_total_spent(nullptr, reset_sp(amount)));
+    EXPECT_EQ(nullptr, amount);
+}
+
 GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize)
 {
     TestTransaction transaction;
@@ -203,6 +214,15 @@ GTEST_TEST(TransactionTest, transaction_get_total_fee)
     BigIntPtr amount;
 
     HANDLE_ERROR(transaction_get_total_fee(&transaction, reset_sp(amount)));
+    EXPECT_EQ("5", *amount);
+}
+
+GTEST_TEST(TransactionTest, transaction_get_total_spent)
+{
+    TestTransaction transaction(BigInt(5));
+    BigIntPtr amount;
+
+    HANDLE_ERROR(transaction_get_total_spent(&transaction, reset_sp(amount)));
     EXPECT_EQ("5", *amount);
 }
 

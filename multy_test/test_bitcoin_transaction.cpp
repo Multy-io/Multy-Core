@@ -869,3 +869,59 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update_empty_tx)
         EXPECT_ERROR(transaction_update(transaction.get()));
     }
 }
+
+GTEST_TEST(BitcoinTransactionTest, transaction_get_total_spent)
+{
+    const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+    const PrivateKeyPtr private_key = account->get_private_key();
+
+    const BigInt available(1000000);
+    const BigInt sent(10000);
+
+    const TransactionTemplate TEST_TX
+    {
+        account.get(),
+        TransactionFee
+        { // fee:
+            BigInt{100}
+        },
+        { // Sources
+            {
+                available,
+                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                sent
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX);
+
+    Properties& change = transaction->add_destination();
+    change.set_property_value("address", "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A");
+    change.set_property_value("is_change", 1);
+
+    HANDLE_ERROR(transaction_update(transaction.get()));
+
+    BigInt change_value;
+    change.get_property_value("amount", &change_value);
+
+    BigIntPtr total_fee;
+    HANDLE_ERROR(transaction_get_total_fee(transaction.get(), reset_sp(total_fee)));
+    EXPECT_NE(nullptr, total_fee);
+
+    BigIntPtr total_spent;
+    HANDLE_ERROR(transaction_get_total_spent(transaction.get(), reset_sp(total_spent)));
+    EXPECT_NE(nullptr, total_spent);
+
+    ASSERT_EQ(*total_spent, *total_fee + sent);
+    ASSERT_EQ(*total_spent, available - change_value);
+}

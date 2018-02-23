@@ -287,3 +287,49 @@ GTEST_TEST(EthereumTransactionTest, transaction_update_empty_tx)
     }
 }
 
+GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            BLOCKCHAIN_ETHEREUM,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+
+    const BigInt available(1000000);
+    const BigInt sent(10000);
+
+    const BigInt gas_limit("121000");
+    const BigInt gas_price("3000000000000");
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", available);
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+
+        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
+        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("amount", sent);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    BigIntPtr total_fee;
+    HANDLE_ERROR(transaction_get_total_fee(transaction.get(), reset_sp(total_fee)));
+    EXPECT_NE(nullptr, total_fee);
+
+    BigIntPtr total_spent;
+    HANDLE_ERROR(transaction_get_total_spent(transaction.get(), reset_sp(total_spent)));
+    EXPECT_NE(nullptr, total_spent);
+
+    ASSERT_EQ(*total_spent, *total_fee + sent);
+}

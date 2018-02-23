@@ -39,7 +39,9 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
     virtual BinaryDataPtr serialize() = 0;
 
     virtual BigInt get_total_fee() const = 0;
-//    virtual BigInt estimate_fee() const = 0;
+
+    virtual BigInt get_total_spent() const = 0;
+
     virtual BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const = 0;
 
     /** Add a source to a transaction.

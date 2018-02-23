@@ -43,6 +43,7 @@ public:
     virtual ~EthereumTransaction();
 
     BinaryDataPtr serialize() override;
+    BigInt get_total_spent() const override;
     BigInt get_total_fee() const override;
 
     void verify();
