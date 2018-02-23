@@ -590,6 +590,20 @@ BigInt BitcoinTransaction::get_total_fee() const
     return calculate_diff();
 }
 
+BigInt BitcoinTransaction::get_total_spent() const
+{
+    BigInt total_spent(0);
+    for (const auto& d : m_destinations)
+    {
+        if (!*d->is_change)
+        {
+            total_spent += *d->amount;
+        }
+    }
+
+    return total_spent + get_total_fee();
+}
+
 BigInt BitcoinTransaction::estimate_total_fee(
         size_t sources_count, size_t destinations_count) const
 {

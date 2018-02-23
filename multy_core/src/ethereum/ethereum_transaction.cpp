@@ -446,6 +446,12 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
     stream << list;
 }
 
+BigInt EthereumTransaction::get_total_spent() const
+{
+    return (m_destination ? *m_destination->amount : BigInt(0))
+            + get_total_fee();
+}
+
 BigInt EthereumTransaction::get_total_fee() const
 {
     return m_fee->total_fee;

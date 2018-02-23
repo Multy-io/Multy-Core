@@ -82,6 +82,15 @@ MULTY_CORE_API struct Error* transaction_estimate_total_fee(
 MULTY_CORE_API struct Error* transaction_get_total_fee(
         const struct Transaction* transaction, struct BigInt** out_fee_total);
 
+/** Get resulting total spent value.
+ * Call transaction_update() first to get up to date data.
+ *
+ * @param transaction - transaction to get total spent value from.
+ * @param out_fee_total - total value spent by this transaction.
+ */
+MULTY_CORE_API struct Error* transaction_get_total_spent(
+        const struct Transaction* transaction, struct BigInt** out_total_spent);
+
 /** Update transaction state.
  *
  * Invoke after modifying transaction internal state (by adding sources\destinations

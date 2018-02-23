@@ -153,6 +153,11 @@ BigInt TestTransaction::get_total_fee() const
     return m_total;
 }
 
+BigInt TestTransaction::get_total_spent() const
+{
+    return m_total;
+}
+
 Properties& TestTransaction::add_source()
 {
     return m_properties;
