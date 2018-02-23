@@ -46,6 +46,8 @@ struct MULTY_CORE_API HDAccount : public ::multy_core::internal::ObjectBase<HDAc
 public:
     typedef multy_core::internal::AccountPtr AccountPtr;
     typedef multy_core::internal::HDPath HDPath;
+    typedef multy_core::internal::PrivateKeyPtr PrivateKeyPtr;
+    typedef multy_core::internal::PublicKeyPtr PublicKeyPtr;
 
     HDAccount();
     virtual ~HDAccount();

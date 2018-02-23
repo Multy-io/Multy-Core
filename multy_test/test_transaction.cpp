@@ -12,78 +12,17 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
+#include "multy_test/mocks.h"
 #include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
 
 #include <memory>
 
-
 namespace
 {
 using namespace multy_core::internal;
 } //namespace
-
-struct TestTransaction : public Transaction
-{
-    TestTransaction(): m_total("5"), m_properties("") {}
-    BlockchainType get_blockchain_type() const override
-    {
-        return m_blockchain;
-    }
-
-    uint32_t get_traits() const override
-    {
-        return m_traits;
-    }
-
-    void update() override
-    {
-    }
-
-    BinaryDataPtr serialize() override
-    {
-        return BinaryDataPtr(new BinaryData{nullptr, 0});
-    }
-
-    BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override
-    {
-        return (m_total - 1);
-    }
-
-    BigInt get_total_fee() const override
-    {
-        return (m_total - 2);
-    }
-
-    Properties& add_source() override
-    {
-        return m_properties;
-    }
-
-    Properties& add_destination() override
-    {
-        return m_properties;
-    }
-
-    Properties& get_fee() override
-    {
-        return m_properties;
-    }
-
-    Properties& get_transaction_properties() override
-    {
-        return m_properties;
-    }
-
-private:
-    const BlockchainType m_blockchain = BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET};
-    const uint32_t m_traits = TRANSACTION_REQUIRES_EXPLICIT_SOURCE;
-    const BigInt m_total;
-    Properties m_properties;
-    const BinaryDataPtr m_binarydata;
-};
-
 
 GTEST_TEST(TransactionTestInvalidArgs, make_transaction)
 {
@@ -251,20 +190,20 @@ GTEST_TEST(TransactionTest, transaction_get_fee)
 
 GTEST_TEST(TransactionTest, transaction_estimate_total_fee)
 {
-    TestTransaction transaction;
+    TestTransaction transaction(BigInt(5));
     BigIntPtr amount;
 
     HANDLE_ERROR(transaction_estimate_total_fee(&transaction, 1, 1, reset_sp(amount)));
-    EXPECT_EQ("4", *amount);
+    EXPECT_EQ("5", *amount);
 }
 
 GTEST_TEST(TransactionTest, transaction_get_total_fee)
 {
-    TestTransaction transaction;
+    TestTransaction transaction(BigInt(5));
     BigIntPtr amount;
 
     HANDLE_ERROR(transaction_get_total_fee(&transaction, reset_sp(amount)));
-    EXPECT_EQ("3", *amount);
+    EXPECT_EQ("5", *amount);
 }
 
 GTEST_TEST(TransactionTest, transaction_serialize)
