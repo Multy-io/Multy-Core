@@ -22,6 +22,17 @@ namespace
 using namespace multy_core::internal;
 } // namespace
 
+// Disable death-test on non-Desktop platforms, since those might crash on mobile.
+#if defined(MULTY_BUILD_FOR_DESKTOP) && MULTY_BUILD_FOR_DESKTOP
+    #define MULTY_ASSERT_DEATH_IF_SUPPORTED(statement, message) \
+            ASSERT_DEATH_IF_SUPPORTED(statement, message)
+    #define MULTY_EXPECT_DEATH_IF_SUPPORTED(statement, message) \
+            EXPECT_DEATH_IF_SUPPORTED(statement, message)
+#else
+    #define MULTY_ASSERT_DEATH_IF_SUPPORTED(statement, message)
+    #define MULTY_EXPECT_DEATH_IF_SUPPORTED(statement, message)
+#endif
+
 class DeletionTestP : public ::testing::TestWithParam<BlockchainType>
 {
 public:
@@ -76,7 +87,7 @@ TEST_P(DeletionTestP, free_hd_account)
     ASSERT_FALSE(hd_account_ptr->is_valid());
 
     // Ensuring that double-free is not performed.
-    ASSERT_DEATH_IF_SUPPORTED(free_hd_account(hd_account_ptr),
+    MULTY_ASSERT_DEATH_IF_SUPPORTED(free_hd_account(hd_account_ptr),
             "trying to free invalid object");
 }
 
@@ -89,7 +100,7 @@ TEST_P(DeletionTestP, free_account)
     ASSERT_FALSE(account_ptr->is_valid());
 
     // Ensuring that double-free is not performed.
-    ASSERT_DEATH_IF_SUPPORTED(free_account(account_ptr),
+    MULTY_ASSERT_DEATH_IF_SUPPORTED(free_account(account_ptr),
             "trying to free invalid object");
 }
 
@@ -107,7 +118,7 @@ TEST_P(DeletionTestP, free_private_key)
     ASSERT_FALSE(key_ptr->is_valid());
 
     // Ensuring that double-free is not performed.
-    ASSERT_DEATH_IF_SUPPORTED(free_key(key_ptr),
+    MULTY_ASSERT_DEATH_IF_SUPPORTED(free_key(key_ptr),
             "trying to free invalid object");
 }
 
@@ -125,7 +136,7 @@ TEST_P(DeletionTestP, free_public_key)
     ASSERT_FALSE(key_ptr->is_valid());
 
     // Ensuring that double-free is not performed.
-    ASSERT_DEATH_IF_SUPPORTED(free_key(key_ptr),
+    MULTY_ASSERT_DEATH_IF_SUPPORTED(free_key(key_ptr),
             "trying to free invalid object");
 }
 
@@ -141,7 +152,7 @@ TEST_P(DeletionTestP, free_transaction)
     ASSERT_FALSE(transaction_ptr->is_valid());
 
     // Ensuring that double-free is not performed.
-    ASSERT_DEATH_IF_SUPPORTED(free_transaction(transaction_ptr),
+    MULTY_ASSERT_DEATH_IF_SUPPORTED(free_transaction(transaction_ptr),
             "trying to free invalid object");
 }
 
@@ -157,6 +168,6 @@ GTEST_TEST(DeletionTest, free_big_int)
     ASSERT_FALSE(big_int_ptr->is_valid());
 
     // Ensuring that double-free is not performed.
-    ASSERT_DEATH_IF_SUPPORTED(free_big_int(big_int_ptr),
+    MULTY_ASSERT_DEATH_IF_SUPPORTED(free_big_int(big_int_ptr),
             "trying to free invalid object");
 }
