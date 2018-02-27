@@ -9,6 +9,8 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
+#include "generated/version.h"
+
 #include "wally_core.h"
 
 #include <string.h>
