@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+message("CMAKE_CURRENT_BINARY_DIR  : ${CMAKE_CURRENT_BINARY_DIR}")
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -13,17 +15,27 @@ option(MULTY_ENABLE_SIMULATE_ERROR "Enable simulating errors in multy_core, see 
 option(BUILD_SHARED_LIBS "Build as shared libraries." OFF)
 option(MULTY_WITH_TEST_APP "Build sample app that runs the tests (consider MULTY_WITH_TESTS)." OFF)
 
+project(multy C CXX)
+
 # Platform-specific options
 if (ANDROID)
+    message("Multy Android flavour.")
+    add_definitions(-DMULTY_BUILD_FOR_ANDROID=1)
+
     # Android specific options, must be prefixed with MULTY_ANDROID_
     set(MULTY_ANDROID_PATH_TO_JNI_WRAPPER "" CACHE PATH "Path to jni wrapper source file.")
-elseif(DEFINED IOS_PLATFORM)
-    # iOS specific options, must be prefixed with MULTY_IOS_
-else()
-    # Desktop specific options, must be prefixed with MULTY_DESKTOP_
-endif()
 
-project(multy C CXX)
+elseif(DEFINED IOS_PLATFORM)
+    message("Multy iOS flavour.")
+    add_definitions(-DMULTY_BUILD_FOR_IOS=1)
+    # iOS specific options, must be prefixed with MULTY_IOS_
+
+else()
+    message("Multy Desktop flavour.")
+    add_definitions(-DMULTY_BUILD_FOR_DESKTOP=1)
+    # Desktop specific options, must be prefixed with MULTY_DESKTOP_
+
+endif()
 
 if(MULTY_WITH_TEST_APP)
     set(MULTY_WITH_TESTS ON)
