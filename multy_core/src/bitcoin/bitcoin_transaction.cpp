@@ -378,13 +378,11 @@ public:
                   "amount_per_byte",
                   Property::OPTIONAL,
                   [this](const BigInt& amount) {
-                      if (amount < BigInt(2))
+                      if (amount < BigInt(1))
                       {
-                          THROW_EXCEPTION("Value should be> 2.");
+                          THROW_EXCEPTION("Value should be> 1.");
                       }
-                  }),
-          min_amount_per_byte(
-                  properties, "min_amount_per_byte", Property::OPTIONAL)
+                  })
     {
     }
 
@@ -393,16 +391,14 @@ public:
         return amount_per_byte.get_value();
     }
 
-    void validate_fee(const BigInt& leftover, size_t transaction_size) const
+    void validate_fee(const BigInt& leftover, uint64_t transaction_size) const
     {
-        const BigInt min_fee(
-                min_amount_per_byte.get_default_value(BigInt(1))
-                        .get_value_as_uint64()
-                * transaction_size);
-        if (leftover < min_fee)
+        const BigInt min_transaction_fee(amount_per_byte.get_value() * transaction_size);
+
+        if (leftover < min_transaction_fee)
         {
             THROW_EXCEPTION("Transaction total fee is too low. ")
-                    << leftover.get_value() << " < " << min_fee.get_value();
+                    << leftover.get_value() << " < " << min_transaction_fee.get_value();
         }
     }
 
@@ -410,7 +406,6 @@ public:
     Properties properties;
 
     PropertyT<BigInt> amount_per_byte;
-    PropertyT<BigInt> min_amount_per_byte;
 };
 
 class BitcoinTransactionSource
@@ -515,13 +510,12 @@ BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
 
 BinaryDataPtr BitcoinTransaction::serialize()
 {
-    verify();
     update();
     sign();
 
     BitcoinDataStream data_stream;
 
-    serialize_to_stream(&data_stream, WITHOUT_ZERO_CHANGE);
+    serialize_to_stream(&data_stream, WITH_POSITIVE_CHANGE_AMOUNT);
     return make_clone(data_stream.get_content());
 }
 
@@ -565,7 +559,7 @@ BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations(D
     for (const auto& dest : m_destinations)
     {
         if ( *dest->amount > BigInt(0) ||
-             (destinations_to_use == WITH_ZERO_CHANGE ? *dest->is_change : 0) )
+             (destinations_to_use == WITH_NONPOSITIVE_CHANGE_AMOUNT ? *dest->is_change : 0) )
         {
             result.push_back(dest.get());
         }
@@ -579,7 +573,7 @@ size_t BitcoinTransaction::estimate_transaction_size() const
     // destinations.
     // Note that this estimation is valid only for non-segwit transactions.
     const size_t sources_count = m_sources.size();
-    const size_t destinations_count = get_non_zero_destinations(WITH_ZERO_CHANGE).size();
+    const size_t destinations_count = get_non_zero_destinations(WITH_NONPOSITIVE_CHANGE_AMOUNT).size();
     // look function estimate_total_fee
     return static_cast<int64_t>(
             sources_count * (150 + 32) + destinations_count * 34 + 10);
@@ -685,17 +679,15 @@ void BitcoinTransaction::update()
                 << " Currenctly there are: " << change_destinations_count;
     }
 
+
     // In order to compute transaction total cost we'll have to serialize tx.
     if (change_destination)
     {
-        sign();
-        BitcoinBytesCountStream counter_stream;
-        serialize_to_stream(&counter_stream, WITH_ZERO_CHANGE);
-        const uint64_t tx_size = counter_stream.get_bytes_count();
-
-        const BigInt tx_cost = tx_size * *m_fee->amount_per_byte;
-        const BigInt current_fee = calculate_diff();
-        const BigInt remainder = current_fee - tx_cost;
+        change_destination->amount.get_value() = BigInt{0};
+        uint64_t tx_size = get_transaction_serialized_size(WITH_NONPOSITIVE_CHANGE_AMOUNT);
+        BigInt expected_fee = tx_size * *m_fee->amount_per_byte;
+        BigInt current_fee = calculate_diff();
+        const BigInt remainder = current_fee - expected_fee;
 
 
         // NOTE: Not adding a change if cost of spending money from that output exceeds its value.
@@ -709,15 +701,44 @@ void BitcoinTransaction::update()
         //
         // Not adding change for leftovers less than said limits increases fee for this TX.
 
-        const int64_t avarage_input_size = is_segwit() ? 100 : 150;
+        const int64_t average_input_size = is_segwit() ? 100 : 150;
         const int64_t min_tx_cost_per_byte = 1;
-        if (remainder > avarage_input_size * min_tx_cost_per_byte)
+        if (remainder > average_input_size * min_tx_cost_per_byte)
         {
             // not setting value with set_value(), since that would fail for read-only property.
             change_destination->amount.get_value() += remainder;
+
+            tx_size = get_transaction_serialized_size(WITH_POSITIVE_CHANGE_AMOUNT);
+            expected_fee = tx_size * *m_fee->amount_per_byte;
+            current_fee = calculate_diff();
+            while (expected_fee > current_fee)
+            {
+                // NOTE: get shortage fee from change_destination amount
+                //      diff_fee is always negative here.
+                const BigInt diff_fee = current_fee - expected_fee;
+                change_destination->amount.get_value() += diff_fee;
+                // Recalculate transaction fee after changes in transaction
+                tx_size = get_transaction_serialized_size(WITH_POSITIVE_CHANGE_AMOUNT);
+                expected_fee = tx_size * *m_fee->amount_per_byte;
+                current_fee = calculate_diff();
+            }
+
+            if (change_destination->amount.get_value() < average_input_size * min_tx_cost_per_byte)
+            {
+                change_destination->amount.get_value() = BigInt{0};
+            }
         }
     }
-    m_fee->validate_fee(calculate_diff(), estimate_transaction_size());
+
+    m_fee->validate_fee(calculate_diff(), get_transaction_serialized_size(WITH_POSITIVE_CHANGE_AMOUNT));
+}
+
+uint64_t BitcoinTransaction::get_transaction_serialized_size(DestinationsToUse destinations_to_use)
+{
+    sign();
+    BitcoinBytesCountStream counter_stream;
+    serialize_to_stream(&counter_stream, destinations_to_use);
+    return counter_stream.get_bytes_count();
 }
 
 void BitcoinTransaction::sign()
@@ -749,7 +770,7 @@ void BitcoinTransaction::sign()
 
         {
             BitcoinDataStream hash_stream;
-            serialize_to_stream(&hash_stream, WITHOUT_ZERO_CHANGE);
+            serialize_to_stream(&hash_stream, WITH_POSITIVE_CHANGE_AMOUNT);
             hash_stream << uint32_t(1); // signature version
 
             const PrivateKeyPtr& private_key = source->private_key.get_value();

@@ -18,8 +18,8 @@ namespace internal
 {
 enum DestinationsToUse
 {
-    WITHOUT_ZERO_CHANGE,
-    WITH_ZERO_CHANGE
+    WITH_POSITIVE_CHANGE_AMOUNT,
+    WITH_NONPOSITIVE_CHANGE_AMOUNT
 };
 
 class BitcoinAccount;
@@ -48,6 +48,7 @@ public:
     Properties& get_fee() override;
 
 private:
+    uint64_t get_transaction_serialized_size(DestinationsToUse destinations_to_use);
     BigInt calculate_diff() const;
     void verify() const;
     void sign();

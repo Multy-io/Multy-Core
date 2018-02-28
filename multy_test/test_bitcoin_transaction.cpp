@@ -95,7 +95,7 @@ struct TransactionChangeDestination : public TransactionDestination
 
 struct TransactionTemplate
 {
-    Account* const account;
+    Account* account;
     TransactionFee fee;
     std::vector<TransactionSource> sources;
     std::vector<TransactionDestination> destinations;
@@ -135,6 +135,100 @@ TransactionPtr make_transaction_from_template(const TransactionTemplate& tx)
 }
 
 } // namespace
+
+const TransactionTemplate TEST_TRANSACTIONS[] =
+{
+    // Transaction 1
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            BigInt{1}
+        },
+        { // Sources
+            {
+                BigInt{100 * 1000 * 1000},
+                from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
+                0,
+                from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac"),
+                nullptr
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
+                BigInt{9000 * 1000}
+            },
+            TransactionChangeDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"
+            }
+        }
+    },
+
+    // Transaction 2
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            BigInt{100}
+        },
+        { // Sources
+            {
+                BigInt{100 * 1000 * 1000},
+                from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
+                0,
+                from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac"),
+                nullptr
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
+                BigInt{99977201}
+            },
+            TransactionChangeDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"
+            }
+        }
+    }
+};
+
+class BitcoinTransactionTestP : public ::testing::TestWithParam<TransactionTemplate>
+{
+public:
+    void SetUp()
+    {
+        account = make_account(BLOCKCHAIN_BITCOIN,
+                "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz");
+        private_key = account->get_private_key();
+        TransactionTemplate temp = GetParam();
+        temp.account = account.get();
+        temp.sources[0].private_key = private_key.get();
+
+        transaction = make_transaction_from_template(temp);
+    }
+    TransactionPtr transaction;
+    AccountPtr account;
+    PrivateKeyPtr private_key;
+};
+
+INSTANTIATE_TEST_CASE_P(
+        test_update,
+        BitcoinTransactionTestP,
+        ::testing::ValuesIn(TEST_TRANSACTIONS));
+
+TEST_P(BitcoinTransactionTestP, iteratively_change_price_fee)
+{
+    BinaryDataPtr serialized = transaction->serialize();
+    BigInt total_fee = transaction->get_total_fee();
+    uint64_t tx_size = serialized->len;
+    BigInt tx_cost = tx_size * GetParam().fee.amount_per_byte;
+    EXPECT_LE(tx_cost, total_fee);
+}
 
 GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
 {
@@ -189,9 +283,7 @@ GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
         Properties* change = nullptr;
         HANDLE_ERROR(transaction_add_destination(transaction.get(), &change));
 
-        BigIntPtr amount;
-        HANDLE_ERROR(make_big_int("1000000", reset_sp(amount)));
-        HANDLE_ERROR(properties_set_big_int_value(change, "amount", amount.get()));
+        HANDLE_ERROR(properties_set_int32_value(change, "is_change", 1));
         HANDLE_ERROR(properties_set_string_value(change, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
     }
 
@@ -200,7 +292,7 @@ GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
         HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
 
         BigIntPtr amount;
-        HANDLE_ERROR(make_big_int("10000", reset_sp(amount)));
+        HANDLE_ERROR(make_big_int("10", reset_sp(amount)));
         HANDLE_ERROR(properties_set_big_int_value(fee, "amount_per_byte", amount.get()));
     }
 
@@ -252,14 +344,12 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
         Properties& change = transaction->add_destination();
         change.set_property_value(
                 "address", "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM");
-        change.set_property_value("amount", out_1);
+        change.set_property_value("is_change", 1);
     }
 
     {
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", BigInt(1000));
-        // allowing zero-fee transaction.
-        fee.set_property_value("min_amount_per_byte", BigInt(0));
     }
 
     BinaryDataPtr serialized = transaction->serialize();
@@ -361,15 +451,15 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
     ASSERT_NE(nullptr, transaction);
 
     const BigInt available("10000");
-    const BigInt out_without_change("9559");
+    const BigInt out_without_change("9709");
     const BigInt out_with_change("9000");
+    const BigInt fee_per_byte_zero("0");
     const BigInt fee_per_byte_one("1");
-    const BigInt fee_per_byte_two("2");
     {
         Properties& source = transaction->add_source();
         source.set_property_value("amount", available);
         source.set_property_value("prev_tx_hash",
-                as_binary_data(from_hex("3696c42469785af61f38a40677d6175d83d7aa987b88aeb0bf896a47873626f0")));
+                as_binary_data(from_hex("6e555ea9f989b755802ee69b3b7cf83777f1248fb2a678f148f71e674951cffa")));
         source.set_property_value("prev_tx_out_index", 1u);
         source.set_property_value("prev_tx_out_script_pubkey",
                 as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
@@ -388,8 +478,8 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
 
     {
         Properties& fee = transaction->get_fee();
-        EXPECT_THROW(fee.set_property_value("amount_per_byte", fee_per_byte_one), Exception);
-        fee.set_property_value("amount_per_byte", fee_per_byte_two);
+        EXPECT_THROW(fee.set_property_value("amount_per_byte", fee_per_byte_zero), Exception);
+        fee.set_property_value("amount_per_byte", fee_per_byte_one);
     }
 
     BinaryDataPtr serialized_without_change = transaction->serialize();
@@ -402,9 +492,9 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
     ASSERT_EQ("0", change_amount);
 
     //NOTE: if change address amount == 0 serialize without change address
-    //      TXid: 667b0fb64e1afd75efc8d32508904bbf781335b6e30f84a07cef756bf4260ba9
+    //      TXid: d58e823d1d34c610bdaa561fc342c17a007615b1e0e01a7628cdcb2e1d91b965
     ASSERT_EQ(as_binary_data(from_hex(
-            "0100000001f0263687476a89bfb0ae887b98aad7835d17d67706a4381ff65a786924c49636010000006b4830450221008990bfa3875ebd4d270d91ce70aa45be56e037adf038389516dd071651a0eefd022022423e9b93893f0d0c1471725aa90e16d7c845e48cc9b8043d3b86ae4c361ca1012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff0157250000000000001976a91460505d4554b5f7b939142cf1efa566d95a31268788ac00000000")),
+            "0100000001facf5149671ef748f178a6b28f24f17737f87c3b9be62e8055b789f9a95e556e010000006b483045022100cea16d07d1b421e612d9a9656ec3a1207adf171039c315eca9e6d54337a8da1002206e95cfa55bb38167726e1c915f8121fdbaf9b310fb2137e2970684f4ea6a5861012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff01ed250000000000001976a91460505d4554b5f7b939142cf1efa566d95a31268788ac00000000")),
             *serialized_without_change);
     const BigInt fee_without_change = transaction->get_total_fee();
 
@@ -416,11 +506,12 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
     change.get_property_value("amount", &change_amount);
     ASSERT_NE("0", change_amount);
 
-//    TODO: remove comment in task MUL-911 where value fee will more accurate
-//    const BigInt fee_with_change = transaction->get_total_fee();
-//   std::cerr << "fee difference: " << (fee_without_change-fee_with_change).get_value() << std::endl;
-//    ASSERT_GT(fee_without_change, fee_with_change);
-    // TODO: Add serrialize check. Add checking amount per byte > 1 satoshi
+    const BigInt fee_with_change = transaction->get_total_fee();
+    ASSERT_GT(fee_without_change, fee_with_change);
+
+    // NOTE: Serrialize check. Add checking amount per byte > 1 satoshi
+    ASSERT_GE(fee_without_change, ((uint64_t)serialized_without_change->len * fee_per_byte_one));
+    ASSERT_GE(fee_with_change, ((uint64_t)serialized_with_change->len * fee_per_byte_one));
 }
 
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
@@ -440,7 +531,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
 
     const BigInt available(BigInt(1000) * 1000 * 1000 * 1000 * 1000);
     const BigInt dest_amount(BigInt(129) * 1000 * 1000);
-    const BigInt fee_value(BigInt(1) * 1000 * 1000);
+    const BigInt fee_per_byte(BigInt(1) * 1000 * 1000);
 
     {
         Properties& source = transaction->add_source();
@@ -464,7 +555,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
 
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_value);
+        fee.set_property_value("amount_per_byte", fee_per_byte);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -492,9 +583,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt available(BigInt(1000) * 1000 * 1000 * 1000 * 1000);
+    const BigInt available(BigInt(130) * 1000 * 1000);
     const BigInt dest_amount(BigInt(129) * 1000 * 1000);
-    const BigInt fee_per_byte(BigInt(1) * 1000 * 1000);
+    const BigInt fee_per_byte(1);
 
     {
         Properties& source = transaction->add_source();
@@ -557,7 +648,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
     const BigInt available(BigInt(12) * 1000 * 1000 * 100);
     const BigInt dest_amount(BigInt(100000000));
     const BigInt change_value(BigInt(999000000));
-    const BigInt fee_value(BigInt(1) * 1000 * 1000);
+    const BigInt fee_per_byte(1);
 
     {
         Properties& source = transaction->add_source();
@@ -596,7 +687,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
     }
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_value);
+        fee.set_property_value("amount_per_byte", fee_per_byte);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -623,7 +714,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
     const BigInt available2("459999999");
     const BigInt dest_amount("100000000");
     const BigInt change_value("588999998");
-    const BigInt fee_value("1000000");
+    const BigInt fee_per_byte("100");
 
     {
         Properties& source = transaction->add_source();
@@ -665,7 +756,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
     }
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_value);
+        fee.set_property_value("amount_per_byte", fee_per_byte);
     }
 
     const BinaryDataPtr serialied = transaction->serialize();
@@ -702,7 +793,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     const BigInt available2(BigInt(1) * 1000 * 1000 * 100);
     const BigInt dest_amount(BigInt("190000")*1000);
     const BigInt change_value(BigInt("9000")*1000);
-    const BigInt fee_value(BigInt(1) * 1000 * 1000);
+    const BigInt fee_per_byte(100);
 
     {
         Properties& source = transaction->add_source();
@@ -747,7 +838,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     }
     {
         Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_value);
+        fee.set_property_value("amount_per_byte", fee_per_byte);
     }
     const BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(as_binary_data(from_hex("01000000024889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1010000006a47304402200efd6929fcf32210e32194fc8468354deaf67060466710441075dab31afa31b30220350c72e95803ad14ce3fe3baa73e0a2288bf46df44e8c3d686e9692e7689cb7301210217fc7a7cc7f8b41b8e886703b95f087cd6e82ccbe6ee2ff27101b6d69ca2e868ffffffff4889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1000000006a473044022063a2925d2693033aa9735f412258c93f80f9bf980c688fbe5634b7fd6af958f40220506064007962d15ed0473ec617f1c38c80bd82af864050bf5e406ed4cf2951cf012102a6492c6dd74e49c4b7a4bd507baac3abf25fb26b97e362c3c0cb28b91a043da2ffffffff02802b530b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac40548900000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00000000")),
@@ -804,7 +895,7 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update)
     BigIntPtr updated_total_fee;
     HANDLE_ERROR(transaction_get_total_fee(transaction.get(), reset_sp(updated_total_fee)));
     EXPECT_NE("0", *updated_total_fee);
-    
+
     // Verifying that excess value was moved to the change address and fee is minimized.
     EXPECT_LT(*updated_total_fee, *total_fee);
 
