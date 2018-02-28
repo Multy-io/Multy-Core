@@ -41,8 +41,8 @@ struct Version
     size_t major;
     size_t minor;
     size_t build;
-    const char* note;  /// can be null
-    const char* commit; /// can be null
+    const char* note;  /// can be null, MUST NOT be freed by caller.
+    const char* commit; /// can be null, MUST NOT be freed by caller.
 };
 
 MULTY_CORE_API struct Error* get_version(struct Version* version);

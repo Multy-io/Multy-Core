@@ -65,20 +65,24 @@ add_library(multy_core
     src/ethereum/ethereum_transaction.cpp
 )
 
-target_compile_definitions(multy_core PRIVATE BUILDING_MULTY_CORE=1)
-target_compile_definitions(multy_core PRIVATE
-    MULTY_CORE_VERSION_MAJOR=0
-    MULTY_CORE_VERSION_MINOR=1
-    MULTY_CORE_VERSION_BUILD=0
-    MULTY_CORE_VERSION_NOTE="PRE-ALPHA-TESTNET"
-    MULTY_CORE_VERSION_COMMIT=""
+# Run a script that generates version.h in build dir
+add_custom_target(
+    multy_core_generate_version
+    COMMAND ${CMAKE_COMMAND}
+            -DIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.template
+            -DOUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/include/generated/version.h
+            -DGIT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/version_from_git.cmake
 )
+
+target_compile_definitions(multy_core PRIVATE BUILDING_MULTY_CORE=1)
 
 target_include_directories(multy_core PRIVATE
     ..
     ../third-party/libwally-core/include/
     ../third-party/libwally-core/src/ccan
     ../third-party
+    ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 target_link_libraries(multy_core
@@ -87,6 +91,6 @@ target_link_libraries(multy_core
     keccak-tiny
     mini-gmp
 )
+add_dependencies(multy_core multy_core_generate_version)
 
 set_target_properties(multy_core PROPERTIES CXX_VISIBILITY_PRESET hidden)
-
