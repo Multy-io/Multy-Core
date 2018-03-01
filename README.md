@@ -9,4 +9,6 @@ $ cmake --build . # or `open ./multy.xcodeproj` and do a build with Xcode
 
 # How to build for Android:
 Link the root CMakeLists.txt to your gradle file and set arguments to:
+```
 "-DMULTY_ANDROID_PATH_TO_JNI_WRAPPER=/Users/pavel/AndroidStudioProjects/Multi/app/src/main/cpp/scratch.cpp"
+```
