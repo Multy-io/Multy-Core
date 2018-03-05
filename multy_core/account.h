@@ -25,8 +25,8 @@ struct Key;
 // See: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 enum Blockchain
 {
-    BLOCKCHAIN_BITCOIN = 0x80000000,
-    BLOCKCHAIN_ETHEREUM = 0x8000003c,
+    BLOCKCHAIN_BITCOIN = 0x00,
+    BLOCKCHAIN_ETHEREUM = 0x3c,
 };
 
 enum BlockchainNetType

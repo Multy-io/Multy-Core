@@ -40,7 +40,7 @@ uint32_t to_chain_code(BlockchainType blockchain_type)
 {
     if (blockchain_type.net_type == BLOCKCHAIN_NET_TYPE_MAINNET)
     {
-        return blockchain_type.blockchain;
+        return hardened_index(blockchain_type.blockchain);
     }
 
     return BIP44_TESTNET_CHAIN_CODE;
