@@ -47,6 +47,7 @@ public:
     Properties& add_source() override;
     Properties& add_destination() override;
     Properties& get_fee() override;
+    void set_message(const BinaryData& value) override;
 
 private:
     uint64_t get_transaction_serialized_size(DestinationsToUse destinations_to_use);
@@ -72,6 +73,7 @@ private:
     BitcoinTransactionFeePtr m_fee;
     std::vector<BitcoinTransactionSourcePtr> m_sources;
     std::vector<BitcoinTransactionDestinationPtr> m_destinations;
+    BitcoinTransactionDestinationPtr m_message;
 };
 
 } // namespace internal

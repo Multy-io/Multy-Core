@@ -78,6 +78,7 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
      */
     virtual Properties& get_transaction_properties() = 0;
 
+    virtual void set_message(const BinaryData& value) = 0;
     static const void* get_object_magic();
 };
 

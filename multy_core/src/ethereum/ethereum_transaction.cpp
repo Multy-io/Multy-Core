@@ -543,5 +543,9 @@ Properties& EthereumTransaction::get_fee()
     return m_fee->get_properties();
 }
 
+void EthereumTransaction::set_message(const BinaryData& value)
+{
+    THROW_EXCEPTION("Not supported yet.");
+}
 } // namespace internal
 } // namespace multy_core

@@ -52,6 +52,11 @@ MULTY_CORE_API struct Error* transaction_add_destination(
 MULTY_CORE_API struct Error* transaction_get_fee(
         struct Transaction* transaction, struct Properties** fee);
 
+/// @param message - message which user wants to set.
+MULTY_CORE_API struct Error* transaction_set_message(
+        struct Transaction* transaction,
+        const struct BinaryData* message);
+
 /// @param transaction_properties - transaction-level properties, must NOT be freed by the caller.
 MULTY_CORE_API struct Error* transaction_get_properties(
         struct Transaction* transaction, struct Properties** transaction_properties);

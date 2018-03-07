@@ -136,6 +136,17 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize)
     EXPECT_ERROR(transaction_serialize(&transaction, nullptr));
 }
 
+GTEST_TEST(TransactionTestInvalidArgs, transaction_set_message)
+{
+    TestTransaction transaction;
+    const BinaryData message = as_binary_data("\x04\x02");
+
+    EXPECT_ERROR(
+            transaction_set_message(nullptr, &message));
+    EXPECT_ERROR(
+            transaction_set_message(&transaction, nullptr));
+}
+
 GTEST_TEST(TransactionTestInvalidArgs, transaction_update)
 {
     EXPECT_ERROR(transaction_update(nullptr));
@@ -235,3 +246,13 @@ GTEST_TEST(TransactionTest, transaction_serialize)
     HANDLE_ERROR(
             transaction_serialize(&transaction, reset_sp(serialize_binary_data)));
 }
+
+GTEST_TEST(TransactionTest, transaction_set_message)
+{
+    TestTransaction transaction;
+    const BinaryData message = as_binary_data("\x04\x02");
+
+    HANDLE_ERROR(
+            transaction_set_message(&transaction, &message));
+}
+
