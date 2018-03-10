@@ -8,6 +8,7 @@
 #define MULTY_CORE_BITCOIN_TRANSACTION_H
 
 #include "multy_core/src/transaction_base.h"
+#include "multy_core/src/bitcoin/bitcoin_account.h"
 
 #include <memory>
 #include <vector>
@@ -61,6 +62,7 @@ private:
     Destinations get_non_zero_destinations(DestinationsToUse destinations_to_use) const;
 
     size_t estimate_transaction_size() const;
+    BitcoinNetType get_net_type() const;
 
 private:
     int32_t m_version;

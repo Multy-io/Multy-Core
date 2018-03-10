@@ -287,10 +287,49 @@ void write_compact_size(uint64_t size, BitcoinStream* stream)
     }
 }
 
+BinaryDataPtr make_p2pkh_sig_script(const BinaryData& public_key_hash)
+{
+    BitcoinDataStream sig_stream;
+    sig_stream << OpCode(0x76); // OP_DUP
+    sig_stream << OpCode(0xA9); // OP_HASH160
+
+    sig_stream << as_compact_size(public_key_hash.len);
+    sig_stream.write_data(public_key_hash.data, public_key_hash.len);
+
+    sig_stream << OpCode(0x88); // OP_EQUALVERIFY
+    sig_stream << OpCode(0xAC); // OP_CHECKSIG
+
+    return make_clone(sig_stream.get_content());
+}
+
+BinaryDataPtr make_p2pkh_sig_script_from_address(const BitcoinNetType expected_net_type, const std::string& address)
+{
+    BitcoinNetType net_type;
+    BitcoinAddressType address_type;
+    BinaryDataPtr binary_address = bitcoin_parse_address(address.c_str(),
+        &net_type, &address_type);
+    assert(binary_address);
+
+    if (address_type != BITCOIN_ADDRESS_P2PKH )
+    {
+        THROW_EXCEPTION("Unsupported address type.")
+                << " Address type: " << address_type;
+    }
+
+    if (expected_net_type != net_type)
+    {
+        THROW_EXCEPTION("Wrong net type for address.")
+                << " Expected: " << expected_net_type
+                << " actual:" << net_type;
+    }
+
+    return make_p2pkh_sig_script(*binary_address);
+}
+
 class BitcoinTransactionDestination
 {
 public:
-    BitcoinTransactionDestination()
+    explicit BitcoinTransactionDestination(BitcoinNetType net_type)
         : properties("TransactionDestination"),
           amount(properties,
                  "amount",
@@ -298,10 +337,7 @@ public:
                  verify_non_negative_amount),
           address(properties, "address", Property::REQUIRED,
                   [this](const std::string &new_address) {
-                        BitcoinNetType net_type;
-                        BitcoinAddressType address_type;
-                        this->binary_address = bitcoin_parse_address(new_address.c_str(),
-                            &net_type, &address_type);
+                        this->sig_script = make_p2pkh_sig_script_from_address(this->m_net_type, new_address);
                   }),
           is_change(false, properties, "is_change", Property::OPTIONAL,
                   [this](int32_t new_value) {
@@ -311,27 +347,9 @@ public:
                       }
                       this->on_change_set(new_value);
                   }),
-          sig_script()
+          sig_script(),
+          m_net_type(net_type)
     {
-    }
-
-    void update()
-    {
-        BitcoinDataStream sig_stream;
-        sig_stream << OpCode(0x76); // OP_DUP
-        sig_stream << OpCode(0xA9); // OP_HASH160
-
-        if (binary_address == nullptr)
-        {
-            THROW_EXCEPTION("Destination address not set.");
-        }
-        sig_stream << as_compact_size(binary_address->len);
-        sig_stream.write_data(binary_address->data, binary_address->len);
-
-        sig_stream << OpCode(0x88); // OP_EQUALVERIFY
-        sig_stream << OpCode(0xAC); // OP_CHECKSIG
-
-        sig_script = make_clone(sig_stream.get_content());
     }
 
     void on_change_set(bool new_value)
@@ -364,8 +382,8 @@ public:
     PropertyT<std::string> address;
     PropertyT<int32_t> is_change;
 
-    BinaryDataPtr binary_address;
     BinaryDataPtr sig_script;
+    const BitcoinNetType m_net_type;
 };
 
 class BitcoinTransactionFee
@@ -437,24 +455,6 @@ public:
 
     ~BitcoinTransactionSource()
     {
-    }
-
-    void update()
-    {
-        //        BitcoinDataStream sig_stream;
-        //        sig_stream <<
-        //        static_cast<uint8_t>(prev_transaction_out_index);
-        //        sig_stream << *prev_transaction_hash;
-        //        BinaryDataPtr signature =
-        //        private_key.sign(sig_stream.get_content());
-
-        //        BitcoinDataStream script_signature_stream;
-        //        script_signature_stream << *signature;
-        //        script_signature_stream <<
-        //        private_key.make_public_key()->get_content();
-
-        //        script_signature =
-        //        make_clone(script_signature_stream.get_content());
     }
 
     friend BitcoinStream& operator<<(
@@ -579,6 +579,11 @@ size_t BitcoinTransaction::estimate_transaction_size() const
             sources_count * (150 + 32) + destinations_count * 34 + 10);
 }
 
+BitcoinNetType BitcoinTransaction::get_net_type() const
+{
+    return static_cast<BitcoinNetType>(get_blockchain_type().net_type);
+}
+
 BigInt BitcoinTransaction::get_total_fee() const
 {
     return calculate_diff();
@@ -650,6 +655,23 @@ void BitcoinTransaction::verify() const
                 "inputs")
                 << " : available - spent = "<< diff.get_value();
     }
+
+    size_t source_index = 0;
+    for (auto& s : m_sources)
+    {
+        const auto& public_key = s->private_key->make_public_key();
+        std::array<uint8_t, HASH160_LEN> public_key_hash;
+        BinaryData public_key_hash_data = as_binary_data(public_key_hash);
+
+        bitcoin_hash_160(public_key->get_content(), &public_key_hash_data);
+        BinaryDataPtr sig_script = make_p2pkh_sig_script(public_key_hash_data);
+        if (*sig_script != **s->prev_transaction_out_script_pubkey)
+        {
+            THROW_EXCEPTION("Source can't be spent using given private key.")
+                    << " Source index: " << source_index;
+        }
+        ++source_index;
+    }
 }
 
 
@@ -657,16 +679,10 @@ void BitcoinTransaction::update()
 {
     verify();
 
-    for (auto& s : m_sources)
-    {
-        s->update();
-    }
-
     size_t change_destinations_count = 0;
     BitcoinTransactionDestination* change_destination = nullptr;
     for (const auto& d : m_destinations)
     {
-        d->update();
         if (*d->is_change)
         {
             change_destination = d.get();
@@ -822,7 +838,7 @@ Properties& BitcoinTransaction::add_source()
 Properties& BitcoinTransaction::add_destination()
 {
     BitcoinTransactionDestinationPtr destination(
-            new BitcoinTransactionDestination());
+            new BitcoinTransactionDestination(get_net_type()));
     m_destinations.emplace_back(std::move(destination));
     return register_properties(
             make_id("#", m_destinations.size() - 1),

@@ -33,6 +33,8 @@ struct BitcoinPrivateKey;
 typedef UPtr<BitcoinPrivateKey> BitcoinPrivateKeyPtr;
 typedef UPtr<BitcoinPublicKey> BitcoinPublicKeyPtr;
 
+void bitcoin_hash_160(const BinaryData& input, BinaryData* output);
+
 AccountPtr make_bitcoin_account(const char* private_key);
 
 /** Parse given base58 encoded address and verify it's checksumm.

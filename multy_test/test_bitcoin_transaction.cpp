@@ -29,7 +29,7 @@ namespace
 using namespace multy_core::internal;
 using namespace test_utility;
 
-bool inBetween(const BigInt& left, const BigInt& value, const BigInt& right)
+bool is_between(const BigInt& left, const BigInt& value, const BigInt& right)
 {
     if (left > right)
     {
@@ -101,11 +101,43 @@ struct TransactionTemplate
     std::vector<TransactionDestination> destinations;
 };
 
+const TransactionTemplate DEFAULT_TX_TEMPLATE
+{
+    nullptr,
+    TransactionFee
+    { // fee:
+        BigInt{100}
+    },
+    { // Sources
+        {
+            BigInt{2000500},
+            from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+            0,
+            from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+            nullptr
+        }
+    },
+    { // Destinations
+        TransactionDestination
+        {
+            "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+            BigInt{1000000}
+        },
+        TransactionChangeDestination
+        {
+            "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"
+        }
+    }
+};
+
 // Make Transaction from template using non-public API, note that returned value must not outlive the argument.
-TransactionPtr make_transaction_from_template(const TransactionTemplate& tx)
+TransactionPtr make_transaction_from_template(const TransactionTemplate& tx,
+        const AccountPtr& account = AccountPtr(),
+        const PrivateKeyPtr& default_private_key = PrivateKeyPtr())
 {
     TransactionPtr transaction;
-    throw_if_error(make_transaction(tx.account, reset_sp(transaction)));
+    throw_if_error(make_transaction(tx.account ? tx.account : account.get(),
+            reset_sp(transaction)));
 
     {
         Properties& fee = transaction->get_fee();
@@ -129,7 +161,14 @@ TransactionPtr make_transaction_from_template(const TransactionTemplate& tx)
         source.set_property_value("prev_tx_out_index", src.prev_tx_index);
         source.set_property_value("prev_tx_out_script_pubkey",
                 as_binary_data(src.prev_tx_scrip_pubkey));
-        source.set_property_value("private_key", *src.private_key);
+        if (src.private_key)
+        {
+            source.set_property_value("private_key", *src.private_key);
+        }
+        else if (default_private_key)
+        {
+            source.set_property_value("private_key", *default_private_key);
+        }
     }
     return transaction;
 }
@@ -204,16 +243,13 @@ public:
     {
         account = make_account(BLOCKCHAIN_BITCOIN,
                 "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz");
-        private_key = account->get_private_key();
         TransactionTemplate temp = GetParam();
-        temp.account = account.get();
-        temp.sources[0].private_key = private_key.get();
 
-        transaction = make_transaction_from_template(temp);
+        transaction = make_transaction_from_template(temp, account,
+                account->get_private_key());
     }
     TransactionPtr transaction;
     AccountPtr account;
-    PrivateKeyPtr private_key;
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -418,7 +454,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
 
     // check that actual fee is within delta of value set by user.
     const BigInt delta(static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * delta_factor));
-    EXPECT_PRED3(inBetween,
+    EXPECT_PRED3(is_between,
             expected_total_fee - delta,
             transaction->get_total_fee(),
             expected_total_fee + delta);
@@ -427,7 +463,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
     change.get_property_value("amount", &change_amount);
 
     ASSERT_LT(0, change_amount);
-    EXPECT_PRED3(inBetween,
+    EXPECT_PRED3(is_between,
             available - out_1 - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 + delta_factor)),
             change_amount,
             available - out_1 - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 - delta_factor)));
@@ -850,37 +886,11 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update)
     // Verify that transaction_update() modifies TX internal state.
     const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
-    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const TransactionTemplate TEST_TX
-    {
-        account.get(),
-        TransactionFee
-        { // fee:
-            BigInt{100}
-        },
-        { // Sources
-            {
-                BigInt{2000500},
-                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
-                0,
-                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
-                private_key.get()
-            }
-        },
-        { // Destinations
-            TransactionDestination
-            {
-                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
-                BigInt{1000000}
-            },
-            TransactionChangeDestination
-            {
-                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"
-            }
-        }
-    };
-    TransactionPtr transaction = make_transaction_from_template(TEST_TX);
+    TransactionPtr transaction = make_transaction_from_template(
+            DEFAULT_TX_TEMPLATE,
+            account,
+            account->get_private_key());
 
     // Single destination spends only portion of data, and the change is not updated
     // untill you invoke transaction_update(), hence the fee is really high.
@@ -904,10 +914,10 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update)
 
     // Verifying that fee is within some bounds of user set value.
     const double delta = 0.0001;
-    EXPECT_PRED3(inBetween,
-            TEST_TX.fee.amount_per_byte * static_cast<int64_t>(serialized->len * (1 - delta)),
+    EXPECT_PRED3(is_between,
+            DEFAULT_TX_TEMPLATE.fee.amount_per_byte * static_cast<int64_t>(serialized->len * (1 - delta)),
             *updated_total_fee,
-            TEST_TX.fee.amount_per_byte * static_cast<int64_t>(serialized->len * (1 + delta))
+            DEFAULT_TX_TEMPLATE.fee.amount_per_byte * static_cast<int64_t>(serialized->len * (1 + delta))
     );
 }
 
@@ -965,36 +975,17 @@ GTEST_TEST(BitcoinTransactionTest, transaction_get_total_spent)
 {
     const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
-    const PrivateKeyPtr private_key = account->get_private_key();
 
     const BigInt available(1000000);
     const BigInt sent(10000);
 
-    const TransactionTemplate TEST_TX
-    {
-        account.get(),
-        TransactionFee
-        { // fee:
-            BigInt{100}
-        },
-        { // Sources
-            {
-                available,
-                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
-                0,
-                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
-                private_key.get()
-            }
-        },
-        { // Destinations
-            TransactionDestination
-            {
-                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
-                sent
-            }
-        }
-    };
-    TransactionPtr transaction = make_transaction_from_template(TEST_TX);
+    TransactionTemplate TEST_TX = DEFAULT_TX_TEMPLATE;
+    TEST_TX.sources[0].available = available;
+    TEST_TX.destinations[0].amount = sent;
+    TEST_TX.destinations.erase(TEST_TX.destinations.end() - 1); // change is last
+
+    TransactionPtr transaction = make_transaction_from_template(
+            TEST_TX, account, account->get_private_key());
 
     Properties& change = transaction->add_destination();
     change.set_property_value("address", "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A");
@@ -1015,4 +1006,59 @@ GTEST_TEST(BitcoinTransactionTest, transaction_get_total_spent)
 
     ASSERT_EQ(*total_spent, *total_fee + sent);
     ASSERT_EQ(*total_spent, available - change_value);
+}
+
+GTEST_TEST(BitcoinTransactionTest, invalid_script_pubkey)
+{
+    const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    TransactionTemplate TEST_TX = DEFAULT_TX_TEMPLATE;
+    {
+        // First, check that TX is Ok and can be serialized.
+        TransactionPtr transaction = make_transaction_from_template(
+                    TEST_TX, account, account->get_private_key());
+        BinaryDataPtr serialized_tx;
+        HANDLE_ERROR(transaction_serialize(transaction.get(), reset_sp(serialized_tx)));
+    }
+
+    // Add extra byte
+    const auto original_script_pubkey = TEST_TX.sources[0].prev_tx_scrip_pubkey;
+    for (int i = 0; i < original_script_pubkey.size(); ++i)
+    {
+        auto& script_pubkey = TEST_TX.sources[0].prev_tx_scrip_pubkey;
+        script_pubkey.insert(script_pubkey.begin() + i, 0xFF);
+        TransactionPtr transaction = make_transaction_from_template(
+                    TEST_TX, account, account->get_private_key());
+
+        BinaryDataPtr serialized_tx;
+        EXPECT_ERROR(transaction_serialize(transaction.get(), reset_sp(serialized_tx)));
+    }
+
+    // Replace byte
+    for (int i = 0; i < original_script_pubkey.size(); ++i)
+    {
+        TEST_TX.sources[0].prev_tx_scrip_pubkey = original_script_pubkey;
+        auto& script_pubkey = TEST_TX.sources[0].prev_tx_scrip_pubkey;
+        script_pubkey[i] += 1;
+        TransactionPtr transaction = make_transaction_from_template(
+                    TEST_TX, account, account->get_private_key());
+
+        BinaryDataPtr serialized_tx;
+        EXPECT_ERROR(transaction_serialize(transaction.get(), reset_sp(serialized_tx)));
+    }
+
+    // Erase byte
+    for (int i = 0; i < original_script_pubkey.size(); ++i)
+    {
+        TEST_TX.sources[0].prev_tx_scrip_pubkey = original_script_pubkey;
+        auto& script_pubkey = TEST_TX.sources[0].prev_tx_scrip_pubkey;
+        script_pubkey.erase(script_pubkey.begin() + i);
+
+        TransactionPtr transaction = make_transaction_from_template(
+                    TEST_TX, account, account->get_private_key());
+
+        BinaryDataPtr serialized_tx;
+        EXPECT_ERROR(transaction_serialize(transaction.get(), reset_sp(serialized_tx)));
+    }
 }

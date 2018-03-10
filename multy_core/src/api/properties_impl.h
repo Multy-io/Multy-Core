@@ -304,14 +304,14 @@ public:
         return get_value();
     }
 
-    const T* operator->() const
+    const T& operator->() const
     {
-        return &get_value();
+        return get_value();
     }
 
-    T* operator->()
+    T& operator->()
     {
-        return &get_value();
+        return get_value();
     }
 
     const T& get_value() const
