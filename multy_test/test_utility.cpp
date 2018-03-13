@@ -5,6 +5,10 @@
  */
 
 #include "multy_core/src/utility.h"
+#include "multy_core/src/exception.h"
+
+#include "multy_test/value_printers.h"
+#include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
 
@@ -13,10 +17,6 @@
 namespace
 {
 using namespace multy_core::internal;
-
-struct A
-{
-};
 
 static const char* const TEST_VALUE1 = "test value1";
 static const char* const TEST_VALUE2 = "test value2";
@@ -51,4 +51,75 @@ GTEST_TEST(UtilityTest, reset_sp)
 
     p_char.reset();
     EXPECT_EQ(TEST_VALUE2, old_value);
+}
+
+GTEST_TEST(UtilityTest, slice)
+{
+    const BinaryData data = as_binary_data("Sample BinaryData");
+
+    const BinaryData sliced = slice(data, 0, 0);
+    EXPECT_EQ(0, sliced.len);
+    EXPECT_EQ(data.data, sliced.data);
+
+    for (int offset = 0; offset < data.len; ++offset)
+    {
+        SCOPED_TRACE(offset);
+
+        for (int size = data.len - offset - 1; size >= 0; --size)
+        {
+            SCOPED_TRACE(size);
+
+            const BinaryData sliced = slice(data, offset, size);
+            EXPECT_EQ(size, sliced.len);
+            EXPECT_EQ(data.data + offset, sliced.data);
+        }
+    }
+}
+
+GTEST_TEST(UtilityInvalidArgsTest, slice)
+{
+    const BinaryData data = as_binary_data("Sample BinaryData");
+    const int32_t TOO_BIG = data.len + 1;
+
+    EXPECT_THROW(slice(data, 0, TOO_BIG), Exception);
+    EXPECT_THROW(slice(data, TOO_BIG, 0), Exception);
+    EXPECT_THROW(slice(data, TOO_BIG, TOO_BIG), Exception);
+}
+
+GTEST_TEST(UtilityTest, power_slice)
+{
+    const BinaryData data = as_binary_data("Sample BinaryData");
+
+    const BinaryData sliced = power_slice(data, 0, 0);
+    EXPECT_EQ(0, sliced.len);
+    EXPECT_EQ(data.data, sliced.data);
+
+    for (int offset = 0; offset < data.len; ++offset)
+    {
+        SCOPED_TRACE(offset);
+
+        for (int size = data.len - offset - 1; size >= 0; --size)
+        {
+            SCOPED_TRACE(size);
+
+            const BinaryData sliced = slice(data, offset, size);
+            EXPECT_EQ(size, sliced.len);
+            EXPECT_EQ(data.data + offset, sliced.data);
+        }
+    }
+}
+
+GTEST_TEST(UtilityInvalidArgsTest, power_slice)
+{
+    const BinaryData data = as_binary_data("Sample BinaryData");
+    const int32_t TOO_BIG = data.len + 1;
+    const int32_t TOO_SMALL = -TOO_BIG;
+
+    EXPECT_THROW(power_slice(data, 0, TOO_BIG), Exception);
+    EXPECT_THROW(power_slice(data, TOO_BIG, 0), Exception);
+    EXPECT_THROW(power_slice(data, TOO_BIG, TOO_BIG), Exception);
+
+    EXPECT_THROW(power_slice(data, 0, TOO_SMALL), Exception);
+    EXPECT_THROW(power_slice(data, TOO_SMALL, 0), Exception);
+    EXPECT_THROW(power_slice(data, TOO_SMALL, TOO_SMALL), Exception);
 }

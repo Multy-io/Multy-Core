@@ -161,12 +161,34 @@ MULTY_CORE_API char* copy_string(const std::string& str);
 /** Slice existing BinaryData into new BinaryData,
  *  starting from offset and with given size;
  *
- * Note that returned object points inside original one, so it must not outlive it,
- * also, data pointed by returned object should not be freed.
+ * Note that returned object points inside original one, so it MUST NOT
+ * outlive it. Also, data pointed by returned object MUST NOT be freed.
  *
- * Throws exception if offset or size (or offset + size) is too big.
+ * @param data - original binary data to perform a slice on.
+ * @param offset - offset in data.data to start slice from.
+ * @param size - size of slice.
+ * @return BinaryData object that does not own the pointed data, DO NOT free
+ *         neither the object nor it's. MUST NOT outlive data argument.
+ * @throws Exception if offset or size is too big.
  */
 MULTY_CORE_API BinaryData slice(const BinaryData& data, size_t offset, size_t size);
+
+/** Slice existing BinaryData into new BinaryData with some added magic.
+ *
+ * Supports negative offset and size, megative values mean data.len + value.
+ * That allows to get a slice without leading or trailing N bytes:
+ *    power_slice(b, 1, -1) === slice(b, 1, b.len - 1); // skip first byte
+ *    power_slice(b, 0, -1) === slice(b, 0, b.len - 1); // skip last byte
+ *    power_slice(b, -1, 1) === slice(b, b.len - 1, 1); // get only last byte.
+ *
+ * @param data - original binary data to perform a slice on.
+ * @param offset - offset in data.data to start slice from.
+ * @param size - size of slice.
+ * @return BinaryData object that does not own the pointed data, DO NOT free
+ *         neither the object nor it's. MUST NOT outlive data argument.
+ * @throws Exception if offset or size is too big.
+ */
+MULTY_CORE_API BinaryData power_slice(const BinaryData& data, int32_t offset, int32_t size);
 
 /** Convenience to simplify passing C++ smart_pointers (like std::unique_ptr<T>)
  * to C-like functions than take T** and store address of new object there.

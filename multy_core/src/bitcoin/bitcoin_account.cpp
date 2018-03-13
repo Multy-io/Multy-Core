@@ -238,6 +238,20 @@ BitcoinAccount::~BitcoinAccount()
 {
 }
 
+void bitcoin_hash_160(const BinaryData& input, BinaryData* output)
+{
+    if (!output)
+    {
+        THROW_EXCEPTION("Invalid argument: output is null.");
+    }
+
+    THROW_IF_WALLY_ERROR(
+            wally_hash160(
+                    input.data, input.len,
+                    const_cast<unsigned char*>(output->data), output->len),
+            "hash160 failed.");
+}
+
 std::string BitcoinAccount::get_address() const
 {
     // P2PKH address generated from public key.
@@ -252,12 +266,11 @@ std::string BitcoinAccount::get_address() const
 
     // 2 - Perform SHA-256 hashing on the public key
     // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
-    THROW_IF_WALLY_ERROR(
-            wally_hash160(
-                    key_data.data, key_data.len,
-                    // Leave space for prefix at step 4.
-                    pub_hash + 1, sizeof(pub_hash) - 1),
-            "(2&3) Hashing of public key failed");
+    {
+        // Leave the first byte intact for prefix.
+        BinaryData hash_data = power_slice(as_binary_data(pub_hash), 1, -1);
+        bitcoin_hash_160(key_data, &hash_data);
+    }
 
     // 4 - Add version byte in front of RIPEMD-160 hash
     //      (0x00 for Main Network)

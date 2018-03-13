@@ -110,6 +110,28 @@ char* copy_string(const char* str)
     return new_message;
 }
 
+BinaryData power_slice(const BinaryData& data, int32_t offset, int32_t size)
+{
+    if (offset < 0)
+    {
+        offset += data.len;
+    }
+    if (size < 0)
+    {
+        size += data.len;
+    }
+    if (offset < 0 || size < 0)
+    {
+        THROW_EXCEPTION("Can't power_slice BinaryData: either offset or size "
+                "is too small.")
+                << " data length: " << data.len
+                << " offset: " << offset
+                << " size: " << size;
+    }
+
+    return slice(data, offset, size);
+}
+
 BinaryData slice(const BinaryData& data, size_t offset, size_t size)
 {
     if (!data.data)
