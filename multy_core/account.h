@@ -27,6 +27,7 @@ enum Blockchain
 {
     BLOCKCHAIN_BITCOIN = 0x00,
     BLOCKCHAIN_ETHEREUM = 0x3c,
+    BLOCKCHAIN_GOLOS = 0x060105
 };
 
 enum BlockchainNetType
@@ -86,7 +87,7 @@ MULTY_CORE_API struct Error* make_hd_leaf_account(
  * free_account().
  */
 MULTY_CORE_API struct Error* make_account(
-        enum Blockchain Blockchain,
+        enum Blockchain blockchain,
         const char* serialized_private_key,
         struct Account** new_account);
 

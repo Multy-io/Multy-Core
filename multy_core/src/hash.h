@@ -37,10 +37,11 @@ public:
 typedef std::unique_ptr<Hasher> HasherPtr;
 enum HasherType
 {
-    SHA2,
-    SHA2_DOUBLE, // double hashing: sha2(sha2(data, size), size)
-    SHA3,
-    KECCAK
+    SHA2, // 256, 512 only
+    SHA2_DOUBLE, // double hashing: sha2(sha2(data, size), size), same sizes as for SHA2
+    SHA3, // 224, 256, 384, 512
+    KECCAK, // 256 only
+    RIPEMD, // 160 only
 };
 
 MULTY_CORE_API HasherPtr make_hasher(HasherType hasher_type, size_t size);

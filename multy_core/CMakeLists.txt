@@ -47,6 +47,7 @@ add_library(multy_core
 
     # Common stuff
     src/account_base.cpp
+    src/ec_key_utils.cpp
     src/hash.cpp
 
     src/exception.cpp
@@ -63,6 +64,9 @@ add_library(multy_core
     # Ethereum
     src/ethereum/ethereum_account.cpp
     src/ethereum/ethereum_transaction.cpp
+
+    # Golos
+    src/golos/golos_account.cpp
 )
 
 # Run a script that generates version.h in build dir

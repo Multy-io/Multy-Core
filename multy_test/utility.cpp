@@ -93,6 +93,21 @@ void throw_exception(const char* message)
     throw std::runtime_error(message);
 }
 
+bool blockchain_can_derive_address_from_private_key(Blockchain blockchain)
+{
+    switch(blockchain)
+    {
+        case BLOCKCHAIN_BITCOIN:
+        case BLOCKCHAIN_ETHEREUM:
+            return true;
+        case BLOCKCHAIN_GOLOS:
+            return false;
+        default:
+            assert(false && "Unsupported blockchain type");
+    }
+    return false;
+}
+
 } // namespace test_utility
 
 bool operator==(const PublicKey& lhs, const PublicKey& rhs)

@@ -14,6 +14,7 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 #include "multy_core/src/ethereum/ethereum_account.h"
+#include "multy_core/src/golos/golos_account.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
@@ -48,6 +49,11 @@ Error* make_hd_account(
             case BLOCKCHAIN_ETHEREUM:
             {
                 *new_account = new EthereumHDAccount(blockchain_type, *master_key, index);
+                break;
+            }
+            case BLOCKCHAIN_GOLOS:
+            {
+                *new_account = new GolosHDAccount(blockchain_type, *master_key, index);
                 break;
             }
             default:
@@ -93,7 +99,9 @@ Error* make_account(
         const char* serialized_private_key,
         Account** new_account)
 {
-    ARG_CHECK(blockchain == BLOCKCHAIN_BITCOIN || blockchain == BLOCKCHAIN_ETHEREUM);
+    ARG_CHECK(blockchain == BLOCKCHAIN_BITCOIN
+            || blockchain == BLOCKCHAIN_ETHEREUM
+            || blockchain == BLOCKCHAIN_GOLOS);
     ARG_CHECK(serialized_private_key);
     ARG_CHECK(new_account);
 
@@ -111,6 +119,12 @@ Error* make_account(
             case BLOCKCHAIN_ETHEREUM:
             {
                 *new_account = make_ethereum_account(serialized_private_key)
+                        .release();
+                break;
+            }
+            case BLOCKCHAIN_GOLOS:
+            {
+                *new_account = make_golos_account(serialized_private_key)
                         .release();
                 break;
             }

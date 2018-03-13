@@ -18,6 +18,7 @@
 namespace
 {
 using namespace multy_core::internal;
+using namespace test_utility;
 } // namespace
 
 void PrintTo(const SerializedKeyTestCase& c, std::ostream* out)
@@ -62,6 +63,12 @@ TEST_P(SerializedKeyTestP, public_key)
 TEST_P(SerializedKeyTestP, address)
 {
     const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+    if (!test_data.address || strlen(test_data.address) == 0)
+    {
+        ASSERT_FALSE(blockchain_can_derive_address_from_private_key(
+                ::testing::get<0>(GetParam()).blockchain));
+        return;
+    }
 
     ConstCharPtr address;
     HANDLE_ERROR(account_get_address_string(account.get(), reset_sp(address)));
@@ -85,7 +92,6 @@ TEST_P(SerializedKeyTestP, private_key)
     ASSERT_NE(nullptr, serialized_private_key);
     ASSERT_STREQ(test_data.private_key, serialized_private_key.get());
 }
-
 
 TEST_P(CheckAddressTestP, validate_address)
 {

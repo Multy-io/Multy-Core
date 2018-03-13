@@ -7,6 +7,7 @@
 #ifndef MULTY_TEST_UTILITY_H
 #define MULTY_TEST_UTILITY_H
 
+#include "multy_core/account.h"
 #include "multy_core/common.h"
 #include "multy_core/src/utility.h"
 
@@ -51,12 +52,16 @@ multy_core::internal::ExtendedKeyPtr make_dummy_extended_key_ptr();
 EntropySource make_dummy_entropy_source();
 
 void throw_exception(const char* message);
+bool blockchain_can_derive_address_from_private_key(Blockchain blockchain);
 
 } // test_utility
 
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);
 bool operator==(const PublicKey& lhs, const PublicKey& rhs);
 bool operator==(const BlockchainType& lhs, const BlockchainType& rhs);
+
+using multy_core::internal::operator==;
+using multy_core::internal::operator!=;
 
 inline bool operator!=(const PublicKey& lhs, const PublicKey& rhs)
 {

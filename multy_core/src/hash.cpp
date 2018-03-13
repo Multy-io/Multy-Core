@@ -11,6 +11,10 @@
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 
+extern "C" {
+#include "ccan/ccan/crypto/ripemd160/ripemd160.h"
+} // extern "C"
+
 #include "wally_crypto.h"
 
 namespace
@@ -70,6 +74,24 @@ public:
     }
 };
 
+class RipemdHasher : public Hasher
+{
+public:
+    void hash(const BinaryData& input, BinaryData* output) const override
+    {
+        assert(output);
+        if (output->len != 160 / 8)
+        {
+            THROW_EXCEPTION("Unsupported Ripemd hash size.")
+                    << " Requested hash size: " << output->len;
+        }
+
+        struct ripemd160 ripemd;
+        ripemd160(&ripemd, input.data, input.len);
+        memcpy(const_cast<unsigned char*>(output->data), &ripemd, sizeof(ripemd));
+    }
+};
+
 template <typename HasherT>
 class DoubleHasher : public Hasher
 {
@@ -118,8 +140,11 @@ HasherPtr make_hasher(HasherType hasher_type, size_t /*size*/)
             return ::make_hasher<::Sha3Hasher>();
         case KECCAK:
             return ::make_hasher<::KeccakHasher>();
+        case RIPEMD:
+            return ::make_hasher<::RipemdHasher>();
         default:
-            THROW_EXCEPTION("Unknown hasher type.");
+            THROW_EXCEPTION("Unknown hasher type.")
+                    << hasher_type;
     }
     return nullptr;
 }

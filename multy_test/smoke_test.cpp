@@ -27,6 +27,7 @@ namespace
 using namespace multy_core::internal;
 using namespace test_utility;
 
+
 class AccountSmokeTestP : public ::testing::TestWithParam<BlockchainType>
 {
 };
@@ -54,80 +55,69 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     const BlockchainType expected_blockchain = GetParam();
 
     ConstCharPtr mnemonic_str;
-    ErrorPtr error;
 
-    error.reset(
+    HANDLE_ERROR(
             make_mnemonic(make_dummy_entropy_source(), reset_sp(mnemonic_str)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, mnemonic_str);
 
     BinaryDataPtr seed;
-    error.reset(make_seed(mnemonic_str.get(), "", reset_sp(seed)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_seed(mnemonic_str.get(), "", reset_sp(seed)));
     ASSERT_NE(nullptr, seed);
 
     ExtendedKeyPtr root_key;
-    error.reset(make_master_key(seed.get(), reset_sp(root_key)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_master_key(seed.get(), reset_sp(root_key)));
     ASSERT_NE(nullptr, root_key);
 
     ConstCharPtr root_id;
-    error.reset(make_key_id(root_key.get(), reset_sp(root_id)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(make_key_id(root_key.get(), reset_sp(root_id)));
     ASSERT_NE(nullptr, root_id);
     ASSERT_STRCASENE("", root_id.get());
 
     HDAccountPtr root_account;
-    error.reset(
+    HANDLE_ERROR(
             make_hd_account(
                     root_key.get(), expected_blockchain, 0,
                     reset_sp(root_account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, root_account);
 
     AccountPtr account;
-    error.reset(
+    HANDLE_ERROR(
             make_hd_leaf_account(
                     root_account.get(), ADDRESS_EXTERNAL, 0,
                     reset_sp(account)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
 
     ConstCharPtr address;
-    error.reset(account_get_address_string(account.get(), reset_sp(address)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(account_get_address_string(account.get(), reset_sp(address)));
+
     ASSERT_NE(nullptr, address);
     ASSERT_LT(0, strlen(address.get()));
 
     KeyPtr private_key;
-    error.reset(
+    HANDLE_ERROR(
             account_get_key(
                     account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, private_key);
 
     ConstCharPtr private_key_str;
-    error.reset(key_to_string(private_key.get(), reset_sp(private_key_str)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(key_to_string(private_key.get(), reset_sp(private_key_str)));
     ASSERT_NE(nullptr, private_key_str);
 
     KeyPtr public_key;
-    error.reset(
+    HANDLE_ERROR(
             account_get_key(
                     account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
-    ASSERT_EQ(nullptr, error);
     ASSERT_NE(nullptr, public_key);
 
     ConstCharPtr public_key_str;
-    error.reset(key_to_string(public_key.get(), reset_sp(public_key_str)));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(key_to_string(public_key.get(), reset_sp(public_key_str)));
     ASSERT_NE(nullptr, public_key_str);
 
     ASSERT_STRNE(public_key_str.get(), private_key_str.get());
 
     BlockchainType blockchain;
-    error.reset(account_get_blockchain_type(account.get(), &blockchain));
-    ASSERT_EQ(nullptr, error);
+    HANDLE_ERROR(account_get_blockchain_type(account.get(), &blockchain));
+
     ASSERT_EQ(expected_blockchain, blockchain);
 }
 

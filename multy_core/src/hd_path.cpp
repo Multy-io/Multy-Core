@@ -28,10 +28,15 @@ std::string to_string(const HDPath& path)
     return stream.str();
 }
 
+void append_child(uint32_t child_chain_code, HDPath* parent_path)
+{
+    parent_path->push_back(child_chain_code);
+}
+
 HDPath make_child_path(HDPath parent_path, uint32_t child_chain_code)
 {
     HDPath result(std::move(parent_path));
-    result.push_back(child_chain_code);
+    append_child(child_chain_code, &result);
     return result;
 }
 
