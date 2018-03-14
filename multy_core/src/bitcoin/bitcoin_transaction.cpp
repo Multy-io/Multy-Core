@@ -31,6 +31,7 @@
 namespace
 {
 using namespace multy_core::internal;
+const size_t BITCOIN_MAX_MESSAGE_LENGTH = 75;
 
 uint32_t bitcoin_traits()
 {
@@ -551,6 +552,11 @@ BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations(D
 {
     // TODO: include also change destination and payload-only destination.
     Destinations result;
+    if (m_message)
+    {
+        result.push_back(m_message.get());
+    }
+
     for (const auto& dest : m_destinations)
     {
         if ( *dest->amount > BigInt(0) ||
@@ -838,6 +844,26 @@ Properties& BitcoinTransaction::add_destination()
     return register_properties(
             make_id("#", m_destinations.size() - 1),
             m_destinations.back()->properties);
+}
+
+void BitcoinTransaction::set_message(const BinaryData& value)
+{
+    if (value.len > BITCOIN_MAX_MESSAGE_LENGTH)
+    {
+        THROW_EXCEPTION("Transaction message is too big.") << " Max length: "
+                        << BITCOIN_MAX_MESSAGE_LENGTH << " actual length: " << value.len;
+    }
+    if (!m_message)
+    {
+        m_message.reset(new BitcoinTransactionDestination(get_net_type()));
+        m_message->address.set_trait(Property::READONLY);
+        m_message->amount.set_trait(Property::READONLY);
+    }
+    BitcoinDataStream sig_stream;
+    sig_stream << OpCode(0x6a); // OP_RETURN
+    sig_stream << as_compact_size(value.len);
+    sig_stream.write_data(value.data, value.len);
+    m_message->sig_script = make_clone(sig_stream.get_content());
 }
 
 Properties& BitcoinTransaction::get_fee()

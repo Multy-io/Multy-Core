@@ -129,6 +129,20 @@ Error* transaction_get_fee(Transaction* transaction, Properties** fee)
 
     return nullptr;
 }
+Error* transaction_set_message(Transaction* transaction, const BinaryData* message)
+{
+    ARG_CHECK_OBJECT(transaction);
+    ARG_CHECK(message);
+    ARG_CHECK(message->data && message->len);
+
+    try
+    {
+        transaction->set_message(*message);
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
 
 Error* transaction_get_properties(Transaction* transaction,
         Properties** transaction_properties)

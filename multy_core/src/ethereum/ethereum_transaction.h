@@ -54,6 +54,7 @@ public:
     Properties& add_source() override;
     Properties& add_destination() override;
     Properties& get_fee() override;
+    void set_message(const BinaryData& value) override;
 
 private:
     enum SerializationMode

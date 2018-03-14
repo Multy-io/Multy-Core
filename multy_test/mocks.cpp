@@ -177,3 +177,7 @@ Properties& TestTransaction::get_transaction_properties()
 {
     return m_properties;
 }
+
+void TestTransaction::set_message(const BinaryData& value)
+{
+}

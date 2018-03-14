@@ -1062,3 +1062,59 @@ GTEST_TEST(BitcoinTransactionTest, invalid_script_pubkey)
         EXPECT_ERROR(transaction_serialize(transaction.get(), reset_sp(serialized_tx)));
     }
 }
+
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_with_op_return)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+                    BLOCKCHAIN_BITCOIN,
+                    "5KWNESNNyn68focSAoUm3zrgnGZ4fABoWf9DccbEUHwWFhx5ouj",
+                    reset_sp(account)));
+    const PrivateKeyPtr private_key = account->get_private_key();
+
+    const BigInt available(107527);
+    const BigInt sent(106777);
+
+    const TransactionTemplate TEST_TX
+    {
+        account.get(),
+        TransactionFee
+        { // fee:
+            BigInt{3}
+        },
+        { // Sources
+            {
+                available,
+                from_hex("a0868fa9ba2dc6fcf2822b2a11cea8e37a6e381f05a1ef11ccc3abae35721454"),
+                0,
+                from_hex("76a91441d29eaed90c0a26021daa5139dcc1d45c4e34a188ac"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "1713EbQ9gh7kgxEVPpSqDBhV36CbFpptT8",
+                sent
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX);
+
+    BinaryDataPtr message;
+    make_binary_data_from_hex("4d554c5459207468652062657374", reset_sp(message));
+    transaction_set_message(transaction.get(), message.get());
+
+    const BinaryDataPtr serialied = transaction->serialize();
+    EXPECT_NE(
+            nullptr,
+            std::search(serialied->data, serialied->data + serialied->len, message->data, message->data + message->len));
+
+    // Txid: a08020fecb81dff920c3a00160f519c986e1b3205d08390b71632e1046a6f885
+    ASSERT_EQ(as_binary_data(from_hex(
+                "010000000154147235aeabc3cc11efa1051f386e7ae3a8ce112a2b82f2fcc62dbaa98f86a0000000008b483045022100eebf874"
+                "3bd2ed75e277f2d7b42302293f1700d5286c1f002009ba937be84ea810220098794c9b320158742b48c9ca94175a45bc044c9e5"
+                "1c5933c2a083c775dca88b0141044c6efb7f684e02090c0f60ec67517678f706282b3bb06ed9e86e49dafefb7561fa79ac1df98"
+                "beb234dba313a9f0928fb08ab7ca086a74a1ae18da0e663c0aac0ffffffff020000000000000000106a0e4d554c545920746865"
+                "206265737419a10100000000001976a91441d29eaed90c0a26021daa5139dcc1d45c4e34a188ac00000000")), *serialied);
+}

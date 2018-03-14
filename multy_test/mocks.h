@@ -103,6 +103,7 @@ struct TestTransaction : public Transaction
     Properties& add_destination() override;
     Properties& get_fee() override;
     Properties& get_transaction_properties() override;
+    void set_message(const BinaryData& value) override;
 
 private:
     const BlockchainType m_blockchain = BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET};
