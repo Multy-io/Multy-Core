@@ -16,11 +16,14 @@
 #include "multy_test/mocks.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
+#include "multy_test/supported_blockchains.h"
 
 #include "gtest/gtest.h"
 
 #include <memory>
 #include <string>
+#include <vector>
+#include <unordered_set>
 
 namespace
 {
@@ -31,7 +34,7 @@ const char* TEST_ADDRESS = "TEST_ADDRESS";
 const HDPath TEST_PATH = {1, 2, 3};
 const char* TEST_PATH_STRING = "m/1/2/3";
 const Blockchain INVALID_BLOCKCHAIN = static_cast<Blockchain>(-1);
-const BlockchainType INVALID_BLOCKCHAIN_TYPE{INVALID_BLOCKCHAIN, BLOCKCHAIN_NET_TYPE_MAINNET};
+const BlockchainType INVALID_BLOCKCHAIN_TYPE{INVALID_BLOCKCHAIN, BITCOIN_NET_TYPE_MAINNET};
 
 GTEST_TEST(AccountTest, free_account)
 {
@@ -45,7 +48,7 @@ GTEST_TEST(AccountTest, fake_account)
     const char* EXPECTED_ADDRESS = TEST_ADDRESS;
     const HDPath EXPECTED_PATH = TEST_PATH;
     const char* EXPECTED_PATH_STRING = TEST_PATH_STRING;
-    const BlockchainType EXPECTED_BLOCKCHAIN_TYPE{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET};
+    const BlockchainType EXPECTED_BLOCKCHAIN_TYPE{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET};
 
     ErrorPtr error;
     TestHDAccount root_account(
@@ -118,7 +121,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_key)
 {
     const KeyType INVALID_KEY_TYPE = static_cast<KeyType>(-1);
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -143,7 +146,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_string)
     ConstCharPtr address_str;
 
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -161,7 +164,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
     ConstCharPtr path_str;
 
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -179,7 +182,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
     BlockchainType blockchain_type = INVALID_BLOCKCHAIN_TYPE;
 
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -193,20 +196,20 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
 
 GTEST_TEST(AccountTestInvalidArgs, validate_address)
 {
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}, nullptr));
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}, nullptr));
     EXPECT_ERROR(validate_address(INVALID_BLOCKCHAIN_TYPE, "test"));
 }
 
 GTEST_TEST(AccountTestInvalidAddress, validate_address)
 {
     // Invalid Checksum
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
             "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET},
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
             "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
 
     // Invalid address
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET},
+    EXPECT_ERROR(validate_address({BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET},
             "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
 }
 
@@ -215,40 +218,12 @@ class AccountTestBlockchainSupportP : public ::testing::TestWithParam<Blockchain
 {
 };
 
-const BlockchainType SUPPORTED_BLOCKCHAINS[] =
-{
-    {
-        BLOCKCHAIN_BITCOIN,
-        BLOCKCHAIN_NET_TYPE_MAINNET
-    },
-    {
-        BLOCKCHAIN_BITCOIN,
-        BLOCKCHAIN_NET_TYPE_TESTNET
-    },
-    {
-        BLOCKCHAIN_ETHEREUM,
-        BLOCKCHAIN_NET_TYPE_MAINNET
-    },
-    {
-        BLOCKCHAIN_ETHEREUM,
-        BLOCKCHAIN_NET_TYPE_TESTNET
-    },
-    {
-        BLOCKCHAIN_GOLOS,
-        BLOCKCHAIN_NET_TYPE_MAINNET
-    },
-    {
-        BLOCKCHAIN_GOLOS,
-        BLOCKCHAIN_NET_TYPE_TESTNET
-    }
-};
-
 INSTANTIATE_TEST_CASE_P(
         SupportedBlockchains,
         AccountTestBlockchainSupportP,
         ::testing::ValuesIn(SUPPORTED_BLOCKCHAINS));
 
-TEST_P(AccountTestBlockchainSupportP, generic)
+TEST_P(AccountTestBlockchainSupportP, create_and_check_account_from_hd_account)
 {
     const ExtendedKey master_key = make_dummy_extended_key();
 
@@ -325,6 +300,51 @@ TEST_P(AccountTestBlockchainSupportP, generic)
     //        EXPECT_EQ(nullptr, error);
     //        EXPECT_EQ(nullptr, address_str);
     //    }
+}
+
+GTEST_TEST(AccountTest, unique_private_keys)
+{
+    // Verify that keys for accounts of different blockchains are diffrent.
+    // Testnet blockchains may have same keys.
+    // Comparing ExtendedKeys by string, since those are blockchain-agnostic.
+
+    const ExtendedKey master_key = make_dummy_extended_key();
+
+    std::map<Blockchain, std::string> main_net_keys_data;
+    std::map<Blockchain, std::string> test_net_keys_data;
+
+    for (const auto& blockchain_type : SUPPORTED_BLOCKCHAINS)
+    {
+        auto& keys_data
+                = contains(SUPPORTED_BLOCKCHAIN_TESTNETS, blockchain_type)
+                ? test_net_keys_data : main_net_keys_data;
+
+        HDAccountPtr root_account;
+        HANDLE_ERROR(
+                make_hd_account(
+                        &master_key, blockchain_type, 0, reset_sp(root_account)));
+        EXPECT_NE(nullptr, root_account);
+
+        std::string key_string = root_account->get_account_key()->to_string();
+        keys_data[blockchain_type.blockchain] = key_string;
+    }
+
+    ASSERT_NE(0, main_net_keys_data.size());
+
+    std::unordered_set<std::string> unique_main_net_keys_data;
+    for (const auto& i : main_net_keys_data)
+    {
+        SCOPED_TRACE(i.first);
+
+        const auto& main_net_key_data = i.second;
+        const auto& test_net_key_data = test_net_keys_data.at(i.first);
+
+        // Ensure that keys are different for main net and test net of same blockchain.
+        ASSERT_NE(test_net_key_data, main_net_key_data);
+
+        // Ensure that keys are different across all main nets.
+        ASSERT_TRUE(unique_main_net_keys_data.insert(main_net_key_data).second);
+    }
 }
 
 } // namespace

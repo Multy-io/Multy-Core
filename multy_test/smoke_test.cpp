@@ -13,6 +13,7 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/u_ptr.h"
 
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/bip39_test_cases.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
@@ -30,21 +31,6 @@ using namespace test_utility;
 
 class AccountSmokeTestP : public ::testing::TestWithParam<BlockchainType>
 {
-};
-
-const BlockchainType SUPPORTED_BLOCKCHAINS[] = {
-        {
-            BLOCKCHAIN_BITCOIN,
-            BLOCKCHAIN_NET_TYPE_MAINNET
-        },
-        {
-            BLOCKCHAIN_BITCOIN,
-            BLOCKCHAIN_NET_TYPE_TESTNET
-        },
-        {
-            BLOCKCHAIN_ETHEREUM,
-            BLOCKCHAIN_NET_TYPE_MAINNET
-        }
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -87,11 +73,19 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
-    ConstCharPtr address;
-    HANDLE_ERROR(account_get_address_string(account.get(), reset_sp(address)));
+    if (blockchain_can_derive_address_from_private_key(expected_blockchain.blockchain))
+    {
+        ConstCharPtr address;
+        HANDLE_ERROR(account_get_address_string(account.get(), reset_sp(address)));
+        ASSERT_NE(nullptr, address);
+        ASSERT_LT(0, strlen(address.get()));
+    }
+    else
+    {
+        ConstCharPtr address;
+        EXPECT_ERROR(account_get_address_string(account.get(), reset_sp(address)));
+    }
 
-    ASSERT_NE(nullptr, address);
-    ASSERT_LT(0, strlen(address.get()));
 
     KeyPtr private_key;
     HANDLE_ERROR(

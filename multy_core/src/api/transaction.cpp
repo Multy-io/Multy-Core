@@ -35,9 +35,10 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
                 *new_transaction = new EthereumTransaction(*account);
                 break;
             default:
-                return MAKE_ERROR(
-                        ERROR_FEATURE_NOT_IMPLEMENTED_YET,
-                        "Blockchain not supported yet.");
+                THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET,
+                        "Blockchain not supported yet.")
+                        << " Requested blockchain type: "
+                        << blockchain_type.blockchain;
         }
     }
     CATCH_EXCEPTION_RETURN_ERROR();

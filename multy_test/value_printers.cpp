@@ -62,21 +62,10 @@ std::ostream& operator<<(std::ostream& ostr, Blockchain blockchain)
     return ostr;
 }
 
-std::ostream& operator<<(std::ostream& ostr, BlockchainNetType net_type)
-{
-    if (net_type == BLOCKCHAIN_NET_TYPE_MAINNET)
-    {
-        return ostr << "MainNet";
-    }
-    else
-    {
-        return ostr << "TestNet(" << static_cast<size_t>(net_type) << ")";
-    }
-}
-
 std::ostream& operator<<(std::ostream& ostr, const BlockchainType& blockchain_type)
 {
-    ostr << blockchain_type.blockchain << "/" << static_cast<BlockchainNetType>(blockchain_type.net_type);
+    ostr << blockchain_type.blockchain << "/"
+            << "NetType(" << blockchain_type.net_type << ")";
     return ostr;
 }
 

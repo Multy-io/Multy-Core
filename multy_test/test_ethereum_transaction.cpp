@@ -5,7 +5,8 @@
  */
 
 #include "multy_core/ethereum.h"
-#include "multy_core/src/bitcoin/bitcoin_transaction.h"
+#include "multy_core/src/ethereum/ethereum_transaction.h"
+
 #include "multy_core/src/api/properties_impl.h"
 
 #include "multy_core/account.h"

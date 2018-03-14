@@ -195,6 +195,26 @@ private:
     EthereumPrivateKeyPtr m_private_key;
 };
 
+uint32_t get_chain_index(BlockchainType blockchain_type)
+{
+    if (blockchain_type.blockchain == BLOCKCHAIN_ETHEREUM)
+    {
+        static const EthereumChainId TESTNETS[] = {
+            ETHEREUM_CHAIN_ID_ROPSTEN,
+            ETHEREUM_CHAIN_ID_RINKEBY,
+            ETHEREUM_CHAIN_ID_ROOTSTOCK_TESTNET,
+            ETHEREUM_CHAIN_ID_KOVAN,
+            ETHEREUM_CHAIN_ID_ETC_TESTNET
+        };
+
+        if (contains(TESTNETS, blockchain_type.net_type))
+        {
+            return CHAIN_INDEX_TEST;
+        }
+    }
+    return blockchain_type.blockchain;
+}
+
 } // namespace
 
 namespace multy_core
@@ -202,10 +222,11 @@ namespace multy_core
 namespace internal
 {
 
-EthereumHDAccount::EthereumHDAccount(BlockchainType blockchain_type,
+EthereumHDAccount::EthereumHDAccount(
+        BlockchainType blockchain_type,
         const ExtendedKey& bip44_master_key,
         uint32_t index)
-    : HDAccountBase(blockchain_type, bip44_master_key, index)
+    : HDAccountBase(blockchain_type, get_chain_index(blockchain_type), bip44_master_key, index)
 {
 }
 
@@ -251,7 +272,7 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
             "Failed to verify private key");
 
-    const BlockchainType blockchain_type{BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET};
+    const BlockchainType blockchain_type{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET};
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
     return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
 }

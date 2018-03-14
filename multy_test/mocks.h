@@ -12,6 +12,7 @@
 #include "multy_core/src/api/transaction_impl.h"
 #include "multy_core/src/api/properties_impl.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/bitcoin/bitcoin_account.h"
 
 #include <string>
 
@@ -79,6 +80,7 @@ struct TestHDAccount : public HDAccount
     BlockchainType get_blockchain_type() const override;
     AccountPtr make_leaf_account(
             AddressType type, uint32_t index) const override;
+    ExtendedKeyPtr get_account_key() const override;
 
 private:
     const BlockchainType m_blockchain_type;

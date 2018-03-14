@@ -21,11 +21,24 @@
 
 namespace
 {
+using namespace multy_core::internal;
+
 const size_t GOLOS_KEY_HASH_SIZE = 4;
 const char GOLOS_PUBLIC_KEY_STRING_PREFIX[] = "GLS";
 const uint8_t GOLOS_KEY_PREFIX[] = {0x80};
 
-const BlockchainType GOLOS_MAIN_NET{BLOCKCHAIN_GOLOS, BLOCKCHAIN_NET_TYPE_MAINNET};
+const BlockchainType GOLOS_MAIN_NET{BLOCKCHAIN_GOLOS, GOLOS_NET_TYPE_MAINNET};
+
+uint32_t get_chain_index(BlockchainType blockchain_type)
+{
+    if (blockchain_type.blockchain == BLOCKCHAIN_GOLOS
+            && blockchain_type.net_type == GOLOS_NET_TYPE_TESTNET)
+    {
+        return CHAIN_INDEX_TEST;
+    }
+    return blockchain_type.blockchain;
+}
+
 } // namespace
 
 namespace multy_core
@@ -139,7 +152,7 @@ GolosHDAccount::GolosHDAccount(
         BlockchainType blockchain_type,
         const ExtendedKey& bip44_master_key,
         uint32_t index)
-    : HDAccountBase(blockchain_type, bip44_master_key, index)
+    : HDAccountBase(blockchain_type, get_chain_index(blockchain_type), bip44_master_key, index)
 {}
 
 GolosHDAccount::~GolosHDAccount()

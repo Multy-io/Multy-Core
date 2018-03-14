@@ -13,8 +13,8 @@ extern "C" {
 
 enum BitcoinNetType
 {
-    BITCOIN_MAINNET = 0,
-    BITCOIN_TESTNET = 1,
+    BITCOIN_NET_TYPE_MAINNET = 0,
+    BITCOIN_NET_TYPE_TESTNET = 1,
 };
 
 enum BitcoinAddressType

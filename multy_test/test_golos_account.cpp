@@ -5,13 +5,14 @@
  */
 
 #include "multy_test/serialized_keys_test_base.h"
+#include "multy_core/src/golos/golos_account.h"
 
 #include "gtest/gtest.h"
 
 namespace
 {
 using namespace multy_core::internal;
-const BlockchainType GOLOS_MAINNET{BLOCKCHAIN_GOLOS, BLOCKCHAIN_NET_TYPE_MAINNET};
+const BlockchainType GOLOS_MAINNET{BLOCKCHAIN_GOLOS, GOLOS_NET_TYPE_MAINNET};
 
 const SerializedKeyTestCase GOLOS_KEYS[] =
 {

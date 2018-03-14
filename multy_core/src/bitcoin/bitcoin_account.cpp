@@ -4,6 +4,7 @@
  * See LICENSE for details
  */
 #include "multy_core/src/bitcoin/bitcoin_account.h"
+#include "multy_core/bitcoin.h"
 
 #include "multy_core/common.h"
 
@@ -73,6 +74,16 @@ std::string to_hex_string(const uint8_t value)
     stream << std::hex;
     stream <<value;
     return stream.str();
+}
+
+uint32_t get_chain_index(BlockchainType blockchain_type)
+{
+    if (blockchain_type.blockchain == BLOCKCHAIN_BITCOIN
+            && blockchain_type.net_type == BITCOIN_NET_TYPE_TESTNET)
+    {
+        return CHAIN_INDEX_TEST;
+    }
+    return blockchain_type.blockchain;
 }
 
 } // namespace
@@ -286,7 +297,7 @@ BitcoinHDAccount::BitcoinHDAccount(
         BlockchainType blockchain_type,
         const ExtendedKey& bip44_master_key,
         uint32_t index)
-    : HDAccountBase(blockchain_type, bip44_master_key, index)
+    : HDAccountBase(blockchain_type, get_chain_index(blockchain_type), bip44_master_key, index)
 {
 }
 
@@ -335,16 +346,16 @@ AccountPtr make_bitcoin_account(const char* private_key)
     }
     key_data.resize(resulting_size);
 
-    BitcoinNetType net_type = BITCOIN_MAINNET;
+    BitcoinNetType net_type = BITCOIN_NET_TYPE_MAINNET;
     // WIF, drop first 0x80 byte
     if (key_data[0] == 0x80 || key_data[0] == 0xef)
     {
-        net_type = (key_data[0] == 0xef) ? BITCOIN_TESTNET : BITCOIN_MAINNET;
+        net_type = (key_data[0] == 0xef) ? BITCOIN_NET_TYPE_TESTNET : BITCOIN_NET_TYPE_MAINNET;
         key_data.erase(key_data.begin());
     }
     bool use_compressed_public_key = false;
     // WIF, drop last 0x01 byte
-    const char* compressed_pefixes = net_type == BITCOIN_MAINNET ? "LK" : "c";
+    const char* compressed_pefixes = net_type == BITCOIN_NET_TYPE_MAINNET ? "LK" : "c";
     if (strchr(compressed_pefixes, private_key[0])
             && key_data.back() == WIF_COMPRESSED_PUBLIC_KEY_SUFFIX)
     {
