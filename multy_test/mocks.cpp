@@ -129,11 +129,6 @@ BlockchainType TestTransaction::get_blockchain_type() const
     return m_blockchain;
 }
 
-uint32_t TestTransaction::get_traits() const
-{
-    return m_traits;
-}
-
 void TestTransaction::update()
 {
 }

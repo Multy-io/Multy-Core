@@ -8,6 +8,7 @@
 
 #include "multy_core/account.h"
 #include "multy_core/big_int.h"
+#include "multy_core/binary_data.h"
 #include "multy_core/common.h"
 #include "multy_core/error.h"
 #include "multy_core/key.h"

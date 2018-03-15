@@ -22,12 +22,6 @@ namespace
 {
 using namespace multy_core::internal;
 
-uint32_t get_ethereum_traits()
-{
-    return TRANSACTION_REQUIRES_EXPLICIT_SOURCE
-        | TRANSACTION_SUPPORTS_FEE;
-}
-
 // based on cpp-ethereum/libdevcore/RLP.h
 const uint8_t RLP_MAX_LENGTH_BYTES = 8;
 const uint8_t RLP_DATA_IMM_LEN_START = 0x80;
@@ -374,7 +368,7 @@ public:
 };
 
 EthereumTransaction::EthereumTransaction(const Account& account)
-    : TransactionBase(account.get_blockchain_type(), get_ethereum_traits()),
+    : TransactionBase(account.get_blockchain_type()),
       m_account(account),
       m_nonce(get_transaction_properties(), "nonce", Property::REQUIRED,
               [](const BigInt& new_nonce)
@@ -543,7 +537,7 @@ Properties& EthereumTransaction::get_fee()
     return m_fee->get_properties();
 }
 
-void EthereumTransaction::set_message(const BinaryData& value)
+void EthereumTransaction::set_message(const BinaryData& /*value*/)
 {
     THROW_EXCEPTION("Not supported yet.");
 }

@@ -55,10 +55,9 @@ Properties& TransactionSourceBase::get_properties()
     return m_properties;
 }
 
-TransactionBase::TransactionBase(BlockchainType blockchain_type, uint32_t traits)
+TransactionBase::TransactionBase(BlockchainType blockchain_type)
     : m_properties("Transaction"),
       m_blockchain_type(blockchain_type),
-      m_traits(traits),
       m_all_properties()
 {
     register_properties("", m_properties);
@@ -67,11 +66,6 @@ TransactionBase::TransactionBase(BlockchainType blockchain_type, uint32_t traits
 BlockchainType TransactionBase::get_blockchain_type() const
 {
     return m_blockchain_type;
-}
-
-uint32_t TransactionBase::get_traits() const
-{
-    return m_traits;
 }
 
 Properties& TransactionBase::get_transaction_properties()

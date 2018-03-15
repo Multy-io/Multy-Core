@@ -33,14 +33,6 @@ namespace
 using namespace multy_core::internal;
 const size_t BITCOIN_MAX_MESSAGE_LENGTH = 75;
 
-uint32_t bitcoin_traits()
-{
-    return 1 << TRANSACTION_REQUIRES_EXPLICIT_SOURCE
-            | 1 << TRANSACTION_SUPPORTS_MULTIPLE_SOURCES
-            | 1 << TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS
-            | 1 << TRANSACTION_SUPPORTS_FEE;
-}
-
 typedef uint8_t OpCode;
 
 template <typename T>
@@ -491,7 +483,7 @@ public:
 };
 
 BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
-    : TransactionBase(blockchain_type, bitcoin_traits()),
+    : TransactionBase(blockchain_type),
       m_version(1),
       m_is_segwit_transaction(0),
       m_lock_time(0),

@@ -33,6 +33,7 @@ namespace internal
 class MULTY_CORE_API Exception : public std::exception
 {
 public:
+    Exception(ErrorCode error_code, const char* message, CodeLocation location);
     Exception(const char* message, CodeLocation location);
     virtual ~Exception();
 
@@ -43,12 +44,16 @@ public:
     void append_message(const char* message) const;
 
 private:
+    const ErrorCode m_error_code;
     mutable std::string m_message;
     const CodeLocation m_location;
 };
 
 #define THROW_EXCEPTION(msg) \
     throw multy_core::internal::Exception(msg, MULTY_CODE_LOCATION)
+
+#define THROW_EXCEPTION2(error_code, msg) \
+    throw multy_core::internal::Exception(error_code, msg, MULTY_CODE_LOCATION)
 
 } // namespace internal
 } // namespace multy_core

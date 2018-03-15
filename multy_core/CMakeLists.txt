@@ -17,15 +17,16 @@ endif()
 
 add_library(multy_core
     # API headers
-    api.h
     account.h
+    api.h
     big_int.h
+    blockchain.h
     common.h
     error.h
     key.h
     mnemonic.h
-    sha3.h
     properties.h
+    sha3.h
     transaction.h
 
     # implementation of API functions
@@ -33,6 +34,8 @@ add_library(multy_core
     src/api/account_impl.cpp
     src/api/big_int.cpp
     src/api/big_int_impl.cpp
+    src/api/binary_data.cpp
+    src/api/blockchain.cpp
     src/api/common.cpp
     src/api/error.cpp
     src/api/key.cpp
@@ -50,6 +53,8 @@ add_library(multy_core
     src/ec_key_utils.cpp
     src/hash.cpp
 
+    src/binary_data_utility.cpp
+    src/error_utility.cpp
     src/exception.cpp
     src/hd_path.cpp
     src/object.cpp
@@ -58,14 +63,17 @@ add_library(multy_core
     src/utility.cpp
 
     # Bitcoin
+    bitcoin.h
     src/bitcoin/bitcoin_account.cpp
     src/bitcoin/bitcoin_transaction.cpp
 
     # Ethereum
+    ethereum.h
     src/ethereum/ethereum_account.cpp
     src/ethereum/ethereum_transaction.cpp
 
     # Golos
+    golos.h
     src/golos/golos_account.cpp
 )
 

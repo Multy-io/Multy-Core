@@ -10,10 +10,10 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/ec_key_utils.h"
 #include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/hash.h"
 #include "multy_core/src/hd_path.h"
 #include "multy_core/src/utility.h"
-#include "multy_core/src/exception_stream.h"
 
 #include "secp256k1.h"
 #include "wally_core.h"
@@ -26,11 +26,6 @@
 namespace
 {
 using namespace multy_core::internal;
-
-enum BitcoinAddressType {
-    P2PKH,
-    P2SH
-};
 
 const uint8_t ADDRESS_PREFIXES[2][2] = {
     // Main net:
@@ -268,7 +263,7 @@ std::string BitcoinAccount::get_address() const
     // 4 - Add version byte in front of RIPEMD-160 hash
     //      (0x00 for Main Network)
     pub_hash[0] = get_address_prefix(
-            static_cast<BitcoinNetType>(m_blockchain_type.net_type), P2PKH);
+            static_cast<BitcoinNetType>(m_blockchain_type.net_type), BITCOIN_ADDRESS_P2PKH);
 
     // 5 - Perform SHA-256 hash on the extended RIPEMD-160 result
     // 6 - Perform SHA-256 hash on the result of the previous SHA-256 hash

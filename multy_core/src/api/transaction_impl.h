@@ -29,7 +29,6 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
     virtual ~Transaction();
 
     virtual BlockchainType get_blockchain_type() const = 0;
-    virtual uint32_t get_traits() const = 0;
 
     virtual void update() = 0;
     /** Serialize transaction to binary form.

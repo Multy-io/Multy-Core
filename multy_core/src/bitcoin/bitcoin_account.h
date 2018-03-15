@@ -8,6 +8,7 @@
 #define MULTY_CORE_BITCOIN_ACCOUNT_H
 
 #include "multy_core/api.h"
+#include "multy_core/bitcoin.h"
 
 #include "multy_core/src/account_base.h"
 #include "multy_core/src/u_ptr.h"
@@ -16,17 +17,6 @@ namespace multy_core
 {
 namespace internal
 {
-enum BitcoinNetType
-{
-    BITCOIN_MAINNET = 0,
-    BITCOIN_TESTNET = 1,
-};
-
-enum BitcoinAddressType
-{
-    BITCOIN_ADDRESS_P2PKH = 0,
-    BITCOIN_ADDRESS_P2SH = 1,
-};
 
 struct BitcoinPublicKey;
 struct BitcoinPrivateKey;
