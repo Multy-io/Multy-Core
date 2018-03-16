@@ -33,6 +33,17 @@ namespace
 using namespace multy_core::internal;
 const size_t BITCOIN_MAX_MESSAGE_LENGTH = 75;
 
+enum OP_CODE : uint8_t
+{
+    OP_FALSE = 0x00,
+    OP_RETURN = 0x6A,
+    OP_DUP = 0x76,
+    OP_HASH160 = 0xA9,
+    OP_EQUALVERIFY = 0x88,
+    OP_CHECKSIG = 0xAC,
+    OP_EQUAL = 0x87
+};
+
 typedef uint8_t OpCode;
 
 template <typename T>
@@ -143,6 +154,11 @@ BitcoinStream& write_as_data(const T& data, BitcoinStream& stream)
 }
 
 BitcoinStream& operator<<(BitcoinStream& stream, uint8_t data)
+{
+    return write_as_data(data, stream);
+}
+
+BitcoinStream& operator<<(BitcoinStream& stream, OP_CODE data)
 {
     return write_as_data(data, stream);
 }
@@ -275,22 +291,33 @@ void write_compact_size(uint64_t size, BitcoinStream* stream)
     }
 }
 
-BinaryDataPtr make_p2pkh_sig_script(const BinaryData& public_key_hash)
+BinaryDataPtr make_script_pub_key(const BinaryData& public_key_hash, BitcoinAddressType address_type)
 {
     BitcoinDataStream sig_stream;
-    sig_stream << OpCode(0x76); // OP_DUP
-    sig_stream << OpCode(0xA9); // OP_HASH160
+    if (address_type == BITCOIN_ADDRESS_P2PKH)
+    {
+        sig_stream << OP_DUP;
+        sig_stream << OP_HASH160;
 
-    sig_stream << as_compact_size(public_key_hash.len);
-    sig_stream.write_data(public_key_hash.data, public_key_hash.len);
+        sig_stream << as_compact_size(public_key_hash.len);
+        sig_stream << public_key_hash;
 
-    sig_stream << OpCode(0x88); // OP_EQUALVERIFY
-    sig_stream << OpCode(0xAC); // OP_CHECKSIG
+        sig_stream << OP_EQUALVERIFY;
+        sig_stream << OP_CHECKSIG;
+    }
+    else if (address_type == BITCOIN_ADDRESS_P2SH)
+    {
+        sig_stream << OP_HASH160;
 
+        sig_stream << as_compact_size(public_key_hash.len);
+        sig_stream << public_key_hash;
+
+        sig_stream << OP_EQUAL;
+    }
     return make_clone(sig_stream.get_content());
 }
 
-BinaryDataPtr make_p2pkh_sig_script_from_address(const BitcoinNetType expected_net_type, const std::string& address)
+BinaryDataPtr make_script_pub_key_from_address(const BitcoinNetType expected_net_type, const std::string& address)
 {
     BitcoinNetType net_type;
     BitcoinAddressType address_type;
@@ -298,7 +325,7 @@ BinaryDataPtr make_p2pkh_sig_script_from_address(const BitcoinNetType expected_n
         &net_type, &address_type);
     assert(binary_address);
 
-    if (address_type != BITCOIN_ADDRESS_P2PKH )
+    if (address_type != BITCOIN_ADDRESS_P2PKH && address_type != BITCOIN_ADDRESS_P2SH)
     {
         THROW_EXCEPTION("Unsupported address type.")
                 << " Address type: " << address_type;
@@ -311,7 +338,7 @@ BinaryDataPtr make_p2pkh_sig_script_from_address(const BitcoinNetType expected_n
                 << " actual:" << net_type;
     }
 
-    return make_p2pkh_sig_script(*binary_address);
+    return make_script_pub_key(*binary_address, address_type);
 }
 
 class BitcoinTransactionDestination
@@ -325,7 +352,7 @@ public:
                  verify_non_negative_amount),
           address(properties, "address", Property::REQUIRED,
                   [this](const std::string &new_address) {
-                        this->sig_script = make_p2pkh_sig_script_from_address(this->m_net_type, new_address);
+                        this->sig_script = make_script_pub_key_from_address(this->m_net_type, new_address);
                   }),
           is_change(false, properties, "is_change", Property::OPTIONAL,
                   [this](int32_t new_value) {
@@ -657,7 +684,7 @@ void BitcoinTransaction::verify() const
         BinaryData public_key_hash_data = as_binary_data(public_key_hash);
 
         bitcoin_hash_160(public_key->get_content(), &public_key_hash_data);
-        BinaryDataPtr sig_script = make_p2pkh_sig_script(public_key_hash_data);
+        BinaryDataPtr sig_script = make_script_pub_key(public_key_hash_data, BITCOIN_ADDRESS_P2PKH);
         if (*sig_script != **s->prev_transaction_out_script_pubkey)
         {
             THROW_EXCEPTION("Source can't be spent using given private key.")
@@ -852,7 +879,7 @@ void BitcoinTransaction::set_message(const BinaryData& value)
         m_message->amount.set_trait(Property::READONLY);
     }
     BitcoinDataStream sig_stream;
-    sig_stream << OpCode(0x6a); // OP_RETURN
+    sig_stream << OP_RETURN;
     sig_stream << as_compact_size(value.len);
     sig_stream.write_data(value.data, value.len);
     m_message->sig_script = make_clone(sig_stream.get_content());
