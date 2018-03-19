@@ -11,13 +11,14 @@
 
 #include <stddef.h>
 
-struct Error;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct Error;
+
 // See: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+// TODO: rename Blockchain to BlockchainType
 enum Blockchain
 {
     BLOCKCHAIN_BITCOIN = 0x00,

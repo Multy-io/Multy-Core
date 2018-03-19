@@ -119,9 +119,3 @@ bool operator==(const PrivateKey& lhs, const PrivateKey& rhs)
 {
     return lhs.to_string() == rhs.to_string();
 }
-
-bool operator==(const BlockchainType& lhs, const BlockchainType& rhs)
-{
-    return lhs.blockchain == rhs.blockchain
-            && lhs.net_type == rhs.net_type;
-}

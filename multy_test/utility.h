@@ -59,7 +59,6 @@ bool blockchain_can_derive_address_from_private_key(Blockchain blockchain);
 
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);
 bool operator==(const PublicKey& lhs, const PublicKey& rhs);
-bool operator==(const BlockchainType& lhs, const BlockchainType& rhs);
 
 using multy_core::internal::operator==;
 using multy_core::internal::operator!=;
@@ -70,11 +69,6 @@ inline bool operator!=(const PublicKey& lhs, const PublicKey& rhs)
 }
 
 inline bool operator!=(const PrivateKey& lhs, const PrivateKey& rhs)
-{
-    return !(lhs == rhs);
-}
-
-inline bool operator!=(const BlockchainType& lhs, const BlockchainType& rhs)
 {
     return !(lhs == rhs);
 }

@@ -12,11 +12,7 @@
 
 #include "multy_core/src/account_base.h"
 #include "multy_core/src/api/key_impl.h"
-#include "multy_core/src/bitcoin/bitcoin_account.h"
-#include "multy_core/src/ethereum/ethereum_account.h"
-#include "multy_core/src/golos/golos_account.h"
-#include "multy_core/src/exception.h"
-#include "multy_core/src/exception_stream.h"
+#include "multy_core/src/blockchain_facade_base.h"
 #include "multy_core/src/utility.h"
 
 #include <memory>
@@ -39,29 +35,8 @@ Error* make_hd_account(
 
     try
     {
-        switch (blockchain_type.blockchain)
-        {
-            case BLOCKCHAIN_BITCOIN:
-            {
-                *new_account = new BitcoinHDAccount(blockchain_type, *master_key, index);
-                break;
-            }
-            case BLOCKCHAIN_ETHEREUM:
-            {
-                *new_account = new EthereumHDAccount(blockchain_type, *master_key, index);
-                break;
-            }
-            case BLOCKCHAIN_GOLOS:
-            {
-                *new_account = new GolosHDAccount(blockchain_type, *master_key, index);
-                break;
-            }
-            default:
-            {
-                return MAKE_ERROR(
-                        ERROR_GENERAL_ERROR, "Blockchain not supported yet");
-            }
-        }
+        *new_account = get_blockchain(blockchain_type.blockchain)
+                .make_hd_account(blockchain_type, *master_key, index).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
@@ -107,32 +82,8 @@ Error* make_account(
 
     try
     {
-        // TODO: make a factory
-        switch (blockchain)
-        {
-            case BLOCKCHAIN_BITCOIN:
-            {
-                *new_account = make_bitcoin_account(serialized_private_key)
-                                       .release();
-                break;
-            }
-            case BLOCKCHAIN_ETHEREUM:
-            {
-                *new_account = make_ethereum_account(serialized_private_key)
-                        .release();
-                break;
-            }
-            case BLOCKCHAIN_GOLOS:
-            {
-                *new_account = make_golos_account(serialized_private_key)
-                        .release();
-                break;
-            }
-            default:
-            {
-                THROW_EXCEPTION("Blockchain not supported yet.");
-            }
-        }
+        *new_account = get_blockchain(blockchain)
+                .make_account(serialized_private_key).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 

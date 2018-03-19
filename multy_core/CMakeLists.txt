@@ -52,6 +52,7 @@ add_library(multy_core
     src/account_base.cpp
     src/ec_key_utils.cpp
     src/hash.cpp
+    src/blockchain_facade_base.cpp
 
     src/binary_data_utility.cpp
     src/error_utility.cpp
@@ -64,16 +65,19 @@ add_library(multy_core
 
     # Bitcoin
     bitcoin.h
+    src/bitcoin/bitcoin_facade.cpp
     src/bitcoin/bitcoin_account.cpp
     src/bitcoin/bitcoin_transaction.cpp
 
     # Ethereum
     ethereum.h
+    src/ethereum/ethereum_facade.cpp
     src/ethereum/ethereum_account.cpp
     src/ethereum/ethereum_transaction.cpp
 
     # Golos
     golos.h
+    src/golos/golos_facade.cpp
     src/golos/golos_account.cpp
 )
 

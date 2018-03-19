@@ -6,6 +6,7 @@
 
 #include "multy_core/src/utility.h"
 
+#include "multy_core/blockchain.h"
 #include "multy_core/error.h"
 
 #include "multy_core/src/exception.h"
@@ -58,6 +59,12 @@ char* copy_string(const char* str)
     memcpy(new_message, str, len);
     new_message[len] = '\0';
     return new_message;
+}
+
+bool operator==(const BlockchainType& left, const BlockchainType& right)
+{
+    return left.blockchain == right.blockchain
+            && left.net_type == right.net_type;
 }
 
 } // namespace internal

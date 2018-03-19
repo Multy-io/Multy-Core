@@ -154,10 +154,10 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
     PrivateKeyPtr priv_key_property1;
 
     AccountPtr account1;
-    make_account(
+    HANDLE_ERROR(make_account(
             BLOCKCHAIN_BITCOIN,
             "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
-            reset_sp(account1));
+            reset_sp(account1)));
 
     priv_key_property1 = account1->get_private_key();
 

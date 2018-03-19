@@ -97,7 +97,7 @@ inline const BinaryData& as_binary_data(const BinaryData& binary_data)
     return binary_data;
 }
 
-bool operator==(const BinaryData& left, const BinaryData& right);
+MULTY_CORE_API bool operator==(const BinaryData& left, const BinaryData& right);
 inline bool operator!=(const BinaryData& left, const BinaryData& right)
 {
     return !(left == right);
@@ -106,4 +106,4 @@ inline bool operator!=(const BinaryData& left, const BinaryData& right)
 } // namespace internal
 } // namespace multy_core
 
-#endif // MULTY_CORE_UTILITY_H
+#endif // MULTY_CORE_BINARY_DATA_UTILITY_H

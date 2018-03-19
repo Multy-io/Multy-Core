@@ -118,4 +118,4 @@ MULTY_CORE_API Error* exception_to_error(const CodeLocation& context);
 } // namespace internal
 } // namespace multy_core
 
-#endif // MULTY_CORE_UTILITY_H
+#endif // MULTY_CORE_ERROR_UTILITY_H
