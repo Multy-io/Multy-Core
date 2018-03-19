@@ -40,18 +40,6 @@ GTEST_TEST(TransactionTestInvalidArgs, make_transaction)
     EXPECT_EQ(nullptr, transaction);
 }
 
-GTEST_TEST(TransactionTestInvalidArgs, transaction_has_trait)
-{
-    TestTransaction transaction;
-    bool has_capability = false;
-
-    EXPECT_ERROR(
-            transaction_has_trait(&transaction, TRANSACTION_SUPPORTS_FEE, nullptr));
-
-    EXPECT_ERROR(
-            transaction_has_trait(nullptr, TRANSACTION_SUPPORTS_FEE, &has_capability));
-}
-
 GTEST_TEST(TransactionTestInvalidArgs, transaction_get_blockchain)
 {
     TestTransaction transaction;
@@ -166,17 +154,6 @@ GTEST_TEST(TransactionTest, make_transaction)
 
     HANDLE_ERROR(make_transaction(account_transaction.get(), reset_sp(transaction)));
     EXPECT_NE(nullptr, transaction.get());
-}
-
-GTEST_TEST(TransactionTest, transaction_has_trait)
-{
-    TestTransaction transaction;
-    bool has_capability = false;
-
-
-    HANDLE_ERROR(
-            transaction_has_trait(&transaction,
-                              TRANSACTION_SUPPORTS_FEE, &has_capability));
 }
 
 GTEST_TEST(TransactionTest, transaction_get_blockchain)

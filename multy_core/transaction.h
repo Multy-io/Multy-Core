@@ -21,21 +21,8 @@ struct BinaryData;
 struct Error;
 struct Transaction;
 
-enum TransactionTrait
-{
-    TRANSACTION_REQUIRES_EXPLICIT_SOURCE,
-    TRANSACTION_SUPPORTS_MULTIPLE_SOURCES,
-    TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS,
-    TRANSACTION_SUPPORTS_FEE,
-};
-
 MULTY_CORE_API struct Error* make_transaction(
         const struct Account* account, struct Transaction** new_transaction);
-
-MULTY_CORE_API struct Error* transaction_has_trait(
-        const struct Transaction* transaction,
-        enum TransactionTrait trait,
-        bool* out_has_capability);
 
 MULTY_CORE_API struct Error* transaction_get_blockchain_type(
         const struct Transaction* transaction, struct BlockchainType* out_blockchain_type);

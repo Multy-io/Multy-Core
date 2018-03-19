@@ -16,9 +16,20 @@ namespace multy_core
 namespace internal
 {
 
-Exception::Exception(const char* message, CodeLocation location)
-    : m_message(message),
+Exception::Exception(
+        ErrorCode error_code,
+        const char* message,
+        CodeLocation location)
+    : m_error_code(error_code),
+      m_message(message),
       m_location(location)
+{
+}
+
+Exception::Exception(
+        const char* message,
+        CodeLocation location)
+    : Exception(ERROR_GENERAL_ERROR, message, location)
 {
 }
 
@@ -34,7 +45,7 @@ const char* Exception::what() const noexcept
 Error* Exception::make_error() const
 {
     CharPtr message(copy_string(m_message));
-    Error* result = ::make_error(ERROR_GENERAL_ERROR, message.get(), m_location);
+    Error* result = ::make_error(m_error_code, message.get(), m_location);
     result->owns_message = true;
     message.release();
 

@@ -7,6 +7,7 @@
 #include "serialized_keys_test_base.h"
 
 #include "multy_core/account.h"
+#include "multy_core/blockchain.h"
 #include "multy_core/key.h"
 
 #include "multy_core/src/u_ptr.h"

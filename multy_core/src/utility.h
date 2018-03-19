@@ -12,105 +12,21 @@
  */
 
 #include "multy_core/api.h"
+#include "multy_core/binary_data.h"
 #include "multy_core/common.h"
-#include "multy_core/error.h"
 
 #include "multy_core/src/u_ptr.h"
+#include "multy_core/src/error_utility.h"
 
-#include <cassert>
 #include <iterator>
 #include <limits>
 #include <memory>
 
-struct Error;
-
-#define ARG_CHECK(arg)                                                         \
-    do                                                                         \
-    {                                                                          \
-        if (!(arg))                                                            \
-        {                                                                      \
-            return MAKE_ERROR(                                                 \
-                    ERROR_INVALID_ARGUMENT,                                    \
-                    "Argument check failed: \"" #arg "\"");                    \
-        }                                                                      \
-    } while (false)
-
-#define OUT_CHECK(arg)                                                         \
-    do                                                                         \
-    {                                                                          \
-        if (!(arg))                                                            \
-        {                                                                      \
-            return MAKE_ERROR(                                                 \
-                    ERROR_INTERNAL,                                            \
-                    "Failed to create output value: \"" #arg "\"");            \
-        }                                                                      \
-    } while (false)
-
-#define CATCH_EXCEPTION_RETURN_ERROR()                                         \
-    catch (...)                                                                \
-    {                                                                          \
-        return multy_core::internal::exception_to_error(MULTY_CODE_LOCATION);  \
-    }
-
-#define CHECK_OBJECT(obj)                                                      \
-    do                                                                         \
-    {                                                                          \
-        if (!(obj)->is_valid())                                                \
-        {                                                                      \
-            return MAKE_ERROR(                                                 \
-                    ERROR_INVALID_ARGUMENT,                                    \
-                    "\"" #obj "\" is not a valid object.");                    \
-        }                                                                      \
-    } while (false)
-
-#define ARG_CHECK_OBJECT(obj)                                                  \
-    do                                                                         \
-    {                                                                          \
-        ARG_CHECK((obj) != nullptr);                                           \
-        CHECK_OBJECT((obj));                                                   \
-    } while (false)
-
-#define OUT_CHECK_OBJECT(obj)                                                  \
-    do                                                                         \
-    {                                                                          \
-        OUT_CHECK((obj) != nullptr);                                           \
-        CHECK_OBJECT((obj));                                                   \
-    } while (false)
-
-#define CHECK_OBJECT_BEFORE_FREE(obj)                                          \
-    do                                                                         \
-    {                                                                          \
-        if ((obj))                                                             \
-        {                                                                      \
-            assert((obj)->is_valid() && "trying to free invalid object:" #obj);\
-            (void)(0);                                                         \
-        }                                                                      \
-    } while(false)
 
 namespace multy_core
 {
-
 namespace internal
 {
-MULTY_CORE_API void throw_if_error(struct Error* err);
-
-#define THROW_IF_WALLY_ERROR(statement, message)                               \
-    multy_core::internal::throw_if_wally_error(                                \
-            MULTY_SIMULATE_ERROR(                                              \
-                    (statement), #statement, MULTY_CODE_LOCATION),             \
-            (message), MULTY_CODE_LOCATION)
-
-#ifndef MULTY_ENABLE_SIMULATE_ERROR
-#define MULTY_SIMULATE_ERROR(err, statement, location) (err)
-#else
-#define MULTY_SIMULATE_ERROR simulate_error
-MULTY_CORE_API int simulate_error(
-        int err_code, const char* statement, const CodeLocation& location);
-#endif
-
-MULTY_CORE_API void throw_if_wally_error(
-        int err_code, const char* message, const CodeLocation& location);
-
 template <typename T, size_t N>
 constexpr size_t array_size(T (&)[N])
 {
@@ -146,16 +62,12 @@ T find_max_value(const T (&values)[N], const T& default_value, const T& value)
     return result;
 }
 
-/// Converts exception to a Error*, to be used inside a catch(...) block.
-MULTY_CORE_API Error* exception_to_error(const CodeLocation& context);
-
 /** Convenience function to copy a string.
  * @param str - string to copy, must not be null.
  * @return - copy of a string, must be freed with free_string(), can be null on
  * error.
  */
 MULTY_CORE_API char* copy_string(const char* str);
-
 MULTY_CORE_API char* copy_string(const std::string& str);
 
 /** Slice existing BinaryData into new BinaryData,

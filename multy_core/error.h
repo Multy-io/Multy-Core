@@ -20,6 +20,7 @@ enum ErrorCode
     ERROR_OUT_OF_MEMORY,
     ERROR_GENERAL_ERROR,
     ERROR_BAD_ENTROPY,
+    ERROR_FEATURE_NOT_IMPLEMENTED_YET
 };
 
 struct CodeLocation
@@ -41,19 +42,11 @@ struct Error
     struct CodeLocation location;
 };
 
-#ifndef MULTY_CODE_LOCATION
-#define MULTY_CODE_LOCATION CodeLocation{__FILE__, __LINE__}
-#endif
-
-#define MAKE_ERROR(code, message) make_error((code), (message), MULTY_CODE_LOCATION)
-
-/** Allocates Error object.**/
+/** Allocates Error object, assumes that message is satic and shouldn't be copied. **/
 MULTY_CORE_API struct Error* make_error(enum ErrorCode code, const char* message, struct CodeLocation location);
 
 /** Frees Error object, can take nullptr. **/
 MULTY_CORE_API void free_error(struct Error* error);
-
-MULTY_CORE_API struct Error* internal_make_error(int code, const char* message, struct CodeLocation location);
 
 #ifdef __cplusplus
 } /* extern "C" */

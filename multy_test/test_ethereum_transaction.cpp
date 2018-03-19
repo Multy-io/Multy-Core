@@ -4,6 +4,7 @@
  * See LICENSE for details
  */
 
+#include "multy_core/ethereum.h"
 #include "multy_core/src/bitcoin/bitcoin_transaction.h"
 #include "multy_core/src/api/properties_impl.h"
 
@@ -13,7 +14,6 @@
 
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
-#include "multy_core/src/ethereum/ethereum_transaction.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 

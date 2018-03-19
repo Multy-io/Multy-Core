@@ -36,32 +36,12 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
                 break;
             default:
                 return MAKE_ERROR(
-                        ERROR_GENERAL_ERROR, "Blockchain not supported yet");
+                        ERROR_FEATURE_NOT_IMPLEMENTED_YET,
+                        "Blockchain not supported yet.");
         }
     }
     CATCH_EXCEPTION_RETURN_ERROR();
     OUT_CHECK_OBJECT(*new_transaction);
-
-    return nullptr;
-}
-
-Error* transaction_has_trait(
-        const Transaction* transaction,
-        TransactionTrait trait,
-        bool* out_has_capability)
-{
-    ARG_CHECK_OBJECT(transaction);
-    ARG_CHECK(trait == TRANSACTION_REQUIRES_EXPLICIT_SOURCE
-            || trait == TRANSACTION_SUPPORTS_MULTIPLE_SOURCES
-            || trait == TRANSACTION_SUPPORTS_MULTIPLE_DESTINATIONS
-            || trait == TRANSACTION_SUPPORTS_FEE);
-    ARG_CHECK(out_has_capability);
-
-    try
-    {
-        *out_has_capability = transaction->get_traits() & (1 << trait);
-    }
-    CATCH_EXCEPTION_RETURN_ERROR();
 
     return nullptr;
 }

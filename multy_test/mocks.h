@@ -93,7 +93,6 @@ struct TestTransaction : public Transaction
     explicit TestTransaction(const BigInt& total_value = BigInt(0));
 
     BlockchainType get_blockchain_type() const override;
-    uint32_t get_traits() const override;
     void update() override;
     BinaryDataPtr serialize() override;
     BigInt estimate_total_fee(size_t sources_count, size_t destinations_count) const override;
@@ -107,7 +106,6 @@ struct TestTransaction : public Transaction
 
 private:
     const BlockchainType m_blockchain = BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET};
-    const uint32_t m_traits = TRANSACTION_REQUIRES_EXPLICIT_SOURCE;
     const BigInt m_total;
     Properties m_properties;
     const BinaryDataPtr m_binarydata;

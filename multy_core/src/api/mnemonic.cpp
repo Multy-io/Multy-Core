@@ -107,14 +107,17 @@ Error* seed_to_string(const BinaryData* seed, const char** str)
     ARG_CHECK(seed->data);
     ARG_CHECK(str);
 
-    char* out = nullptr;
-
-    int result = wally_base58_from_bytes(seed->data, seed->len, 0, &out);
-    if (result != WALLY_OK)
+    try
     {
-        return internal_make_error(result, "Failed to convert seed to string", MULTY_CODE_LOCATION);
+        char* out = nullptr;
+
+        THROW_IF_WALLY_ERROR(
+                wally_base58_from_bytes(seed->data, seed->len, 0, &out),
+                "Failed to convert seed to string");
+        *str = out;
     }
-    *str = out;
+    CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*str);
 
     return nullptr;
