@@ -36,7 +36,8 @@ Error* validate_address(BlockchainType blockchain_type, const char* address)
                 bitcoin_parse_address(address, &net_type, &address_type);
                 if (address_type != BITCOIN_ADDRESS_P2PKH)
                 {
-                    THROW_EXCEPTION("BTC: Only P2PKH addresses are supported for now.");
+                    THROW_EXCEPTION("Not supported address type, only P2PKH and P2SH are supported.")
+                                   << " Address type: " << address_type;
                 }
                 if (net_type != blockchain_type.net_type)
                 {

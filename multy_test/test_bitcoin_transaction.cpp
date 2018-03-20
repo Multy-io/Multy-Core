@@ -1118,3 +1118,125 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_with_op_return)
                 "beb234dba313a9f0928fb08ab7ca086a74a1ae18da0e663c0aac0ffffffff020000000000000000106a0e4d554c545920746865"
                 "206265737419a10100000000001976a91441d29eaed90c0a26021daa5139dcc1d45c4e34a188ac00000000")), *serialied);
 }
+
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet_to_P2SH_addres)
+{
+    AccountPtr account = make_account(BLOCKCHAIN_BITCOIN, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    const BigInt available(9809);
+    const BigInt sent(9209);
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            BigInt{3}
+        },
+        { // Sources
+            {
+                available,
+                from_hex("e067d9e5f1d90b646be952ac8c6671c67023145e71ead7019827c39015f2da95"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                nullptr
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "2MwsRtyuZyW2HuPUcUKGa4dAm9M9RkUPacK",
+                sent
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // Txid: afc0688e06f4779fe71d45b889ddf9c867341ea2a9bc14d9133b2aa3c591c9cd
+    ASSERT_EQ(as_binary_data(from_hex(
+                "010000000195daf21590c3279801d7ea715e142370c671668cac52e96b640bd9f1e5d967e0000000006a473044022056a97dbfb"
+                "6a72d5efea94636e01eee865953e784bdfef7dbbbcd24fd7dd73da102204e1c757134a3da11cbd91dfe8ee6c07b62a9ca1dfe5f"
+                "f017f779d2a5493ccd23012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff01f92"
+                "300000000000017a91432b96b25e20037514ce9469e86fdfad58bf2e2278700000000")), *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_to_P2SH_addres)
+{
+    AccountPtr account = make_account(BLOCKCHAIN_BITCOIN, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
+
+    const BigInt available(115197);
+    const BigInt sent(114500);
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            BigInt{3}
+        },
+        { // Sources
+            {
+                available,
+                from_hex("82f2704eafa63d69a94c479153e4c1427f12110281a848fdaca951167319cb7c"),
+                2,
+                from_hex("76a9146b6e514825a406e84456950cafb6911095aa61f688ac"),
+                nullptr
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "3HGwSrGh7ARwDbzr3SwmRcavk6UWJtyUd2",
+                sent
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // Txid: c8a8fe4e36d006e28dc55f00bbc7cfea9622b6262710973f6625f4fb9710cba4
+    ASSERT_EQ(as_binary_data(from_hex(
+                "01000000017ccb19731651a9acfd48a8810211127f42c1e45391474ca9693da6af4e70f282020000008b4830450221009c526a9"
+                "d76f125df9b874d7803b6f72c7c116ee847338771c68919a189e666fb02203a6f6ebea415561d9846816c02d0a93596ddb92ae3"
+                "57436a36745c02c92bff2f014104a7364b8ad3f02ae0a9dbe355aa3ac9b2a661e230976f505f55f66d26ea3ae906ed3bbfd24ab"
+                "384fe7c15a99ae1227276629820da47f10c29fd9c9a026bc602deffffffff0144bf01000000000017a914aaf44ab6c1076eae84"
+                "9bf717adf955e0456639ab8700000000")), *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_testnet)
+{
+    const AccountPtr account_testnet = make_account(BLOCKCHAIN_BITCOIN, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    TransactionPtr transaction_testnet;
+    HANDLE_ERROR(make_transaction(account_testnet.get(), reset_sp(transaction_testnet)));
+
+    Properties& destination_testnet = transaction_testnet->add_destination();
+    // valid testnet addresses
+    HANDLE_ERROR(properties_set_string_value(&destination_testnet, "address", "2MwsRtyuZyW2HuPUcUKGa4dAm9M9RkUPacK"));
+    HANDLE_ERROR(properties_set_string_value(&destination_testnet, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
+
+    // invalid testnet addresses
+    EXPECT_ERROR(properties_set_string_value(&destination_testnet, "address", "3HGwSrGh7ARwDbzr3SwmRcavk6UWJtyUd2"));
+    EXPECT_ERROR(properties_set_string_value(&destination_testnet, "address", "TEST"));
+}
+
+GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_mainnet)
+{
+
+    const AccountPtr account_mainnet = make_account(BLOCKCHAIN_BITCOIN, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
+
+    TransactionPtr transaction_mainnet;
+    HANDLE_ERROR(make_transaction(account_mainnet.get(), reset_sp(transaction_mainnet)));
+
+    Properties& destination_mainnet = transaction_mainnet->add_destination();
+    // valid mainnet addresses
+    HANDLE_ERROR(properties_set_string_value(&destination_mainnet, "address", "3HGwSrGh7ARwDbzr3SwmRcavk6UWJtyUd2"));
+    HANDLE_ERROR(properties_set_string_value(&destination_mainnet, "address", "1713EbQ9gh7kgxEVPpSqDBhV36CbFpptT8"));
+
+    // invalid mainnet addresses
+    EXPECT_ERROR(properties_set_string_value(&destination_mainnet, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
+    EXPECT_ERROR(properties_set_string_value(&destination_mainnet, "address", "TEST"));
+}
