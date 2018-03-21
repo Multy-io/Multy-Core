@@ -5,6 +5,7 @@
  */
 
 #include "multy_test/mocks.h"
+#include "multy_test/utility.h"
 
 namespace
 {
@@ -18,8 +19,8 @@ std::string TestPublicKey::to_string() const
 
 const BinaryData TestPublicKey::get_content() const
 {
-
-    return BinaryData{nullptr, 0};
+    static const char* PUBLIC_KEY_DATA = "private_key";
+    return as_binary_data(PUBLIC_KEY_DATA);
 }
 
 PublicKeyPtr TestPublicKey::clone() const
@@ -117,6 +118,11 @@ AccountPtr TestHDAccount::make_leaf_account(AddressType type, uint32_t index) co
                     m_path,
                     m_private_key->clone(),
                     m_public_key->clone()));
+}
+
+ExtendedKeyPtr TestHDAccount::get_account_key() const
+{
+    return make_clone(test_utility::make_dummy_extended_key());
 }
 
 TestTransaction::TestTransaction(const BigInt& total_value)

@@ -8,7 +8,6 @@
 #define MULTY_CORE_ACCOUNT_H
 
 #include "multy_core/api.h"
-
 #include "multy_core/blockchain.h"
 
 #include <stddef.h>

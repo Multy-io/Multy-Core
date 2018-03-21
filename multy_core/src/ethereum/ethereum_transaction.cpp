@@ -6,6 +6,7 @@
 
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 
+#include "multy_core/src/ethereum/ethereum_account.h"
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
@@ -30,10 +31,6 @@ const uint8_t RLP_DATA_IMM_LEN_COUNT = RLP_LIST_START - RLP_DATA_IMM_LEN_START -
 const uint8_t RLP_DATA_IND_LEN_ZERO = RLP_DATA_IMM_LEN_START + RLP_DATA_IMM_LEN_COUNT - 1;
 const uint8_t RLP_LIST_IMM_LEN_COUNT = 256 - RLP_LIST_START - RLP_MAX_LENGTH_BYTES;
 const uint8_t RLP_LIST_IND_LEN_ZERO = RLP_LIST_START + RLP_LIST_IMM_LEN_COUNT - 1;
-
-const int32_t PRE_EIP155_CHAIN_ID = -4;
-
-#define LV(x) (#x " : ") << std::hex << static_cast<int>(x)
 
 template <typename T>
 struct IntWrapper
@@ -379,7 +376,7 @@ EthereumTransaction::EthereumTransaction(const Account& account)
                     }
               }),
       m_payload(get_transaction_properties(), "payload", Property::OPTIONAL),
-      m_chain_id(PRE_EIP155_CHAIN_ID,
+      m_chain_id(ETHEREUM_CHAIN_ID_PRE_EIP155,
             get_transaction_properties(),
             "chain_id",
             Property::OPTIONAL),

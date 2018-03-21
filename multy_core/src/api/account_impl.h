@@ -15,9 +15,6 @@
 #include "multy_core/src/hd_path.h"
 #include "multy_core/src/u_ptr.h"
 
-struct PublicKey;
-struct PrivateKey;
-
 // Declared a struct (and out of multy_core::internal namespace)
 // for consitency with a C-like interface.
 // Exported only to make testing easier.
@@ -48,6 +45,7 @@ public:
     typedef multy_core::internal::HDPath HDPath;
     typedef multy_core::internal::PrivateKeyPtr PrivateKeyPtr;
     typedef multy_core::internal::PublicKeyPtr PublicKeyPtr;
+    typedef multy_core::internal::ExtendedKeyPtr ExtendedKeyPtr;
 
     HDAccount();
     virtual ~HDAccount();
@@ -55,6 +53,7 @@ public:
     virtual HDPath get_path() const = 0;
     virtual BlockchainType get_blockchain_type() const = 0;
     virtual AccountPtr make_leaf_account(AddressType type, uint32_t index) const = 0;
+    virtual ExtendedKeyPtr get_account_key() const = 0;
 
     static const void* get_object_magic();
 };

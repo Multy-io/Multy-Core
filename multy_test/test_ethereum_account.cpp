@@ -5,6 +5,7 @@
  */
 
 #include "multy_core/account.h"
+#include "multy_core/src/ethereum/ethereum_account.h"
 
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
@@ -120,14 +121,14 @@ INSTANTIATE_TEST_CASE_P(
         Ethereum,
         SerializedKeyTestP,
         ::testing::Combine(
-                ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET}),
+                ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET}),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
         DISABLED_Ethereum,
         CheckAddressTestP,
         ::testing::Combine(
-                ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, BLOCKCHAIN_NET_TYPE_MAINNET}),
+                ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_RINKEBY}),
                 ::testing::ValuesIn(TEST_CASES_ADDRESS)));
 
 GTEST_TEST(EtheremAccountTest, PrivateKeySig)

@@ -27,6 +27,9 @@ namespace multy_core
 {
 namespace internal
 {
+
+const uint32_t CHAIN_INDEX_TEST = 0x01;
+
 class AccountBase : public Account
 {
 public:
@@ -62,11 +65,13 @@ public:
 protected:
     HDAccountBase(
             BlockchainType blockchain_type,
+            uint32_t chain_index,
             const ExtendedKey& bip44_master_key,
             uint32_t index);
 
     HDPath get_path() const override;
     BlockchainType get_blockchain_type() const override;
+    ExtendedKeyPtr get_account_key() const override;
 
     virtual AccountPtr make_account(
             const ExtendedKey& parent_key,

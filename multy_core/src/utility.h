@@ -15,6 +15,8 @@
 #include "multy_core/binary_data.h"
 #include "multy_core/common.h"
 
+#include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/error_utility.h"
 
@@ -223,6 +225,13 @@ size_t get_bytes_len(T value)
     }
 
     return i;
+}
+
+template <typename Container, typename Value>
+bool contains(const Container& container, const Value& v)
+{
+    return std::find(std::begin(container), std::end(container), v)
+            != std::end(container);
 }
 
 } // namespace internal

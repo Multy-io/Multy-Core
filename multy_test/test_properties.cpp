@@ -17,6 +17,7 @@
 #include "multy_core/src/utility.h"
 
 #include "multy_test/utility.h"
+#include "multy_test/mocks.h"
 
 #include "gtest/gtest.h"
 
@@ -628,28 +629,6 @@ BinaryDataPtr get_test_data<BinaryDataPtr>()
 template <>
 PrivateKeyPtr get_test_data<PrivateKeyPtr>()
 {
-    struct TestPrivateKey : public ::PrivateKey
-    {
-        std::string to_string() const
-        {
-            return "test_key";
-        }
-
-        multy_core::internal::PublicKeyPtr make_public_key() const
-        {
-            throw std::runtime_error("not implemented");
-        }
-
-        PrivateKeyPtr clone() const
-        {
-            return PrivateKeyPtr(new TestPrivateKey);
-        }
-        BinaryDataPtr sign(const BinaryData& /*data*/) const
-        {
-            throw std::runtime_error("not implemented");
-        }
-    };
-
     return PrivateKeyPtr(new TestPrivateKey);
 }
 

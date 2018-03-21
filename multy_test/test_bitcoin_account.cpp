@@ -6,6 +6,7 @@
 
 #include "multy_core/account.h"
 #include "multy_core/key.h"
+#include "multy_core/src/bitcoin/bitcoin_account.h"
 
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
@@ -131,28 +132,28 @@ INSTANTIATE_TEST_CASE_P(
         Bitcoin,
         SerializedKeyTestP,
         ::testing::Combine(
-                ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}),
+                ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_MAINNET_P2PKH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}),
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2PKH)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_TESTNET_P2PKH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_TESTNET}),
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_TESTNET}),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_TESTNET_P2PKH)));
 
 INSTANTIATE_TEST_CASE_P(
         DISABLED_Bitcoin_MAINNET_P2SH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BLOCKCHAIN_NET_TYPE_MAINNET}),
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_TESTNET}),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2SH)));
 
 struct SignTestCase

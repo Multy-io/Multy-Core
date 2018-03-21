@@ -10,6 +10,7 @@
 #include "multy_core/account.h"
 #include "multy_core/common.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/hash.h"
 
 #include "gtest/gtest.h"
 
