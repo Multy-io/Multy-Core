@@ -10,6 +10,8 @@
 #include "multy_core/src/api/transaction_impl.h"
 #include "multy_core/src/bitcoin/bitcoin_transaction.h"
 #include "multy_core/src/ethereum/ethereum_transaction.h"
+#include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 
 namespace

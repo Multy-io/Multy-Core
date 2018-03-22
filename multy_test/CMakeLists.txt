@@ -6,6 +6,7 @@ if (MULTY_MORE_WARNINGS)
 
         # Disabled warnings:
         -Wno-missing-braces # false-positive on std::array initialization.
+        -Wno-sign-compare # too many and not too usefull
     )
 endif()
 

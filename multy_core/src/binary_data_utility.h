@@ -14,6 +14,11 @@
 #include "multy_core/api.h"
 #include "multy_core/binary_data.h"
 
+#include <array>
+#include <vector>
+
+#include <stdint.h>
+
 namespace multy_core
 {
 namespace internal

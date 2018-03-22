@@ -516,7 +516,8 @@ BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
       m_lock_time(0),
       m_fee(new BitcoinTransactionFee),
       m_sources(),
-      m_destinations()
+      m_destinations(),
+      m_message()
 {
     //    m_properties.bind_property("segwit_mode", &m_is_segwit_transaction);
     //    m_properties.bind_property("lock_time", &m_lock_time);

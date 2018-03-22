@@ -11,6 +11,7 @@
 #include "wally_crypto.h"
 
 #include <array>
+#include <string.h>
 
 namespace
 {
