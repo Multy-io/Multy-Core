@@ -13,8 +13,8 @@ extern "C" {
 
 enum GolosNetType
 {
-    GOLOS_MAINNET = 0,
-    GOLOS_TESTNET = 1,
+    GOLOS_NET_TYPE_MAINNET = 0,
+    GOLOS_NET_TYPE_TESTNET = 1,
 };
 
 #ifdef __cplusplus

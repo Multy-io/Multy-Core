@@ -25,12 +25,7 @@ enum Blockchain
     BLOCKCHAIN_GOLOS = 0x060105
 };
 
-enum BlockchainNetType
-{
-    BLOCKCHAIN_NET_TYPE_MAINNET = 0,
-    BLOCKCHAIN_NET_TYPE_TESTNET = 1,
-};
-
+// TODO: rename BlockchainType to BlockchainSpec
 struct BlockchainType
 {
     enum Blockchain blockchain;

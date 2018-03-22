@@ -6,6 +6,8 @@
 
 #include "multy_core/src/golos/golos_account.h"
 
+#include "multy_core/golos.h"
+
 #include "multy_core/common.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/hash.h"

@@ -6,7 +6,7 @@
 
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 
-#include "multy_core/src/ethereum/ethereum_account.h"
+#include "multy_core/ethereum.h"
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"

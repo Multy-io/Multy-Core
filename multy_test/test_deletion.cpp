@@ -8,12 +8,15 @@
 
 #include "multy_core/big_int.h"
 #include "multy_core/key.h"
+#include "multy_core/bitcoin.h"
 #include "multy_core/common.h"
+#include "multy_core/ethereum.h"
 #include "multy_core/src/u_ptr.h"
 
 #include "multy_test/mocks.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
+#include "multy_test/supported_blockchains.h"
 
 #include "gtest/gtest.h"
 
@@ -51,26 +54,6 @@ public:
     const ExtendedKey master_key = test_utility::make_dummy_extended_key();
     HDAccountPtr hd_account;
     AccountPtr account;
-};
-
-const BlockchainType SUPPORTED_BLOCKCHAINS[] =
-{
-    {
-        BLOCKCHAIN_BITCOIN,
-        BLOCKCHAIN_NET_TYPE_MAINNET
-    },
-    {
-        BLOCKCHAIN_BITCOIN,
-        BLOCKCHAIN_NET_TYPE_TESTNET
-    },
-    {
-        BLOCKCHAIN_ETHEREUM,
-        BLOCKCHAIN_NET_TYPE_MAINNET
-    },
-    {
-        BLOCKCHAIN_ETHEREUM,
-        BLOCKCHAIN_NET_TYPE_MAINNET
-    }
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -143,7 +126,13 @@ TEST_P(DeletionTestP, free_public_key)
 TEST_P(DeletionTestP, free_transaction)
 {
     TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ErrorPtr error(make_transaction(account.get(), reset_sp(transaction)));
+    if (error && error->code == ERROR_FEATURE_NOT_IMPLEMENTED_YET)
+    {
+        SUCCEED();
+        return;
+    }
+    ASSERT_EQ(nullptr, error);
 
     Transaction* transaction_ptr = transaction.get();
     transaction.reset();

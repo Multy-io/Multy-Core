@@ -12,12 +12,6 @@
 #include "multy_core/src/account_base.h"
 #include "multy_core/src/u_ptr.h"
 
-enum GolostNetType
-{
-    GOLOS_NET_TYPE_MAINNET = 0,
-    GOLOS_NET_TYPE_TESTNET = 1,
-};
-
 namespace multy_core
 {
 namespace internal
