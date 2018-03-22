@@ -17,6 +17,8 @@ extern "C" {
 
 #include "wally_crypto.h"
 
+#include <string.h>
+
 namespace
 {
 using namespace multy_core::internal;

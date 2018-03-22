@@ -82,6 +82,7 @@ HDAccountBase::HDAccountBase(
         const ExtendedKey& bip44_master_key,
         uint32_t index)
     : m_blockchain_type(blockchain_type),
+      m_account_key(),
       m_bip44_path(BIP44_ACCOUNT_PATH_DEPTH)
 {
     // BIP44 derive account key:
