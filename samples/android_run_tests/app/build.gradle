@@ -20,11 +20,14 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11"
-                arguments "-DMULTY_ANDROID_PATH_TO_JNI_WRAPPER=samples/android_run_tests/app/src/main/cpp/native-lib.cpp"
+                arguments "-DMULTY_ANDROID_PATH_TO_JNI_WRAPPER=src/main/cpp/native-lib.cpp"
                 arguments "-DANDROID_STL=c++_shared"
                 arguments "-DMULTY_WITH_TESTS=ON"
                 arguments "-DCMAKE_CONFIGURATION_TYPES=Release"
             }
+        }
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
     }
     buildTypes {
