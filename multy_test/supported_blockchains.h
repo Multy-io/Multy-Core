@@ -8,9 +8,9 @@
 #define MULTY_TEST_SUPPORTED_BLOCKCHAINS_H
 
 #include "multy_core/account.h"
-#include "multy_core/src/bitcoin/bitcoin_account.h"
-#include "multy_core/src/ethereum/ethereum_account.h"
-#include "multy_core/src/golos/golos_account.h"
+#include "multy_core/bitcoin.h"
+#include "multy_core/ethereum.h"
+#include "multy_core/golos.h"
 
 #include <vector>
 

@@ -6,6 +6,7 @@
 
 #include "multy_core/src/ethereum/ethereum_account.h"
 
+#include "multy_core/ethereum.h"
 #include "multy_core/common.h"
 
 #include "multy_core/src/ec_key_utils.h"

@@ -7,6 +7,8 @@
 #include "multy_test/serialized_keys_test_base.h"
 #include "multy_core/src/golos/golos_account.h"
 
+#include "multy_core/golos.h"
+
 #include "gtest/gtest.h"
 
 namespace

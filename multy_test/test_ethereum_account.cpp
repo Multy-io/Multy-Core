@@ -7,6 +7,7 @@
 #include "multy_core/account.h"
 #include "multy_core/src/ethereum/ethereum_account.h"
 
+#include "multy_core/ethereum.h"
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/api/sha3_impl.h"
