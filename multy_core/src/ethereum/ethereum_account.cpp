@@ -11,6 +11,7 @@
 
 #include "multy_core/src/ec_key_utils.h"
 #include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
 #include "multy_core/src/hash.h"
@@ -34,7 +35,8 @@ extern "C" {
 namespace
 {
 using namespace multy_core::internal;
-typedef std::array<unsigned char, 20> EthereumAddressValue;
+const size_t ETHEREUM_BINARY_ADDRESS_SIZE = 20;
+typedef std::array<unsigned char, ETHEREUM_BINARY_ADDRESS_SIZE> EthereumAddressValue;
 
 struct EthereumPublicKey : public PublicKey
 {
@@ -276,6 +278,33 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
     const BlockchainType blockchain_type{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET};
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
     return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
+}
+
+BinaryDataPtr ethereum_parse_address(const char* address)
+{
+    const char ADDRESS_PREFIX[] = "0x";
+    if (!address)
+    {
+        THROW_EXCEPTION("Invalid address: nullptr.");
+    }
+
+    if (strstr(address, ADDRESS_PREFIX) == address)
+    {
+        address += array_size(ADDRESS_PREFIX);
+    }
+
+    BinaryDataPtr binary_address;
+    throw_if_error(make_binary_data_from_hex(address,
+            reset_sp(binary_address)));
+
+    if (binary_address->len != ETHEREUM_BINARY_ADDRESS_SIZE)
+    {
+        THROW_EXCEPTION("Invalid decoded address size.")
+                << " Expected size: " << ETHEREUM_BINARY_ADDRESS_SIZE
+                << " Actual size: " << binary_address->len;
+    }
+
+    return binary_address;
 }
 
 } // namespace internal

@@ -26,6 +26,8 @@ protected:
 
 AccountPtr make_ethereum_account(const char* serialized_private_key);
 
+BinaryDataPtr ethereum_parse_address(const char* address);
+
 } // namespace internal
 } // namespace multy_core
 
