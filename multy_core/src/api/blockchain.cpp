@@ -10,6 +10,7 @@
 #include "multy_core/error.h"
 
 #include "multy_core/src/bitcoin/bitcoin_account.h"
+#include "multy_core/src/ethereum/ethereum_account.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
@@ -49,7 +50,8 @@ Error* validate_address(BlockchainType blockchain_type, const char* address)
             }
             case BLOCKCHAIN_ETHEREUM:
             {
-                THROW_EXCEPTION("ETH addresses are not supported yet.");
+                ethereum_parse_address(address);
+                break;
             }
             default:
             {

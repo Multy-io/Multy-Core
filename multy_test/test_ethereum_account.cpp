@@ -126,7 +126,7 @@ INSTANTIATE_TEST_CASE_P(
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
-        DISABLED_Ethereum,
+        Ethereum,
         CheckAddressTestP,
         ::testing::Combine(
                 ::testing::Values(BlockchainType{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_RINKEBY}),
