@@ -55,7 +55,23 @@ const char* BITCOIN_ADDRESSES_TESTNET_P2PKH[] =
 const char* BITCOIN_ADDRESSES_MAINNET_P2SH[] =
 {
     "3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX",
+    "3P14159f73E4gFr7JterCCQh9QjiTjiZrG",
+    "342ftSRCvFHfCeFFBuz4xwbeqnDw6BGUey",
+    "347N1Thc213QqfYCz3PZkjoJpNv5b14kBd",
+    "3C5DeqHzyRaHX4pSitwFykaEZwc5Ves42F",
+    "3G636p5qPjxzJj58Tm9uaRpHWR8aUYaGt2",
 };
+
+const char* BITCOIN_ADDRESSES_TESTNET_P2SH[] =
+{
+    "2N7EKxnxZEaHNyz4hCHhzymLnEE9Nf3vSJ3",
+    "2Mz6DxmESjuXMCUR3nMFotaFETX9JYDaMbW",
+    "2MygBGCpaBVSsXCdvUzgkTNdtL3jGqeF6wE",
+    "2NFu6AJf6foqyVwC78UFRTXafHQ38d3oyWt",
+    "2MzuV16NLy1zFr3KDmMd1sN8EgAqyCbBBzG",
+    "2NB9MQSvXUq2pA7AHSyvqxetv811mRZMNUd",
+};
+
 
 SerializedKeyTestCase TEST_CASES[] = {
         {
@@ -150,11 +166,18 @@ INSTANTIATE_TEST_CASE_P(
             ::testing::ValuesIn(BITCOIN_ADDRESSES_TESTNET_P2PKH)));
 
 INSTANTIATE_TEST_CASE_P(
-        DISABLED_Bitcoin_MAINNET_P2SH,
+        Bitcoin_MAINNET_P2SH,
+        CheckAddressTestP,
+        ::testing::Combine(
+            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}),
+            ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2SH)));
+
+INSTANTIATE_TEST_CASE_P(
+        Bitcoin_TESTNET_P2SH,
         CheckAddressTestP,
         ::testing::Combine(
             ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_TESTNET}),
-            ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2SH)));
+            ::testing::ValuesIn(BITCOIN_ADDRESSES_TESTNET_P2SH)));
 
 struct SignTestCase
 {
