@@ -14,20 +14,24 @@
 #include "multy_core/api.h"
 #include "multy_core/binary_data.h"
 #include "multy_core/common.h"
+#include "multy_core/blockchain.h"
 
-#include "multy_core/src/u_ptr.h"
 #include "multy_core/src/binary_data_utility.h"
 #include "multy_core/src/error_utility.h"
+#include "multy_core/src/u_ptr.h"
 
 #include <algorithm>
 #include <iterator>
 #include <limits>
 #include <memory>
 
+extern "C" struct BlockchainType;
+
 namespace multy_core
 {
 namespace internal
 {
+
 template <typename T, size_t N>
 constexpr size_t array_size(T (&)[N])
 {
@@ -151,6 +155,12 @@ bool contains(const Container& container, const Value& v)
 {
     return std::find(std::begin(container), std::end(container), v)
             != std::end(container);
+}
+
+MULTY_CORE_API bool operator==(const BlockchainType& left, const BlockchainType& right);
+inline bool operator!=(const BlockchainType& left, const BlockchainType& right)
+{
+    return !(left == right);
 }
 
 } // namespace internal

@@ -7,11 +7,9 @@
 #include "multy_core/transaction.h"
 
 #include "multy_core/src/api/account_impl.h"
+#include "multy_core/src/api/properties_impl.h"
 #include "multy_core/src/api/transaction_impl.h"
-#include "multy_core/src/bitcoin/bitcoin_transaction.h"
-#include "multy_core/src/ethereum/ethereum_transaction.h"
-#include "multy_core/src/exception.h"
-#include "multy_core/src/exception_stream.h"
+#include "multy_core/src/blockchain_facade_base.h"
 #include "multy_core/src/utility.h"
 
 namespace
@@ -26,22 +24,8 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
 
     try
     {
-        const BlockchainType blockchain_type = account->get_blockchain_type();
-        switch (blockchain_type.blockchain)
-        {
-            // TODO: use factory to create a transactions.
-            case BLOCKCHAIN_BITCOIN:
-                *new_transaction = new BitcoinTransaction(blockchain_type);
-                break;
-            case BLOCKCHAIN_ETHEREUM:
-                *new_transaction = new EthereumTransaction(*account);
-                break;
-            default:
-                THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET,
-                        "Blockchain not supported yet.")
-                        << " Requested blockchain type: "
-                        << blockchain_type.blockchain;
-        }
+        *new_transaction = get_blockchain(account->get_blockchain_type().blockchain)
+                .make_transaction(*account).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
     OUT_CHECK_OBJECT(*new_transaction);

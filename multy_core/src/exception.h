@@ -10,7 +10,7 @@
 #include "multy_core/api.h"
 #include "multy_core/error.h"
 
-#include "multy_core/error.h"
+#include "multy_core/src/error_utility.h"
 
 #include <exception>
 #include <string>
