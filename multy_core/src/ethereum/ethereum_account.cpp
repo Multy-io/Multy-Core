@@ -17,9 +17,7 @@
 #include "multy_core/src/hash.h"
 
 extern "C" {
-// TODO: Fix issue with not exported symbols from libwally-core for iOS builds,
-//   and then re-enable using hex-converting functions from CCAN.
-//#include "ccan/str/hex/hex.h"
+#include "ccan/str/hex/hex.h"
 #include "libwally-core/src/internal.h"
 } // extern "C"
 #include "secp256k1_recovery.h"
@@ -36,6 +34,8 @@ namespace
 {
 using namespace multy_core::internal;
 const size_t ETHEREUM_BINARY_ADDRESS_SIZE = 20;
+const char* ETHEREUM_ADDRESS_PREFIX = "0x";
+
 typedef std::array<unsigned char, ETHEREUM_BINARY_ADDRESS_SIZE> EthereumAddressValue;
 
 struct EthereumPublicKey : public PublicKey
@@ -188,10 +188,21 @@ public:
         EthereumPublicKeyPtr public_key(
                 reinterpret_cast<EthereumPublicKey*>(
                         m_private_key->make_public_key().release()));
-        EthereumAddressValue m_address(make_address(*public_key));
-        CharPtr out;
-        wally_hex_from_bytes(m_address.data(), m_address.size(), reset_sp(out));
-        return std::string(out.get());
+
+        EthereumAddressValue address(make_address(*public_key));
+
+        std::string result(hex_str_size(strlen(ETHEREUM_ADDRESS_PREFIX))
+                + hex_str_size(address.size()),
+                '\0');
+        if (!hex_encode(address.data(), address.size(),
+                const_cast<char*>(result.data()), result.size()))
+        {
+            THROW_EXCEPTION("Faield to hex-encode Ethereum address.");
+        }
+        result.insert(0, ETHEREUM_ADDRESS_PREFIX);
+        trim_excess_trailing_null(&result);
+
+        return result;
     }
 
 private:
@@ -282,15 +293,14 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
 
 BinaryDataPtr ethereum_parse_address(const char* address)
 {
-    const char ADDRESS_PREFIX[] = "0x";
     if (!address)
     {
         THROW_EXCEPTION("Invalid address: nullptr.");
     }
 
-    if (strstr(address, ADDRESS_PREFIX) == address)
+    if (strncmp(address, ETHEREUM_ADDRESS_PREFIX, strlen(ETHEREUM_ADDRESS_PREFIX)) == 0)
     {
-        address += array_size(ADDRESS_PREFIX);
+        address += strlen(ETHEREUM_ADDRESS_PREFIX);
     }
 
     BinaryDataPtr binary_address;
