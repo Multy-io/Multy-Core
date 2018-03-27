@@ -334,3 +334,108 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
 
     ASSERT_EQ(*total_spent, *total_fee + sent);
 }
+
+GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
+{
+    AccountPtr account;
+
+    HANDLE_ERROR(make_account(
+                     BLOCKCHAIN_ETHEREUM,
+                     "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+                     reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance("10000000000000000");
+    const BigInt value("2000000000000000");
+    const BigInt gas_limit(21001);
+    const BigInt gas_price("4000000000");
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(0));
+        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_MAINNET);
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        const bytes address = from_hex("6b4be1fc5fa05c5d959d27155694643b8af72fd8");
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // TXid: 0x53247e308d9e269f020231eafea9abf9bf4fda42746119ce16c2d1de3df20fb9
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f86a8084ee6b2800825209946b4be1fc5fa05c5d959d27155694643b8af72fd887071afd498d00008025a04f1acf"
+            "3b7611aec1a5e8be0844c8ca1b1b6d12f0f41176787a7d9813e465231ea019a4664f2d812ab61d579c4cc9a391bd"
+            "545437c361017525f56d81b9a14db563")), *serialied);
+}
+
+GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+                     BLOCKCHAIN_ETHEREUM,
+                     "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+                     reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance("7916000000000000");
+    const BigInt value("2000000000000000");
+    const BigInt gas_limit(121000);
+    const BigInt gas_price("4000000000");
+
+    {
+        const bytes data = from_hex("4d554c5459207468652062657374");
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(1));
+        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_MAINNET);
+        properties.set_property_value("payload", as_binary_data(data));
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        const bytes address = from_hex("6b4be1fc5fa05c5d959d27155694643b8af72fd8");
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // TXid: 0x5e52cf6ea1796558671051964ffde971a430182c5966f0d9a0aba5946bc1e55e
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f8790184ee6b28008301d8a8946b4be1fc5fa05c5d959d27155694643b8af72fd887071afd498d00008e4d554c54"
+            "5920746865206265737426a03ae3469ccf47aaccfd8beb2c4f0b84e9db60aae7fd3b27aeae85c928e8f56131a00f"
+            "f0b0db2532b40782640aad46cbd2bc7e3911af0547fcd7272ae801cc98cc4d")), *serialied);
+}
