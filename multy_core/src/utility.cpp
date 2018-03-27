@@ -67,5 +67,14 @@ bool operator==(const BlockchainType& left, const BlockchainType& right)
             && left.net_type == right.net_type;
 }
 
+void trim_excess_trailing_null(std::string* str)
+{
+    auto pos = str->find_last_not_of('\0');
+    if (pos != std::string::npos)
+    {
+        str->erase(pos + 1);
+    }
+}
+
 } // namespace internal
 } // namespace multy_core

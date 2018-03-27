@@ -97,13 +97,7 @@ std::string BigInt::get_value() const
     // +1 for null-terminator, +1 for sign.
     std::string result(mpz_sizeinbase(m_value, 10) + 2, '\0');
     mpz_get_str(const_cast<char*>(result.data()), 10, m_value);
-
-    // remove excess '\0' chars at end of string.
-    auto pos = result.find_last_not_of('\0');
-    if (pos != std::string::npos)
-    {
-        result.erase(pos + 1);
-    }
+    trim_excess_trailing_null(&result);
     return result;
 }
 

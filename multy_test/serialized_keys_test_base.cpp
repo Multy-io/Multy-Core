@@ -101,3 +101,25 @@ TEST_P(CheckAddressTestP, validate_address)
     const char* test_data = ::testing::get<1>(param);
     HANDLE_ERROR(validate_address(blockchain_type, test_data));
 }
+
+TEST_P(CheckAddressTestP, validate_address_on_invalid_address)
+{
+    const auto& param = GetParam();
+    const BlockchainType blockchain_type = ::testing::get<0>(param);
+    const std::string test_address = ::testing::get<1>(param);
+
+    EXPECT_ERROR(validate_address(blockchain_type,
+            (test_address + 'A').c_str()));
+    EXPECT_ERROR(validate_address(blockchain_type,
+            ('A' + test_address).c_str()));
+
+    EXPECT_ERROR(validate_address(blockchain_type,
+            // remove last symbol
+            test_address.substr(0, test_address.size() - 1).c_str()));
+
+    EXPECT_ERROR(validate_address(blockchain_type,
+            // remove first symbol
+            test_address.substr(1, test_address.size() - 1).c_str()));
+
+    EXPECT_ERROR(validate_address(blockchain_type, ""));
+}

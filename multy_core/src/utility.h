@@ -163,6 +163,9 @@ inline bool operator!=(const BlockchainType& left, const BlockchainType& right)
     return !(left == right);
 }
 
+// remove excess '\0' chars at end of string.
+void trim_excess_trailing_null(std::string* str);
+
 } // namespace internal
 } // namespace multy_core
 
