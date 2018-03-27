@@ -93,7 +93,23 @@ GTEST_TEST(KeysTestInvalidArgs, make_child_key)
     EXPECT_NE(nullptr, error);
 }
 
-std::string key_id_from_seed(const bytes& data)
+GTEST_TEST(KeysTestInvalidArgs, make_user_id_from_master_key)
+{
+    const ExtendedKey root_key = make_dummy_extended_key();
+
+    ConstCharPtr user_id;
+    EXPECT_ERROR(make_user_id_from_master_key(nullptr, reset_sp(user_id)));
+    EXPECT_ERROR(make_user_id_from_master_key(&root_key, nullptr));
+
+    ExtendedKeyPtr derived_key;
+    HANDLE_ERROR(make_child_key(&root_key, 0, reset_sp(derived_key)));
+
+    // Using non-master key is an error.
+    EXPECT_ERROR(make_user_id_from_master_key(derived_key.get(),
+            reset_sp(user_id)));
+}
+
+std::string user_id_from_seed(const bytes& data)
 {
     const BinaryData seed{data.data(), data.size()};
 
@@ -105,18 +121,18 @@ std::string key_id_from_seed(const bytes& data)
     EXPECT_EQ(nullptr, error);
     EXPECT_NE(nullptr, key);
 
-    ConstCharPtr key_id;
-    error.reset(make_key_id(key.get(), reset_sp(key_id)));
+    ConstCharPtr user_id;
+    error.reset(make_user_id_from_master_key(key.get(), reset_sp(user_id)));
     EXPECT_EQ(nullptr, error);
-    EXPECT_NE(nullptr, key_id);
+    EXPECT_NE(nullptr, user_id);
 
-    return std::string(key_id ? key_id.get() : "");
+    return std::string(user_id ? user_id.get() : "");
 }
 
 GTEST_TEST(KeysTest, KeyId)
 {
     const bytes seed_data = from_hex("00000000000000000000000000000000");
-    const std::string reference_id = key_id_from_seed(seed_data);
+    const std::string reference_id = user_id_from_seed(seed_data);
     ASSERT_NE("", reference_id);
 
     std::unordered_set<std::string> ids;
@@ -131,7 +147,7 @@ GTEST_TEST(KeysTest, KeyId)
             test_data[byte_index] |= (1 << bit_index);
 
             SCOPED_TRACE(as_binary_data(test_data));
-            const std::string id = key_id_from_seed(test_data);
+            const std::string id = user_id_from_seed(test_data);
 
             auto result = ids.insert(id);
             ASSERT_NE("", id);

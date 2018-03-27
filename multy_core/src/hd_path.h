@@ -20,8 +20,6 @@ namespace internal
 // TODO: create a class for HDPath with proper methods.
 typedef std::vector<uint32_t> HDPath;
 
-const uint32_t HARDENED_INDEX_BASE = 0x80000000;
-
 void append_child(uint32_t child_chain_code, HDPath* parent_path);
 
 HDPath make_child_path(HDPath parent_path, uint32_t child_chain_code);

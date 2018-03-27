@@ -12,23 +12,6 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
 
-#include "wally_bip32.h"
-#include "wally_core.h"
-#include "wally_crypto.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "keccak-tiny/keccak-tiny.h"
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-#include <array>
-#include <memory>
-
 namespace
 {
 using namespace multy_core::internal;
@@ -41,17 +24,7 @@ Error* make_master_key(const BinaryData* seed, ExtendedKey** new_master_key)
 
     try
     {
-        ExtendedKeyPtr key(new ExtendedKey);
-        const int result = bip32_key_from_seed(
-                seed->data, seed->len, BIP32_VER_MAIN_PRIVATE, 0, &key->key);
-        if (result == WALLY_ERROR)
-        {
-            return MAKE_ERROR(
-                    ERROR_BAD_ENTROPY,
-                    "Can't generate master key with given entropy");
-        }
-        THROW_IF_WALLY_ERROR(result, "Failed to generate master key");
-        *new_master_key = key.release();
+        *new_master_key = make_master_key(*seed).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
@@ -60,32 +33,19 @@ Error* make_master_key(const BinaryData* seed, ExtendedKey** new_master_key)
     return nullptr;
 }
 
-Error* make_key_id(
-        const ExtendedKey* key,
-        const char** out_key_id)
+Error* make_user_id_from_master_key(
+        const ExtendedKey* master_key,
+        const char** out_user_id)
 {
-    ARG_CHECK_OBJECT(key);
-    ARG_CHECK(out_key_id);
+    ARG_CHECK_OBJECT(master_key);
+    ARG_CHECK(out_user_id);
     try
     {
-        const auto& pub_key = key->key.pub_key;
-        std::array<uint8_t, SHA256_LEN> address_hash;
-        THROW_IF_WALLY_ERROR(
-                sha3_256(address_hash.data(), address_hash.size(),
-                        &pub_key[1], sizeof(pub_key) - 1),
-                "Failed to compute SHA3_256 of public key");
-
-        CharPtr out_id;
-        THROW_IF_WALLY_ERROR(
-                wally_base58_from_bytes(address_hash.data(), address_hash.size(),
-                        BASE58_FLAG_CHECKSUM, reset_sp(out_id)),
-                "Failed to convert to base58");
-
-        *out_key_id = out_id.release();
+        *out_user_id = make_user_id_from_master_key(*master_key).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
-    OUT_CHECK(*out_key_id);
+    OUT_CHECK(*out_user_id);
 
     return nullptr;
 }
@@ -100,16 +60,10 @@ Error* make_child_key(
 
     try
     {
-        ExtendedKeyPtr key(new ExtendedKey);
-        THROW_IF_WALLY_ERROR(
-                bip32_key_from_parent(
-                        &parent_key->key, chain_code, BIP32_FLAG_KEY_PRIVATE,
-                        &key->key),
-                "Failed to make child key");
-
-        *new_child_key = key.release();
+        *new_child_key = make_child_key(*parent_key, chain_code).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
+
     OUT_CHECK(*new_child_key);
 
     return nullptr;

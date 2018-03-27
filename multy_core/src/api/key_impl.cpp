@@ -6,6 +6,8 @@
 
 #include "multy_core/src/api/key_impl.h"
 
+#include "multy_core/src/exception.h"
+#include "multy_core/src/hash.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
@@ -70,3 +72,67 @@ PrivateKey::~PrivateKey()
 PublicKey::~PublicKey()
 {
 }
+
+namespace multy_core
+{
+namespace internal
+{
+
+ExtendedKeyPtr make_master_key(const BinaryData& seed)
+{
+    ExtendedKeyPtr key(new ExtendedKey);
+    const int result = bip32_key_from_seed(
+            seed.data, seed.len, BIP32_VER_MAIN_PRIVATE, 0, &key->key);
+
+    if (result == WALLY_ERROR)
+    {
+        THROW_EXCEPTION2(
+                ERROR_BAD_ENTROPY,
+                "Can't generate master key with given entropy.");
+    }
+    THROW_IF_WALLY_ERROR(result, "Failed to generate master key.");
+
+    return key;
+}
+
+ExtendedKeyPtr make_child_key(
+        const ExtendedKey& parent_key,
+        uint32_t chain_code)
+{
+    ExtendedKeyPtr child_key(new ExtendedKey);
+    THROW_IF_WALLY_ERROR(
+            bip32_key_from_parent(
+                    &parent_key.key, chain_code, BIP32_FLAG_KEY_PRIVATE,
+                    &child_key->key),
+            "Failed to make child key");
+
+    return child_key;
+}
+
+CharPtr make_user_id_from_master_key(const ExtendedKey& master_key)
+{
+    if (!(master_key.key.depth == 0 && master_key.key.child_num == 0))
+    {
+        THROW_EXCEPTION("Can't create a user id from non-master key.");
+    }
+
+    const ExtendedKeyPtr multy_user_id_key = make_child_key(master_key,
+            MULTY_USER_ID_PURPOSE);
+
+    const auto& pub_key = multy_user_id_key->key.pub_key;
+    const auto hash = do_hash<SHA3, 256>(do_hash<SHA3, 256>(pub_key));
+
+    std::array<uint8_t, sizeof(hash) + 1> user_id;
+    memcpy(user_id.data() + 1, hash.data(), hash.size());
+    user_id[0] = MULTY_USER_ID_VERSION;
+
+    CharPtr out_id;
+    THROW_IF_WALLY_ERROR(wally_hex_from_bytes(hash.data(), hash.size(),
+            reset_sp(out_id)),
+            "Failed to create user id.");
+
+    return out_id;
+}
+
+} // namespace internal
+} // namespace multy_core
