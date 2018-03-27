@@ -220,11 +220,9 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     const BigInt gas_price("3000000000000");
 
     {
-        const bytes payload = from_hex("ffff");
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt("3"));
         properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
-        properties.set_property_value("payload", as_binary_data(payload));
     }
 
     {
@@ -244,6 +242,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
         fee.set_property_value("gas_price", gas_price);
         fee.set_property_value("gas_limit", gas_limit);
     }
+
+    BinaryDataPtr data;
+    HANDLE_ERROR(make_binary_data_from_hex("ffff", reset_sp(data)));
+    HANDLE_ERROR(transaction_set_message(transaction.get(), data.get()));
 
     BigInt estimated_fee = transaction->estimate_total_fee(1, 1);
     std::cerr << "estimated_fee: " << estimated_fee.get_value() << "\n";
@@ -406,11 +408,9 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
     const BigInt gas_price("4000000000");
 
     {
-        const bytes data = from_hex("4d554c5459207468652062657374");
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt(1));
         properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_MAINNET);
-        properties.set_property_value("payload", as_binary_data(data));
     }
 
     {
@@ -430,6 +430,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
         fee.set_property_value("gas_price", gas_price);
         fee.set_property_value("gas_limit", gas_limit);
     }
+
+    BinaryDataPtr data;
+    HANDLE_ERROR(make_binary_data_from_hex("4d554c5459207468652062657374", reset_sp(data)));
+    HANDLE_ERROR(transaction_set_message(transaction.get(), data.get()));
 
     const BinaryDataPtr serialied = transaction->serialize();
 
