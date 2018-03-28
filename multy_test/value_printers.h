@@ -44,6 +44,12 @@ inline std::ostream& operator<<(std::ostream& out, const BigInt& value)
     return out;
 }
 
+inline std::ostream& operator<<(std::ostream& out, const BinaryData& value)
+{
+    PrintTo(value, &out);
+    return out;
+}
+
 template <typename T, typename D>
 inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)
 {

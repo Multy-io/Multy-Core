@@ -442,6 +442,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
         fee.set_property_value("amount_per_byte", fee_per_byte);
     }
 
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
     BinaryDataPtr serialized = transaction->serialize();
     ASSERT_NE(nullptr, serialized);
     EXPECT_NE(0, serialized->len);
@@ -517,6 +520,9 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
         EXPECT_THROW(fee.set_property_value("amount_per_byte", fee_per_byte_zero), Exception);
         fee.set_property_value("amount_per_byte", fee_per_byte_one);
     }
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
 
     BinaryDataPtr serialized_without_change = transaction->serialize();
     ASSERT_NE(nullptr, serialized_without_change);
@@ -594,6 +600,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
         fee.set_property_value("amount_per_byte", fee_per_byte);
     }
 
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
     const BinaryDataPtr serialied = transaction->serialize();
     // TODO: should re-serializing (and re-signing) produce same result ?
     const BinaryDataPtr serialied2 = transaction->serialize();
@@ -647,6 +656,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_per_byte);
     }
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
 
     const BinaryDataPtr serialied = transaction->serialize();
     {
@@ -726,6 +738,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
         fee.set_property_value("amount_per_byte", fee_per_byte);
     }
 
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
     const BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(as_binary_data(from_hex(
             "0100000001da1ca8202f16683e307b47fe4c9e65804569e4b50f84e14ed79b60e54a65ae13010000006b483045022100e217cfb5920878da55069a919029ab910ff106cfb20fd901e82de041b149d71902202756c5700377294837893cca854e60b6cca86423f4407b8faf92ff898aded00a012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff0300e1f505000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00e1f505000000001976a914323c1ea8756feaaaa85d0d0e51b0cc07b4c7ac5e88acc0878b3b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000")),
@@ -794,6 +809,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_per_byte);
     }
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
 
     const BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(as_binary_data(from_hex("01000000028a6f540019b83dd4503dff55763b270d293789d3b55bfc0bd2851d3df19d0a4c000000006a4730440220661ae5dd08bb4576a04c76114e980d9431c0d2f477dd8c71acfb7f77c8dd1670022022037a1939ae556881a93f41efcf7c3da756b7141b7245971c7337e4a859623d012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff177de91cfc886d7dfc48a3e5ef695c19f8b6128d90857757b4fa84ad90881bc5000000006a4730440220757edec6ee1fbc52c9046dc80c618001a9a7d4162f0a3abf81f27f09005f77e70220042c890f4702dda612883ceb25db4590c1f8459b0bdd88cd9858d4b7565e997b012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff0200e1f505000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac3e6d1b23000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000")),
@@ -876,6 +894,9 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
         Properties& fee = transaction->get_fee();
         fee.set_property_value("amount_per_byte", fee_per_byte);
     }
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
     const BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(as_binary_data(from_hex("01000000024889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1010000006a47304402200efd6929fcf32210e32194fc8468354deaf67060466710441075dab31afa31b30220350c72e95803ad14ce3fe3baa73e0a2288bf46df44e8c3d686e9692e7689cb7301210217fc7a7cc7f8b41b8e886703b95f087cd6e82ccbe6ee2ff27101b6d69ca2e868ffffffff4889ea1647627904f48eaf67cabefd6327ad9ce40efc6cb643fd6c77d8b0fda1000000006a473044022063a2925d2693033aa9735f412258c93f80f9bf980c688fbe5634b7fd6af958f40220506064007962d15ed0473ec617f1c38c80bd82af864050bf5e406ed4cf2951cf012102a6492c6dd74e49c4b7a4bd507baac3abf25fb26b97e362c3c0cb28b91a043da2ffffffff02802b530b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac40548900000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00000000")),
             *serialied);
@@ -1102,21 +1123,30 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_with_op_return)
     TransactionPtr transaction = make_transaction_from_template(TEST_TX);
 
     BinaryDataPtr message;
-    make_binary_data_from_hex("4d554c5459207468652062657374", reset_sp(message));
-    transaction_set_message(transaction.get(), message.get());
+    HANDLE_ERROR(make_binary_data_from_hex("4d554c5459207468652062657374",
+            reset_sp(message)));
+    HANDLE_ERROR(transaction_set_message(transaction.get(), message.get()));
+
+    {
+        Properties* transaction_properties = nullptr;
+        HANDLE_ERROR(transaction_get_properties(transaction.get(),
+                &transaction_properties));
+        HANDLE_ERROR(properties_set_int32_value(transaction_properties,
+                "is_replaceable", 0));
+    }
 
     const BinaryDataPtr serialied = transaction->serialize();
-    EXPECT_NE(
-            nullptr,
-            std::search(serialied->data, serialied->data + serialied->len, message->data, message->data + message->len));
+    EXPECT_PRED2((contains_sequence<BinaryData, BinaryData>),
+            *serialied, *message);
 
     // Txid: a08020fecb81dff920c3a00160f519c986e1b3205d08390b71632e1046a6f885
     ASSERT_EQ(as_binary_data(from_hex(
-                "010000000154147235aeabc3cc11efa1051f386e7ae3a8ce112a2b82f2fcc62dbaa98f86a0000000008b483045022100eebf874"
-                "3bd2ed75e277f2d7b42302293f1700d5286c1f002009ba937be84ea810220098794c9b320158742b48c9ca94175a45bc044c9e5"
-                "1c5933c2a083c775dca88b0141044c6efb7f684e02090c0f60ec67517678f706282b3bb06ed9e86e49dafefb7561fa79ac1df98"
-                "beb234dba313a9f0928fb08ab7ca086a74a1ae18da0e663c0aac0ffffffff020000000000000000106a0e4d554c545920746865"
-                "206265737419a10100000000001976a91441d29eaed90c0a26021daa5139dcc1d45c4e34a188ac00000000")), *serialied);
+            "010000000154147235aeabc3cc11efa1051f386e7ae3a8ce112a2b82f2fcc62dbaa98f86a0000000008b483045022100eebf874"
+            "3bd2ed75e277f2d7b42302293f1700d5286c1f002009ba937be84ea810220098794c9b320158742b48c9ca94175a45bc044c9e5"
+            "1c5933c2a083c775dca88b0141044c6efb7f684e02090c0f60ec67517678f706282b3bb06ed9e86e49dafefb7561fa79ac1df98"
+            "beb234dba313a9f0928fb08ab7ca086a74a1ae18da0e663c0aac0ffffffff020000000000000000106a0e4d554c545920746865"
+            "206265737419a10100000000001976a91441d29eaed90c0a26021daa5139dcc1d45c4e34a188ac00000000")),
+            *serialied);
 }
 
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet_to_P2SH_addres)
@@ -1152,14 +1182,19 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet_to_P2SH_addres)
     };
     TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
 
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
+
     const BinaryDataPtr serialied = transaction->serialize();
 
     // Txid: afc0688e06f4779fe71d45b889ddf9c867341ea2a9bc14d9133b2aa3c591c9cd
     ASSERT_EQ(as_binary_data(from_hex(
-                "010000000195daf21590c3279801d7ea715e142370c671668cac52e96b640bd9f1e5d967e0000000006a473044022056a97dbfb"
-                "6a72d5efea94636e01eee865953e784bdfef7dbbbcd24fd7dd73da102204e1c757134a3da11cbd91dfe8ee6c07b62a9ca1dfe5f"
-                "f017f779d2a5493ccd23012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff01f92"
-                "300000000000017a91432b96b25e20037514ce9469e86fdfad58bf2e2278700000000")), *serialied);
+            "010000000195daf21590c3279801d7ea715e142370c671668cac52e96b640bd9f1e5d967e0000000006a473044022056a97dbfb"
+            "6a72d5efea94636e01eee865953e784bdfef7dbbbcd24fd7dd73da102204e1c757134a3da11cbd91dfe8ee6c07b62a9ca1dfe5f"
+            "f017f779d2a5493ccd23012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff01f92"
+            "300000000000017a91432b96b25e20037514ce9469e86fdfad58bf2e2278700000000")),
+            *serialied);
 }
 
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_to_P2SH_addres)
@@ -1194,16 +1229,111 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_to_P2SH_addres)
         }
     };
     TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
 
     const BinaryDataPtr serialied = transaction->serialize();
 
     // Txid: c8a8fe4e36d006e28dc55f00bbc7cfea9622b6262710973f6625f4fb9710cba4
     ASSERT_EQ(as_binary_data(from_hex(
-                "01000000017ccb19731651a9acfd48a8810211127f42c1e45391474ca9693da6af4e70f282020000008b4830450221009c526a9"
-                "d76f125df9b874d7803b6f72c7c116ee847338771c68919a189e666fb02203a6f6ebea415561d9846816c02d0a93596ddb92ae3"
-                "57436a36745c02c92bff2f014104a7364b8ad3f02ae0a9dbe355aa3ac9b2a661e230976f505f55f66d26ea3ae906ed3bbfd24ab"
-                "384fe7c15a99ae1227276629820da47f10c29fd9c9a026bc602deffffffff0144bf01000000000017a914aaf44ab6c1076eae84"
-                "9bf717adf955e0456639ab8700000000")), *serialied);
+            "01000000017ccb19731651a9acfd48a8810211127f42c1e45391474ca9693da6af4e70f282020000008b4830450221009c526a9"
+            "d76f125df9b874d7803b6f72c7c116ee847338771c68919a189e666fb02203a6f6ebea415561d9846816c02d0a93596ddb92ae3"
+            "57436a36745c02c92bff2f014104a7364b8ad3f02ae0a9dbe355aa3ac9b2a661e230976f505f55f66d26ea3ae906ed3bbfd24ab"
+            "384fe7c15a99ae1227276629820da47f10c29fd9c9a026bc602deffffffff0144bf01000000000017a914aaf44ab6c1076eae84"
+            "9bf717adf955e0456639ab8700000000")),
+            *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, is_replaceable_default_value)
+{
+    //
+    // Verify that all TXs are REPLACEABLE by-default.
+    //
+
+    const AccountPtr account = make_account(BLOCKCHAIN_BITCOIN, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+
+    int32_t is_replaceable = std::numeric_limits<int32_t>::max();
+    transaction->get_transaction_properties()
+            .get_property_value("is_replaceable", &is_replaceable);
+
+    ASSERT_EQ(1, is_replaceable);
+}
+
+GTEST_TEST(BitcoinTransactionTest, replaceable)
+{
+    // Verify that TX can be explicitly made FINAL or REPLACEABLE (BIP125).
+
+    AccountPtr account = make_account(BLOCKCHAIN_BITCOIN,
+            "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            BigInt{3}
+        },
+        { // Sources
+            {
+                BigInt{115197},
+                from_hex("82f2704eafa63d69a94c479153e4c1427f12110281a848fdaca951167319cb7c"),
+                2,
+                from_hex("76a9146b6e514825a406e84456950cafb6911095aa61f688ac"),
+                nullptr
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "3HGwSrGh7ARwDbzr3SwmRcavk6UWJtyUd2",
+                BigInt{114500}
+            }
+        }
+    };
+    const unsigned char FINAL_TX_SEQ[] = {0xff, 0xff, 0xff, 0xff};
+
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+
+    //
+    // Explicitly making TX FINAL.
+    //
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
+    const BinaryDataPtr final_tx = transaction->serialize();
+    ASSERT_EQ(as_binary_data(from_hex(
+            "01000000017ccb19731651a9acfd48a8810211127f42c1e45391474ca9693da6af4e70f282020000008b4830450221009c526a9"
+            "d76f125df9b874d7803b6f72c7c116ee847338771c68919a189e666fb02203a6f6ebea415561d9846816c02d0a93596ddb92ae3"
+            "57436a36745c02c92bff2f014104a7364b8ad3f02ae0a9dbe355aa3ac9b2a661e230976f505f55f66d26ea3ae906ed3bbfd24ab"
+            "384fe7c15a99ae1227276629820da47f10c29fd9c9a026bc602deffffffff0144bf01000000000017a914aaf44ab6c1076eae84"
+            "9bf717adf955e0456639ab8700000000")),
+            *final_tx);
+
+    EXPECT_PRED2((contains_sequence<BinaryData, BinaryData>),
+            *final_tx, as_binary_data(FINAL_TX_SEQ));
+
+    //
+    // Explitily making TX REPLACEABLE
+    //
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 1);
+    const BinaryDataPtr replaceable_tx = transaction->serialize();
+    EXPECT_NE(*final_tx, *replaceable_tx);
+
+    // It is hard to express negation with EXPECT_PRED2(), simplest way is:
+    EXPECT_FALSE(contains_sequence(*replaceable_tx,
+            as_binary_data(FINAL_TX_SEQ)));
+
+    //
+    // Turning 'is_replacible' OFF again and verifying that TX is FINAL.
+    //
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+    const BinaryDataPtr final_tx2 = transaction->serialize();
+    EXPECT_EQ(*final_tx, *final_tx2);
 }
 
 GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_testnet)
@@ -1225,7 +1355,6 @@ GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_testnet)
 
 GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_mainnet)
 {
-
     const AccountPtr account_mainnet = make_account(BLOCKCHAIN_BITCOIN, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
 
     TransactionPtr transaction_mainnet;

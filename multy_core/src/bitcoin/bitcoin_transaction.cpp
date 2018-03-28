@@ -32,6 +32,11 @@ namespace
 {
 using namespace multy_core::internal;
 const size_t BITCOIN_MAX_MESSAGE_LENGTH = 75;
+const uint32_t BITCOIN_INPUT_SEQ_FINAL = 0xFFFFFFFF;
+
+// BIP-125: Any value less than (BITCOIN_INPUT_SEQ_FINAL - 1) would do, see
+// https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
+const uint32_t BITCOIN_INPUT_SEQ_REPLACEABLE = BITCOIN_INPUT_SEQ_FINAL - 2;
 
 enum OP_CODE : uint8_t
 {
@@ -43,8 +48,6 @@ enum OP_CODE : uint8_t
     OP_CHECKSIG = 0xAC,
     OP_EQUAL = 0x87
 };
-
-typedef uint8_t OpCode;
 
 template <typename T>
 std::string make_id(const std::string& base, const T& suffix)
@@ -502,7 +505,7 @@ public:
     PropertyT<PrivateKeyPtr> private_key;
 
     // not a property since set by Transaction or Source itself.
-    uint32_t seq = 0xffffffff;
+    uint32_t seq = BITCOIN_INPUT_SEQ_FINAL;
     BinaryDataPtr script_signature;
     BinaryDataPtr script_witness; // serialized separately.
 
@@ -514,6 +517,8 @@ BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
       m_version(1),
       m_is_segwit_transaction(0),
       m_lock_time(0),
+      m_is_replaceable(1, get_transaction_properties(),
+                "is_replaceable", Property::OPTIONAL),
       m_fee(new BitcoinTransactionFee),
       m_sources(),
       m_destinations(),
@@ -538,23 +543,21 @@ BinaryDataPtr BitcoinTransaction::serialize()
 template <typename T>
 void BitcoinTransaction::serialize_to_stream(T* stream, DestinationsToUse destinations_to_use) const
 {
-    T& dest_stream = *stream;
-
-    dest_stream << m_version;
-    dest_stream << as_compact_size(m_sources.size());
+    *stream << m_version;
+    *stream << as_compact_size(m_sources.size());
     for (const auto& source : m_sources)
     {
-        dest_stream << *source;
+        *stream << *source;
     }
 
     const auto destinations = get_non_zero_destinations(destinations_to_use);
-    dest_stream << as_compact_size(destinations.size());
+    *stream << as_compact_size(destinations.size());
     for (const auto& destination : destinations)
     {
-        dest_stream << *destination;
+        *stream << *destination;
     }
 
-    dest_stream << m_lock_time;
+    *stream << m_lock_time;
 }
 
 bool BitcoinTransaction::is_segwit() const
@@ -702,6 +705,18 @@ void BitcoinTransaction::update()
 
     size_t change_destinations_count = 0;
     BitcoinTransactionDestination* change_destination = nullptr;
+    for (const auto& source : m_sources)
+    {
+        if (m_is_replaceable.get_value())
+        {
+            source->seq = BITCOIN_INPUT_SEQ_REPLACEABLE;
+        }
+        else
+        {
+            source->seq = BITCOIN_INPUT_SEQ_FINAL;
+        }
+    }
+
     for (const auto& d : m_destinations)
     {
         if (*d->is_change)

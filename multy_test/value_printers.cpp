@@ -36,12 +36,6 @@ std::ostream& operator<<(std::ostream& ostr, HDPath const& path)
     return ostr;
 }
 
-std::ostream& operator<<(std::ostream& ostr, BinaryData const& data)
-{
-    return ostr << (data.data ? to_hex(data) : std::string("<null>")) << ", "
-                << data.len;
-}
-
 std::ostream& operator<<(std::ostream& ostr, Blockchain blockchain)
 {
     switch (blockchain)
@@ -92,7 +86,8 @@ void PrintTo(const Error& e, std::ostream* out)
 
 void PrintTo(const BinaryData& data, std::ostream* out)
 {
-    *out << "BinaryData{ " << data << " }";
+    *out << "BinaryData{ " << (data.data ? to_hex(data) : std::string("<null>"))
+         << ", " << data.len << " }";
 }
 
 void PrintTo(const Key& key, std::ostream* out)
