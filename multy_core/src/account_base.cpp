@@ -13,10 +13,6 @@
 namespace
 {
 using namespace multy_core::internal;
-constexpr uint32_t hardened_index(uint32_t index)
-{
-    return index | HARDENED_INDEX_BASE;
-}
 
 // According to bip 44, complete address path looks like:
 // m / purpose' / coin_type' / account' / change / address_index

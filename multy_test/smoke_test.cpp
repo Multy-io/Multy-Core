@@ -55,7 +55,7 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     ASSERT_NE(nullptr, root_key);
 
     ConstCharPtr root_id;
-    HANDLE_ERROR(make_key_id(root_key.get(), reset_sp(root_id)));
+    HANDLE_ERROR(make_user_id_from_master_key(root_key.get(), reset_sp(root_id)));
     ASSERT_NE(nullptr, root_id);
     ASSERT_STRCASENE("", root_id.get());
 

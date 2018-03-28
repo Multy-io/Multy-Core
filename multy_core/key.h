@@ -26,9 +26,18 @@ struct BinaryData;
 MULTY_CORE_API struct Error* make_master_key(
         const struct BinaryData* seed, struct ExtendedKey** new_master_key);
 
-MULTY_CORE_API struct Error* make_key_id(
-        const struct ExtendedKey* key,
-        const char** out_key_id);
+/** Make a user id string from master key.
+ *
+ * User id is a string that uniquely identifies user without giving away
+ * any details about master key.
+ * @param master_key - key that was created from binary seed.
+ * @param out_user_id - resulting user id string, MUST BE freed with free_string().
+ * @return Error if master_key is not a root of the HD key tree or something
+ *          else gone wrong, null otherwise.
+ */
+MULTY_CORE_API struct Error* make_user_id_from_master_key(
+        const struct ExtendedKey* master_key,
+        const char** out_user_id);
 
 /** Make child key from parent key, see BIP32 for key derivation and HD
  * accounts.
@@ -79,10 +88,10 @@ MULTY_CORE_API struct Error* decrypt_with_key(
 */
 
 /** Frees ExtendedKey instance, can take nullptr. **/
-MULTY_CORE_API void free_extended_key(struct ExtendedKey* root);
+MULTY_CORE_API void free_extended_key(struct ExtendedKey* key);
 
 /** Frees struct Key* instance, can take nullptr. **/
-MULTY_CORE_API void free_key(struct Key* root);
+MULTY_CORE_API void free_key(struct Key* key);
 
 #ifdef __cplusplus
 } /* extern "C" */
