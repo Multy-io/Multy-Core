@@ -375,7 +375,6 @@ EthereumTransaction::EthereumTransaction(const Account& account)
                         THROW_EXCEPTION("Nonce should be non-negative.");
                     }
               }),
-      m_payload(get_transaction_properties(), "payload", Property::OPTIONAL),
       m_chain_id(ETHEREUM_CHAIN_ID_PRE_EIP155,
             get_transaction_properties(),
             "chain_id",
@@ -411,7 +410,7 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
     list << m_gas;
     list << m_destination->address;
     list << m_destination->amount;
-    if (m_payload.is_set())
+    if (m_payload && (m_payload->data != nullptr))
     {
         list << m_payload;
     }
@@ -500,7 +499,7 @@ BigInt EthereumTransaction::estimate_total_fee(size_t, size_t) const
     const uint64_t PAYLOAD_NONZERO_BYTE_GAS = 68;
     const uint64_t TX_BASE_GAS = 21000;
 
-    const BinaryData& data = m_payload.is_set() ? **m_payload : BinaryData{nullptr, 0};
+    const BinaryData& data = m_payload ? *m_payload : BinaryData{nullptr, 0};
     const uint64_t zero_bytes_count = std::count(data.data, data.data + data.len, 0);
 
     const uint64_t estimated_gas = TX_BASE_GAS
@@ -534,9 +533,9 @@ Properties& EthereumTransaction::get_fee()
     return m_fee->get_properties();
 }
 
-void EthereumTransaction::set_message(const BinaryData& /*value*/)
+void EthereumTransaction::set_message(const BinaryData& value)
 {
-    THROW_EXCEPTION("Not supported yet.");
+    m_payload = make_clone(value);
 }
 } // namespace internal
 } // namespace multy_core

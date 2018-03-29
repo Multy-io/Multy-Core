@@ -52,13 +52,13 @@ private:
     const Account& m_account;
 
     PropertyT<BigInt> m_nonce;
-    PropertyT<BinaryDataPtr> m_payload;
     PropertyT<int32_t> m_chain_id;
 
     EthereumTransactionFeePtr m_fee;
     EthereumTransactionSourcePtr m_source;
     EthereumTransactionDestinationPtr m_destination;
     EthereumTransactionSignaturePtr m_signature;
+    BinaryDataPtr m_payload;
 
     BigInt m_gas;
 };
