@@ -15,6 +15,7 @@
 #include "multy_core/binary_data.h"
 
 #include <array>
+#include <string>
 #include <vector>
 
 #include <stdint.h>
@@ -76,6 +77,11 @@ template <typename T, size_t N>
 inline BinaryData as_binary_data(const T (&array)[N])
 {
     return detail::do_convert_to_binary_data(array, N);
+}
+
+inline BinaryData as_binary_data(const std::string& str)
+{
+    return detail::do_convert_to_binary_data(str.c_str(), str.size());
 }
 
 template <typename T, typename A>
