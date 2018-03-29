@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Appscrunch/Multy-Core.svg?branch=master)](https://travis-ci.org/Appscrunch/Multy-Core)
+
 # Multy-Core
 Cross-platform mobile-first library for HD wallets and creating raw transactions of Bitcoin and Ethereum (and many more to come).
 
