@@ -53,6 +53,7 @@ public:
     using Predicate = std::function<void(typename PredicateArgTraits<U>::ArgumentType const&)>;
 
     bool is_set() const;
+    std::string get_name() const;
 
     void set_trait(Trait new_trait);
     Trait get_trait() const;

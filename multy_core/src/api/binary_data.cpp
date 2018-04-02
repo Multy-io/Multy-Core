@@ -6,6 +6,7 @@
 
 #include "multy_core/binary_data.h"
 
+#include "multy_core/src/codec.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
@@ -72,28 +73,7 @@ Error* make_binary_data_from_hex(
     ARG_CHECK(new_binary_data);
     try
     {
-        const size_t hex_str_len = strlen(hex_str);
-        if (hex_str_len & 1)
-        {
-            return MAKE_ERROR(ERROR_INVALID_ARGUMENT, "Input string length must be even.");
-        }
-
-        const size_t data_len = hex_str_len / 2;
-        BinaryDataPtr result;
-        throw_if_error(make_binary_data(data_len, reset_sp(result)));
-
-        if (data_len != 0)
-        {
-            size_t real_size = 0;
-            THROW_IF_WALLY_ERROR(
-                    wally_hex_to_bytes(
-                            hex_str, const_cast<unsigned char*>(result->data),
-                            result->len, &real_size),
-                    "Failed to convert hex string to binary data.");
-
-            result->len = real_size;
-        }
-        *new_binary_data = result.release();
+        *new_binary_data = decode(hex_str, strlen(hex_str), CODEC_HEX).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 
