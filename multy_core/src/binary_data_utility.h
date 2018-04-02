@@ -106,4 +106,29 @@ inline bool operator!=(const BinaryData& left, const BinaryData& right)
 } // namespace internal
 } // namespace multy_core
 
+namespace std
+{
+
+inline const unsigned char* begin(const BinaryData& data)
+{
+    return data.data;
+}
+
+inline const unsigned char* end(const BinaryData& data)
+{
+    return data.data + data.len;
+}
+
+inline const unsigned char* cbegin(const BinaryData& data)
+{
+    return data.data;
+}
+
+inline const unsigned char* cend(const BinaryData& data)
+{
+    return data.data + data.len;
+}
+
+} // namespace std
+
 #endif // MULTY_CORE_BINARY_DATA_UTILITY_H

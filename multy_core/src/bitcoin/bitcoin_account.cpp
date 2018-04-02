@@ -388,7 +388,7 @@ BinaryDataPtr bitcoin_parse_address(const char* address,
                 wally_base58_to_bytes(
                     address, BASE58_FLAG_CHECKSUM, decoded.data(),
                     decoded.size(), &binary_size),
-                "Invalid address");
+                "Invalid address.");
 
     decoded.resize(binary_size);
     if (decoded.empty())

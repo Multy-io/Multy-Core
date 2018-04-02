@@ -21,9 +21,11 @@
 #include "multy_core/src/u_ptr.h"
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <string>
 
 extern "C" struct BlockchainType;
 
@@ -155,6 +157,13 @@ bool contains(const Container& container, const Value& v)
 {
     return std::find(std::begin(container), std::end(container), v)
             != std::end(container);
+}
+
+template <typename Container, typename Sequence>
+bool contains_sequence(const Container& container, const Sequence& s)
+{
+    return std::search(std::begin(container), std::end(container),
+            std::begin(s), std::end(s)) != std::end(container);
 }
 
 MULTY_CORE_API bool operator==(const BlockchainType& left, const BlockchainType& right);

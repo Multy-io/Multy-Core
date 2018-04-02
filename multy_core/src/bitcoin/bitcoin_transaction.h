@@ -9,6 +9,7 @@
 
 #include "multy_core/src/transaction_base.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
+#include "multy_core/src/api/properties_impl.h"
 
 #include <memory>
 #include <vector>
@@ -69,6 +70,7 @@ private:
     int32_t m_version;
     int32_t m_is_segwit_transaction;
     uint32_t m_lock_time;
+    PropertyT<int32_t> m_is_replaceable;
 
     BitcoinTransactionFeePtr m_fee;
     std::vector<BitcoinTransactionSourcePtr> m_sources;
