@@ -19,9 +19,18 @@
 #include "wally_core.h"
 #include "wally_crypto.h"
 
+extern "C" {
+#include "libwally-core/src/internal.h"
+}
+#include "libwally-core/src/secp256k1/include/secp256k1.h"
+
 #include <cassert>
 
 #include <string.h>
+
+#define GOLOS_RECOVERY_PARAM_COMPRESSED 4
+#define GOLOS_RECOVERY_PARAM_COMPACT 27
+#define GOLOS_SIGNATURE_SIZE  65
 
 namespace
 {
@@ -41,6 +50,26 @@ uint32_t get_chain_index(BlockchainType blockchain_type)
         return CHAIN_INDEX_TEST;
     }
     return blockchain_type.blockchain;
+}
+
+// Check that signature is in canonical format
+// For details please see: bitshares/bitshares1-core#1129
+bool is_canonical_signature(const std::array<unsigned char, GOLOS_SIGNATURE_SIZE>& c )
+{
+    return !(c[1] & 0x80)
+           && !(c[1] == 0 && !(c[2] & 0x80))
+           && !(c[33] & 0x80)
+           && !(c[33] == 0 && !(c[34] & 0x80));
+}
+
+// This extended nonce function is based on Golos implementation
+static int extended_nonce_function( unsigned char *nonce32, const unsigned char *msg32,
+        const unsigned char *key32, const unsigned char* /*algo16*/,
+        void *data, unsigned int /*attempt*/)
+{
+    unsigned int* extra = (unsigned int*) data;
+    (*extra)++;
+    return secp256k1_nonce_function_default(nonce32, msg32, key32, nullptr, nullptr, *extra);
 }
 
 } // namespace
@@ -124,10 +153,30 @@ public:
         return make_clone(*this);
     }
 
-    BinaryDataPtr sign(const BinaryData& /*data*/) const override
+    BinaryDataPtr sign(const BinaryData& data) const override
     {
-        // TODO: implement signing.
-        return nullptr;
+        auto data_hash = do_hash<SHA2, 256>(data);
+
+        std::array<unsigned char, GOLOS_SIGNATURE_SIZE> result;
+        int recovery_id = 0;
+        unsigned int counter = 0;
+        do
+        {
+            secp256k1_ecdsa_signature signature;
+            if (!secp256k1_ecdsa_sign(secp_ctx(), &signature,
+                    data_hash.data(), m_data.data(), extended_nonce_function, &counter, &recovery_id))
+            {
+                THROW_EXCEPTION("Failed to sign with private key.");
+            }
+
+            if (!secp256k1_ecdsa_signature_serialize_compact(secp_ctx(), result.data() + 1, &signature))
+            {
+                THROW_EXCEPTION("Failed to make compact size from signature.");
+            }
+        } while(!is_canonical_signature(result));
+
+        result.begin()[0] = GOLOS_RECOVERY_PARAM_COMPRESSED + GOLOS_RECOVERY_PARAM_COMPACT + recovery_id;
+        return make_clone(as_binary_data(result));
     }
 
     std::string to_string() const override
