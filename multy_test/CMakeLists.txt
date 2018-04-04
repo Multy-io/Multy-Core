@@ -64,3 +64,8 @@ target_link_libraries(
     multy_core
     libwally-core
 )
+
+if (MULTY_TEST_DISABLE_DEATH_TESTS)
+    target_compile_definitions(multy_test PRIVATE MULTY_TEST_DISABLE_DEATH_TESTS)
+    message("DEATH tests disabled.")
+endif()
