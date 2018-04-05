@@ -692,8 +692,9 @@ void BitcoinTransaction::verify() const
         BinaryDataPtr sig_script = make_script_pub_key(public_key_hash_data, BITCOIN_ADDRESS_P2PKH);
         if (*sig_script != **s->prev_transaction_out_script_pubkey)
         {
+            AccountPtr error_account = make_bitcoin_account(s->private_key->to_string().c_str());
             THROW_EXCEPTION("Source can't be spent using given private key.")
-                    << " Source index: " << source_index;
+                    << " Source index: " << source_index << ", corresponding address: "<< error_account->get_address();
         }
         ++source_index;
     }
