@@ -14,6 +14,7 @@ option(MULTY_ENABLE_SIMULATE_ERROR "Enable simulating errors in multy_core, see 
 # This is a standard CMake option, but we are putting it here to emphasise.
 option(BUILD_SHARED_LIBS "Build as shared libraries." OFF)
 option(MULTY_WITH_TEST_APP "Build sample app that runs the tests (consider MULTY_WITH_TESTS)." OFF)
+option(MULTY_TEST_DISABLE_DEATH_TESTS "Explicitly disable death tests." ON)
 
 project(multy C CXX)
 

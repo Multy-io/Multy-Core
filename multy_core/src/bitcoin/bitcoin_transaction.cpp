@@ -413,7 +413,8 @@ public:
                   properties,
                   "amount_per_byte",
                   Property::OPTIONAL,
-                  [this](const BigInt& amount) {
+                  [](const BigInt& amount)
+                  {
                       if (amount < BigInt(1))
                       {
                           THROW_EXCEPTION("Value should be> 1.");

@@ -3,11 +3,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MULTY_MORE_WARNINGS)
     add_definitions(
-        -Wall -Weffc++ -Wpedantic -Wextra -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings
+        -Wall -Wpedantic -Wextra -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings
 
         # Disabled warnings:
          -Wno-missing-braces # false-positive on std::array initialization.
          -Wno-tautological-constant-out-of-range-compare # false-positive on caution checks
+         -Wno-effc++ # GCC 4.8.4 false-positive on non-virtual protected destructor of Object:
+         # base class ‘class multy_core::internal::Object’ has a non-virtual destructor [-Werror=effc++]
     )
 endif()
 

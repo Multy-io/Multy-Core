@@ -13,10 +13,11 @@
 #include "multy_core/ethereum.h"
 #include "multy_core/src/u_ptr.h"
 
+#include "multy_test/death_test.h"
 #include "multy_test/mocks.h"
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
-#include "multy_test/supported_blockchains.h"
 
 #include "gtest/gtest.h"
 
@@ -24,17 +25,6 @@ namespace
 {
 using namespace multy_core::internal;
 } // namespace
-
-// Disable death-test on non-Desktop platforms, since those might crash on mobile.
-#if defined(MULTY_BUILD_FOR_DESKTOP) && MULTY_BUILD_FOR_DESKTOP
-    #define MULTY_ASSERT_DEATH_IF_SUPPORTED(statement, message) \
-            ASSERT_DEATH_IF_SUPPORTED(statement, message)
-    #define MULTY_EXPECT_DEATH_IF_SUPPORTED(statement, message) \
-            EXPECT_DEATH_IF_SUPPORTED(statement, message)
-#else
-    #define MULTY_ASSERT_DEATH_IF_SUPPORTED(statement, message)
-    #define MULTY_EXPECT_DEATH_IF_SUPPORTED(statement, message)
-#endif
 
 class DeletionTestP : public ::testing::TestWithParam<BlockchainType>
 {
