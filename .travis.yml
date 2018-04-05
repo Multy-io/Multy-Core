@@ -1,48 +1,75 @@
-language: android
-jdk: oraclejdk8
+language: cpp
 
-env:
-  global:
-    - ANDROID=true
-    - ANDROID_API_LEVEL=21
-    - EMULATOR_API_LEVEL=21
-    - ANDROID_BUILD_TOOLS=26.1.1
-    - ADB_INSTALL_TIMEOUT=5 # minutes
+matrix:
+  include:
+    - language: android
+      jdk: oraclejdk8
 
-android:
-  components:
-    - tools
-    - platform-tools
-    - build-tools-${ANDROID_BUILD_TOOLS}
-#    - android-$ANDROID_API
-    - android-${ANDROID_API_LEVEL}
-    - extra # ???
-    - addon # ???
-#    - sys-img-armeabi-v7a-addon-google_apis-google-24
-#    - sys-img-armeabi-v7a-addon-google_apis-google-$EMULATOR_API_LEVEL
+      env:
+        global:
+          - ANDROID=true
+          - ANDROID_API_LEVEL=21
+          - EMULATOR_API_LEVEL=21
+          - ANDROID_BUILD_TOOLS=26.1.1
+          - ADB_INSTALL_TIMEOUT=5 # minutes
 
-install:
-  # Accept SDK Licenses + Install NDK
-  - yes | sdkmanager --update > /dev/null
-  - sdkmanager ndk-bundle > /dev/null
-    # Install the system image.
-  # [DISABLED] Setting up AVD and starting an emulatpor
-  # - sdkmanager "system-images;android-24;default;armeabi-v7a" > /dev/null
-  # # Create and start emulator for the script. Meant to race the install task.
-  # - android list target
-  # - avdmanager list avd
-  # - echo no | avdmanager create avd --force -n test_AVD -k "system-images;android-24;default;armeabi-v7a"
-  # - android list target
-  # - avdmanager list avd
-  # - $ANDROID_HOME/emulator/emulator -avd test_AVD -no-audio -no-window &
+      android:
+        components:
+          - tools
+          - platform-tools
+          - build-tools-${ANDROID_BUILD_TOOLS}
+          - android-${ANDROID_API_LEVEL}
+          - extra # ???
+          - addon # ???
+      #    - sys-img-armeabi-v7a-addon-google_apis-google-24
+      #    - sys-img-armeabi-v7a-addon-google_apis-google-$EMULATOR_API_LEVEL
 
-script:
-  - set -e
-  - cd ./samples/android_run_tests/
-  - ./gradlew assembleRelease
-#  - adb shell setprop dalvik.vm.dexopt-flags v=n,o=v
-# [DISABLED] installing apk on emulator
-#  - android-wait-for-emulator
-#  - adb shell input keyevent 82 &
-#  - adb devices
-#  - ./gradlew installRelease --stacktrace --debug
+      install:
+        # Accept SDK Licenses + Install NDK
+        - yes | sdkmanager --update > /dev/null
+        - sdkmanager ndk-bundle > /dev/null
+          # Install the system image.
+        # [DISABLED] Setting up AVD and starting an emulatpor
+        # - sdkmanager "system-images;android-24;default;armeabi-v7a" > /dev/null
+        # # Create and start emulator for the script. Meant to race the install task.
+        # - android list target
+        # - avdmanager list avd
+        # - echo no | avdmanager create avd --force -n test_AVD -k "system-images;android-24;default;armeabi-v7a"
+        # - android list target
+        # - avdmanager list avd
+        # - $ANDROID_HOME/emulator/emulator -avd test_AVD -no-audio -no-window &
+
+      script:
+        - set -e
+        - cd ./samples/android_run_tests/
+        - ./gradlew assembleRelease
+      #  - adb shell setprop dalvik.vm.dexopt-flags v=n,o=v
+      # [DISABLED] installing apk on emulator
+      #  - android-wait-for-emulator
+      #  - adb shell input keyevent 82 &
+      #  - adb devices
+      #  - ./gradlew installRelease --stacktrace --debug
+    - os: osx
+      language: objective-c
+
+      script:
+        - export BUILD_DIR=$(pwd)/build-iOS
+        - mkdir ${BUILD_DIR} && pushd ${BUILD_DIR}
+
+        # Prepare && build
+        - cmake ..  -G'Unix Makefiles' -DCCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=9.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DMULTY_WITH_TESTS=1
+        - cmake --build .
+
+        # Copy build artifacts to the sample app
+        - find . -iname '*.dylib' -or -iname '*.a' -not -path '*google*' -exec cp ../samples/iOS_run_tests/Libraries/ {} \;
+
+        # Copy updated headers to the sample app
+        - cp ../multy_core/*.h ../samples/iOS_run_tests/Headers
+
+        # Rename Error to MultyError due to name clash.
+        - sed -i '' -E 's/Error/MultyError/g' ../samples/iOS_run_tests/Headers/error.h
+
+        # Build the sample app with updated libs and headers
+        #  - xcodebuild -list -project ../samples/iOS_run_tests/iOS_run_tests.xcodeproj
+        #  - xcodebuild build -configuration Debug -project ../samples/iOS_run_tests/iOS_run_tests.xcodeproj #CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+
