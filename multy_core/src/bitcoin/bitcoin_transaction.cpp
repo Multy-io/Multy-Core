@@ -32,6 +32,9 @@ namespace
 {
 using namespace multy_core::internal;
 const size_t BITCOIN_MAX_MESSAGE_LENGTH = 75;
+const size_t BITCOIN_DUST_RELAY_FEE_PER_BYTE = 3;
+const size_t BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_NON_SEGWIT = 182;
+const size_t BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_SEGWIT = 98;
 const uint32_t BITCOIN_INPUT_SEQ_FINAL = 0xFFFFFFFF;
 
 // BIP-125: Any value less than (BITCOIN_INPUT_SEQ_FINAL - 1) would do, see
@@ -63,6 +66,32 @@ void verify_non_negative_amount(const BigInt& amount)
     {
         THROW_EXCEPTION("BigInt value is negative.");
     }
+}
+
+bool is_dust_amount(const BigInt& amount, bool is_segwit)
+{
+    // NOTE: "Dust" is defined in terms of BITCOIN_DUST_RELAY_FEE_PER_BYTE,
+    // which has units satoshis-per-byte.
+    // If you'd pay more in fees than the value of the output
+    // to spend something, then we consider it dust.
+    // A typical spendable non-segwit txout is 34 bytes big, and will
+    // need a CTxIn of at least 148 bytes to spend:
+    // so dust is a spendable txout less than
+    // 182*BITCOIN_DUST_RELAY_FEE_PER_BYTE (in satoshis).
+    // 546 satoshis at the default rate of 3 sat/B.
+    // A typical spendable segwit txout is 31 bytes big, and will
+    // need a CTxIn of at least 67 bytes to spend:
+    // so dust is a spendable txout less than
+    // 98*BITCOIN_DUST_RELAY_FEE_PER_BYTE (in satoshis).
+    // 294 satoshis at the default rate of 3 sat/B.
+    // Look for more info: https://github.com/bitcoin/bitcoin/blob/e057589dc67f25da6779b60d0e247a3730adbc6d/src/policy/policy.cpp#L18
+
+    const uint64_t nsize = is_segwit ? BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_SEGWIT: BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_NON_SEGWIT;
+    if (amount < BigInt(nsize * BITCOIN_DUST_RELAY_FEE_PER_BYTE))
+    {
+        return true;
+    }
+    return false;
 }
 
 } // namespace
@@ -356,6 +385,7 @@ public:
           address(properties, "address", Property::REQUIRED,
                   [this](const std::string &new_address) {
                         this->sig_script = make_script_pub_key_from_address(this->m_net_type, new_address);
+                        this->m_is_segwit_destination = false;
                   }),
           is_change(false, properties, "is_change", Property::OPTIONAL,
                   [this](int32_t new_value) {
@@ -366,7 +396,8 @@ public:
                       this->on_change_set(new_value);
                   }),
           sig_script(),
-          m_net_type(net_type)
+          m_net_type(net_type),
+          m_is_segwit_destination(false)
     {
     }
 
@@ -402,6 +433,7 @@ public:
 
     BinaryDataPtr sig_script;
     const BitcoinNetType m_net_type;
+    bool m_is_segwit_destination;
 };
 
 class BitcoinTransactionFee
@@ -682,7 +714,7 @@ void BitcoinTransaction::verify() const
     }
 
     size_t source_index = 0;
-    for (auto& s : m_sources)
+    for (const auto& s : m_sources)
     {
         const auto& public_key = s->private_key->make_public_key();
         std::array<uint8_t, HASH160_LEN> public_key_hash;
@@ -697,6 +729,16 @@ void BitcoinTransaction::verify() const
                     << " Source index: " << source_index << ", corresponding address: "<< error_account->get_address();
         }
         ++source_index;
+    }
+    if (m_blockchain_type.net_type == BITCOIN_NET_TYPE_MAINNET)
+    {
+        for (const auto& d : m_destinations)
+        {
+            if (!*d->is_change && is_dust_amount(d->amount.get_value(), d->m_is_segwit_destination))
+            {
+                THROW_EXCEPTION("Bitcoin dust output.");
+            }
+        }
     }
 }
 
@@ -743,21 +785,18 @@ void BitcoinTransaction::update()
         BigInt current_fee = calculate_diff();
         const BigInt remainder = current_fee - expected_fee;
 
-
-        // NOTE: Not adding a change if cost of spending money from that output exceeds its value.
+        // NOTE: Not adding a change if output is an "dust". cost of spending money from that output exceeds its value.
         //
         // Most of the nodes reject TX with fee less than 1 Satoshi per byte.
         // So we assume that cost of spending an output is roughly equivalent
         // to byte length of corresponding input in serialized TX.
-        // Average input size is:
-        //  * 150 bytes for non-SegWit TX
-        //  * 100 bytes for SegWit TX
+        // Average input and output size is:
+        //  * 182 bytes for non-SegWit TX
+        //  * 98 bytes for SegWit TX
         //
         // Not adding change for leftovers less than said limits increases fee for this TX.
 
-        const int64_t average_input_size = is_segwit() ? 100 : 150;
-        const int64_t min_tx_cost_per_byte = 1;
-        if (remainder > average_input_size * min_tx_cost_per_byte)
+        if (!is_dust_amount(remainder, change_destination->m_is_segwit_destination))
         {
             // not setting value with set_value(), since that would fail for read-only property.
             change_destination->amount.get_value() += remainder;
@@ -777,7 +816,7 @@ void BitcoinTransaction::update()
                 current_fee = calculate_diff();
             }
 
-            if (change_destination->amount.get_value() < average_input_size * min_tx_cost_per_byte)
+            if (is_dust_amount(change_destination->amount.get_value(), change_destination->m_is_segwit_destination))
             {
                 change_destination->amount.get_value() = BigInt{0};
             }

@@ -71,9 +71,9 @@ protected:
     bool validate_all_properties(std::string* not_set_properties) const;
     Properties& register_properties(const std::string& name, Properties&);
     Properties m_properties;
+    const BlockchainType m_blockchain_type;
 
 private:
-    const BlockchainType m_blockchain_type;
     std::vector<std::pair<std::string, Properties*>> m_all_properties;
 };
 

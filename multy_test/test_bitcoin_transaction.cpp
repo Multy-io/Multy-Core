@@ -186,7 +186,7 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
         },
         { // Sources
             {
-                BigInt{100 * 1000 * 1000},
+                BigInt{10 * 1000 * 1000},
                 from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
                 0,
                 from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac"),
@@ -197,7 +197,7 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
             TransactionDestination
             {
                 "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
-                BigInt{9000 * 1000}
+                BigInt{9999227}
             },
             TransactionChangeDestination
             {
@@ -226,7 +226,7 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
             TransactionDestination
             {
                 "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
-                BigInt{99977201}
+                BigInt{99976950}
             },
             TransactionChangeDestination
             {
@@ -1368,4 +1368,50 @@ GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_mainnet)
     // invalid mainnet addresses
     EXPECT_ERROR(properties_set_string_value(&destination_mainnet, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
     EXPECT_ERROR(properties_set_string_value(&destination_mainnet, "address", "TEST"));
+}
+
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_dust_outputs)
+{
+    AccountPtr account = make_account(BLOCKCHAIN_BITCOIN, "5KDejYL1XnGkhwhH1ubSqiFCqXGxYzuJYHXhU7UqeVLEDeqBJ22");
+
+    const BigInt available(9809);
+    const BigInt dust_sent_amount(500);
+    const BigInt for_dust_change(8500);
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            BigInt{3}
+        },
+        { // Sources
+            {
+                available,
+                from_hex("63ebc8dd4de286a1ab32029f1986876ac981b8b9ccd597be3f2d6ac1961e02ee"),
+                0,
+                from_hex("76a914dda3945cee6bb677de3b090db38ef3053fc45acb88ac"),
+                nullptr
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+
+    Properties& send_destination = transaction->add_destination();
+    send_destination.set_property_value("address", "1MCvJ6pqJrGJEjo55RhLhr1de2wFLoDBXF");
+    send_destination.set_property_value("amount", dust_sent_amount);
+
+    Properties& change_destination = transaction->add_destination();
+    change_destination.set_property_value("address", "1Q46s1EJXDMvVTCVQGKfrjEudvgu39uXu5");
+    change_destination.set_property_value("is_change", 1);
+
+    // Destination amount considered dust, hence TX verification fails.
+    EXPECT_ERROR(transaction_update(transaction.get()));
+
+    send_destination.set_property_value("amount", for_dust_change);
+    // Now change amount is dust, hence change amount should be implicitly set to 0 by TX itself.
+    HANDLE_ERROR(transaction_update(transaction.get()));
+    BigInt change_amount;
+    change_destination.get_property_value("amount" , &change_amount);
+    EXPECT_EQ(BigInt(0), change_amount);
 }
