@@ -4,18 +4,59 @@ env:
   - BUILD_TYPE=Debug
   - BUILD_TYPE=Release
 
-compiler:
-  - clang
-  - gcc
-
 os:
-  - linux
   - osx
 
 matrix:
+  fast_finish: true
   include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - BUILD_TYPE=Debug
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - BUILD_TYPE=Release
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang++"
+        - BUILD_TYPE=Debug
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang++"
+        - BUILD_TYPE=Release
+
     - language: android
       jdk: oraclejdk8
+      os: linux
 
       env:
         global:
@@ -60,8 +101,8 @@ matrix:
       #  - adb devices
       #  - ./gradlew installRelease --stacktrace --debug
 
-    - os: osx
-      language: objective-c
+    - language: objective-c
+      os: osx
 
       script:
         - export BUILD_DIR=$(pwd)/build-iOS
@@ -72,7 +113,7 @@ matrix:
         - cmake --build .
 
         # Copy build artifacts to the sample app
-        - find . -iname '*.dylib' -or -iname '*.a' -not -path '*google*' -exec cp ../samples/iOS_run_tests/Libraries/ {} \;
+        - find . -iname '*.dylib' -or -iname '*.a' -not -path '*google*' -exec cp {} ../samples/iOS_run_tests/Libraries/ \;
 
         # Copy headers to the sample app
         - cp ../multy_core/*.h ../samples/iOS_run_tests/Headers
@@ -83,6 +124,9 @@ matrix:
         # Build the sample app with updated libs and headers
         #  - xcodebuild -list -project ../samples/iOS_run_tests/iOS_run_tests.xcodeproj
         #  - xcodebuild build -configuration Debug -project ../samples/iOS_run_tests/iOS_run_tests.xcodeproj #CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+
+before_script:
+    - eval "${MATRIX_EVAL}"
 
 script:
   - mkdir build && cd build

@@ -7,10 +7,13 @@ if (MULTY_MORE_WARNINGS)
 
         # Disabled warnings:
          -Wno-missing-braces # false-positive on std::array initialization.
-         -Wno-tautological-constant-out-of-range-compare # false-positive on caution checks
-         -Wno-effc++ # GCC 4.8.4 false-positive on non-virtual protected destructor of Object:
-         # base class ‘class multy_core::internal::Object’ has a non-virtual destructor [-Werror=effc++]
     )
+
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
+        add_definitions(
+            -Wno-tautological-constant-out-of-range-compare # false-positive on caution checks
+        )
+    endif()
 endif()
 
 if (MULTY_WARNINGS_AS_ERRORS)
