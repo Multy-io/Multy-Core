@@ -5,6 +5,7 @@
  */
 
 #include "multy_core/src/object.h"
+#include "wally_core.h"
 
 namespace multy_core
 {
@@ -29,7 +30,8 @@ Object& Object::operator=(const Object& other)
 
 Object::~Object()
 {
-    m_magic = nullptr;
+    // Using this function in hope that it is not going to be optimized out by compiler.
+    wally_bzero(&m_magic, sizeof(m_magic));
 }
 
 const void* Object::get_magic() const
