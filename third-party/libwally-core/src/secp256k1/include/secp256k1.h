@@ -444,6 +444,7 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  *           0: the nonce generation function failed, or the private key was invalid.
  *  Args:    ctx:    pointer to a context object, initialized for signing (cannot be NULL)
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
+ *           recid:  pointer to an int, which will be updated to contain the recovery id (can be NULL)
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL)
  *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
@@ -458,7 +459,8 @@ SECP256K1_API int secp256k1_ecdsa_sign(
     const unsigned char *msg32,
     const unsigned char *seckey,
     secp256k1_nonce_function noncefp,
-    const void *ndata
+    const void *ndata,
+    int* recid
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA secret key.

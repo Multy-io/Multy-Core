@@ -191,7 +191,7 @@ int wally_ec_sig_from_bytes(const unsigned char *priv_key, size_t priv_key_len,
     } else {
         secp256k1_ecdsa_signature sig;
 
-        if (!secp256k1_ecdsa_sign(ctx, &sig, bytes_in, priv_key, nonce_fn, NULL)) {
+        if (!secp256k1_ecdsa_sign(ctx, &sig, bytes_in, priv_key, nonce_fn, NULL, NULL)) {
             wally_clear(&sig, sizeof(sig));
             if (secp256k1_ec_seckey_verify(ctx, priv_key))
                 return WALLY_ERROR; /* Nonce function failed */
