@@ -55,6 +55,8 @@ EntropySource make_dummy_entropy_source();
 void throw_exception(const char* message);
 bool blockchain_can_derive_address_from_private_key(Blockchain blockchain);
 
+std::string minify_json(const std::string &input_json);
+
 } // test_utility
 
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);

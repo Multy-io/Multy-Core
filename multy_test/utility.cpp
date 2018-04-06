@@ -108,6 +108,33 @@ bool blockchain_can_derive_address_from_private_key(Blockchain blockchain)
     return false;
 }
 
+std::string minify_json(const std::string& input_json)
+{
+    std::string result;
+    result.reserve(input_json.length());
+    bool quoted = false;
+    bool last_backslash = false;
+    for (const auto& c : input_json)
+    {
+        if (!isspace(c) || quoted)
+        {
+            result += c;
+        }
+        if (c == '"' && !last_backslash)
+        {
+            quoted = !quoted;
+        }
+        if (c == '\\' && !last_backslash)
+        {
+            last_backslash = true;
+        } else
+        {
+            last_backslash = false;
+        }
+     }
+    return result;
+}
+
 } // namespace test_utility
 
 bool operator==(const PublicKey& lhs, const PublicKey& rhs)

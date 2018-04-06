@@ -31,6 +31,7 @@ add_library(multy_test SHARED
     test_ethereum_account.cpp
     test_ethereum_transaction.cpp
     test_golos_account.cpp
+    test_golos_transaction.cpp
     test_keys.cpp
     test_mnemonic.cpp
     test_object.cpp

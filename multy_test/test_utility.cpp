@@ -16,6 +16,7 @@
 
 namespace
 {
+using namespace test_utility;
 using namespace multy_core::internal;
 
 static const char* const TEST_VALUE1 = "test value1";
@@ -122,4 +123,11 @@ GTEST_TEST(UtilityInvalidArgsTest, power_slice)
     EXPECT_THROW(power_slice(data, 0, TOO_SMALL), Exception);
     EXPECT_THROW(power_slice(data, TOO_SMALL, 0), Exception);
     EXPECT_THROW(power_slice(data, TOO_SMALL, TOO_SMALL), Exception);
+}
+
+GTEST_TEST(UtilityTest, minify_json)
+{
+    ASSERT_EQ(minify_json("\t\n\v\f\r a"), "a");
+    ASSERT_EQ(minify_json(R"( " \" " )"), R"(" \" ")");
+    ASSERT_EQ(minify_json(R"( " a \\ a" \\ )"), R"(" a \\ a"\\)");
 }
