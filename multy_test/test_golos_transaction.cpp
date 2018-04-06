@@ -45,14 +45,14 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
     {
         Properties* properties = nullptr;
         const int32_t ref_block_num(14918824);
-        BinaryDataPtr ref_block_prefix;
+        BinaryDataPtr ref_block_hash;
         const std::string expiration("2018-03-22T14:42:00");
 
-        HANDLE_ERROR(make_binary_data_from_hex("0x00e3a4a84407f2df4953c35614248b433e6db43e", reset_sp(ref_block_prefix)));
+        HANDLE_ERROR(make_binary_data_from_hex("00e3a4a84407f2df4953c35614248b433e6db43e", reset_sp(ref_block_hash)));
 
         HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
         HANDLE_ERROR(properties_set_int32_value(properties, "ref_block_num", ref_block_num));
-        HANDLE_ERROR(properties_set_binary_data_value(properties, "ref_block_prefix", ref_block_prefix.get()));
+        HANDLE_ERROR(properties_set_binary_data_value(properties, "ref_block_hash", ref_block_hash.get()));
         HANDLE_ERROR(properties_set_string_value(properties, "expiration", expiration.c_str()));
     }
 
@@ -65,7 +65,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
         HANDLE_ERROR(make_big_int("2000", reset_sp(balance))); // balance = 2.000 GOLOS
 
         HANDLE_ERROR(properties_set_big_int_value(source, "amount", balance.get()));
-        HANDLE_ERROR(properties_set_string_value(source, "from", "multytest"));
+        HANDLE_ERROR(properties_set_string_value(source, "address", "multytest"));
     }
 
     {
@@ -75,7 +75,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
         BigIntPtr amount;
         HANDLE_ERROR(make_big_int("5", reset_sp(amount))); // amount = 0.005 GOLOS
         HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
-        HANDLE_ERROR(properties_set_string_value(destination, "to", "multy"));
+        HANDLE_ERROR(properties_set_string_value(destination, "address", "multy"));
     }
 
     // transaction_id = "eb096e9f1e4a34c0d9b72c3193b8a77bc3480a01"
@@ -118,14 +118,14 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
     {
         Properties* properties = nullptr;
         const int32_t ref_block_num(14918938);
-        BinaryDataPtr ref_block_prefix;
+        BinaryDataPtr ref_block_hash;
         const std::string expiration("2018-03-22T14:14:47");
 
-        HANDLE_ERROR(make_binary_data_from_hex("0x00e3a51ae8050b1a18628acba614338e68ade170", reset_sp(ref_block_prefix)));
+        HANDLE_ERROR(make_binary_data_from_hex("00e3a51ae8050b1a18628acba614338e68ade170", reset_sp(ref_block_hash)));
 
         HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
         HANDLE_ERROR(properties_set_int32_value(properties, "ref_block_num", ref_block_num));
-        HANDLE_ERROR(properties_set_binary_data_value(properties, "ref_block_prefix", ref_block_prefix.get()));
+        HANDLE_ERROR(properties_set_binary_data_value(properties, "ref_block_hash", ref_block_hash.get()));
         HANDLE_ERROR(properties_set_string_value(properties, "expiration", expiration.c_str()));
     }
 
@@ -138,7 +138,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
         HANDLE_ERROR(make_big_int("1995", reset_sp(balance))); // balance = 1.995 GOLOS
 
         HANDLE_ERROR(properties_set_big_int_value(source, "amount", balance.get()));
-        HANDLE_ERROR(properties_set_string_value(source, "from", "multytest"));
+        HANDLE_ERROR(properties_set_string_value(source, "address", "multytest"));
     }
 
     {
@@ -149,7 +149,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
         HANDLE_ERROR(make_big_int("1000", reset_sp(amount))); // amount = 1.000 GOLOS
         HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
 
-        HANDLE_ERROR(properties_set_string_value(destination, "to", "multy"));
+        HANDLE_ERROR(properties_set_string_value(destination, "address", "multy"));
     }
 
     // transaction_id = "21c532df873d31536358ab1cf2b906ddaad613cc"
@@ -170,7 +170,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
             ]
             ],
             "ref_block_num":42266,
-            "ref_block_prefix":436930024,
+            "ref_block_hash":436930024,
             "signatures":[
                 "1f00fd6f824457bfde1088810c8cca210f45fb456daa02ea4ab22c6f0feef5deaa5ba3b9657bb88c55dc47f796c2711652e540bca0342ffb8c475e107f1be0cc56"
             ]
@@ -192,14 +192,14 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api_with_message)
     {
         Properties* properties = nullptr;
         const int32_t ref_block_num(14919066);
-        BinaryDataPtr ref_block_prefix;
+        BinaryDataPtr ref_block_hash;
         const std::string expiration("2018-03-22T14:54:06");
 
-        HANDLE_ERROR(make_binary_data_from_hex("00e3a59a74c605fe620694036c2d028602074c7f", reset_sp(ref_block_prefix)));
+        HANDLE_ERROR(make_binary_data_from_hex("00e3a59a74c605fe620694036c2d028602074c7f", reset_sp(ref_block_hash)));
 
         HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
         HANDLE_ERROR(properties_set_int32_value(properties, "ref_block_num", ref_block_num));
-        HANDLE_ERROR(properties_set_binary_data_value(properties, "ref_block_prefix", ref_block_prefix.get()));
+        HANDLE_ERROR(properties_set_binary_data_value(properties, "ref_block_hash", ref_block_hash.get()));
         HANDLE_ERROR(properties_set_string_value(properties, "expiration", expiration.c_str()));
     }
 
@@ -212,7 +212,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api_with_message)
         HANDLE_ERROR(make_big_int("995", reset_sp(balance))); // balance = 0.995 GOLOS
 
         HANDLE_ERROR(properties_set_big_int_value(source, "amount", balance.get()));
-        HANDLE_ERROR(properties_set_string_value(source, "from", "multytest"));
+        HANDLE_ERROR(properties_set_string_value(source, "address", "multytest"));
     }
 
     {
@@ -223,7 +223,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api_with_message)
         HANDLE_ERROR(make_big_int("50", reset_sp(amount))); // amount = 0.050 GOLOS
         HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
 
-        HANDLE_ERROR(properties_set_string_value(destination, "to", "pashaklybik"));
+        HANDLE_ERROR(properties_set_string_value(destination, "address", "pashaklybik"));
     }
 
     BinaryDataPtr message;
@@ -248,7 +248,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api_with_message)
             ]
             ],
             "ref_block_num":42394,
-            "ref_block_prefix":4261791348,
+            "ref_block_hash":4261791348,
             "signatures":[
                 "1f69b05d86c589f6069f2895767b57c259296f2cc224bee782e177749320a94e4b15b5b1ec52e381b6b9eea989e7bbb6079d65209cf47869c36d404659781c9b49"
              ]

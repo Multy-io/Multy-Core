@@ -66,7 +66,7 @@ static const char byte_to_base58[58] = {
  * *len <= input value - OK, bytes_out contains data.
  * *len > input value - Failed and bytes_out untouched.
  */
-static int base58_decode(const char *base58, size_t base58_len,
+int base58_decode(const char *base58, size_t base58_len,
                          unsigned char *bytes_out, size_t *len)
 {
     uint32_t bn_buf[BIGNUM_WORDS];

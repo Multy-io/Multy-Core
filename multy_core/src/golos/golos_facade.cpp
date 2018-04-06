@@ -6,8 +6,16 @@
 
 #include "multy_core/src/golos/golos_facade.h"
 
-#include "multy_core/src/exception.h"
+#include "multy_core/golos.h"
 #include "multy_core/src/golos/golos_account.h"
+#include "multy_core/src/golos/golos_transaction.h"
+
+#include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
+
+#include <algorithm>
+#include <cstring>
+#include <regex>
 
 namespace multy_core
 {
@@ -35,20 +43,36 @@ AccountPtr GolosFacade::make_account(const char* serialized_private_key)
     return make_golos_account(serialized_private_key);
 }
 
-TransactionPtr GolosFacade::make_transaction(const Account& /*account*/)
+TransactionPtr GolosFacade::make_transaction(const Account& account)
 {
-    THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET,
-            "Creating Golos transactions is not supported yet.");
+    return TransactionPtr(new GolosTransaction(account.get_blockchain_type()));
 }
 
 void GolosFacade::validate_address(
-        BlockchainType, const char*)
+        BlockchainType, const char* address)
 {
-    // We know nothing about golos address and can do perform basic verification,
-    // like absence/presence of whitespace and special chars.
+    if (!address)
+    {
+        THROW_EXCEPTION("Invalid Golos accont address: nullptr.");
+    }
 
-    THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET,
-            "Validating Golos addresses is not supported yet.");
+    const size_t address_length = strlen(address);
+    if (address_length < GOLOS_ACCOUNT_MIN_LENGTH
+        || address_length > GOLOS_ACCOUNT_MAX_LENGTH)
+    {
+        THROW_EXCEPTION("Invalid Golos account length.")
+                << " Expected: between " << GOLOS_ACCOUNT_MIN_LENGTH
+                << " and " << GOLOS_ACCOUNT_MAX_LENGTH
+                << ", actual: " << address_length << ".";
+    }
+
+    static const char* GOLOS_ACCOUNT_NAME_RE = "[a-z][a-z0-9]+";
+    static const std::regex golos_account_name_re(GOLOS_ACCOUNT_NAME_RE);
+    if (!std::regex_match(address, golos_account_name_re))
+    {
+        THROW_EXCEPTION("Invalid Golos account.")
+                << "Should match pattern: \"" << GOLOS_ACCOUNT_NAME_RE << "\".";
+    }
 }
 
 } // namespace internal

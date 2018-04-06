@@ -54,6 +54,7 @@ add_library(multy_core
     src/api/transaction_impl.cpp
 
     # Common stuff
+    src/codec.cpp
     src/account_base.cpp
     src/ec_key_utils.cpp
     src/hash.cpp
@@ -82,8 +83,10 @@ add_library(multy_core
 
     # Golos
     golos.h
+    src/golos/golos.cpp
     src/golos/golos_facade.cpp
     src/golos/golos_account.cpp
+    src/golos/golos_transaction.cpp
 )
 
 # Run a script that generates version.h in build dir

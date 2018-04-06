@@ -401,6 +401,11 @@ bool Property::is_set() const
     return get_properties().is_set(m_value_ptr);
 }
 
+std::string Property::get_name() const
+{
+    return get_properties().get_property_by_value(m_value_ptr).get_name();
+}
+
 void Property::set_trait(Trait new_trait)
 {
     get_properties().get_property_by_value(m_value_ptr).set_trait(new_trait);
