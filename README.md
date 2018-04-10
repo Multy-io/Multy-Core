@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbf217af3b54404b9af75e59240bb049)](https://app.codacy.com/app/Enmk/Multy-Core?utm_source=github.com&utm_medium=referral&utm_content=Appscrunch/Multy-Core&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/Appscrunch/Multy-Core.svg?branch=master)](https://travis-ci.org/Appscrunch/Multy-Core)
 
 # Multy-Core
