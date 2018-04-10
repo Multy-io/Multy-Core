@@ -127,7 +127,7 @@ CharPtr make_user_id_from_master_key(const ExtendedKey& master_key)
     user_id[0] = MULTY_USER_ID_VERSION;
 
     CharPtr out_id;
-    THROW_IF_WALLY_ERROR(wally_hex_from_bytes(hash.data(), hash.size(),
+    THROW_IF_WALLY_ERROR(wally_hex_from_bytes(user_id.data(), user_id.size(),
             reset_sp(out_id)),
             "Failed to create user id.");
 
