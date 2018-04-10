@@ -31,7 +31,7 @@ struct MnemonicTestCase
     const std::string expected_mnemonic;
     const bytes expected_seed;
 
-    MnemonicTestCase(
+    explicit MnemonicTestCase(
             const char* entropy,
             const char* expected_mnemonic,
             const char* expected_seed)

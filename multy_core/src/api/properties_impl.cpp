@@ -105,7 +105,7 @@ struct BinderBase : public Binder
             Property::Trait trait)
         : m_properties(properties),
           m_name(name),
-          m_value(value),
+          m_raw_value(value),
           m_type(value_type),
           m_trait(trait),
           m_is_set(false)
@@ -217,7 +217,7 @@ struct BinderBase : public Binder
 
     const void* get_value() const override
     {
-        return m_value;
+        return m_raw_value;
     }
 
     void handle_exception(const char* action, const CodeLocation& location) const
@@ -239,10 +239,22 @@ struct BinderBase : public Binder
         }
     }
 
-protected:
+    void set()
+    {
+        m_is_set = true;
+        m_properties.set_dirty();
+    }
+
+    void reset()
+    {
+        m_is_set = false;
+        m_properties.set_dirty();
+    }
+
+private:
     const Properties& m_properties;
     const std::string m_name;
-    const void* m_value;
+    const void* m_raw_value;
     const ValueType m_type;
     Property::Trait m_trait;
     bool m_is_set;
@@ -311,7 +323,7 @@ struct BinderT : public BinderBase
     {
         try
         {
-            if (m_trait == Property::READONLY)
+            if (get_trait() == Property::READONLY)
             {
                 THROW_EXCEPTION("property is read-only");
             }
@@ -322,8 +334,8 @@ struct BinderT : public BinderBase
             }
 
             copy_value(new_value, m_value);
-            m_is_set = true;
-            m_properties.set_dirty();
+
+            set();
         }
         catch (...)
         {
@@ -353,8 +365,8 @@ struct BinderT : public BinderBase
         // dangerous to reset value like that, need to have some template
         // "reset" function to do that properly.
         // copy_value(T(), value);
-        m_is_set = false;
-        m_properties.set_dirty();
+
+        reset();
     }
 
     T* m_value;

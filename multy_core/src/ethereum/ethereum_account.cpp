@@ -44,7 +44,7 @@ public:
     static const size_t DATA_SIZE = 64;
     typedef std::vector<uint8_t> KeyData;
 
-    EthereumPublicKey(KeyData key_data)
+    explicit EthereumPublicKey(KeyData key_data)
         : m_data(std::move(key_data))
     {
         if (m_data.size() != DATA_SIZE)
@@ -83,7 +83,7 @@ struct EthereumPrivateKey : public PrivateKey
 {
     typedef std::array<uint8_t, 32> KeyData;
 
-    EthereumPrivateKey(const KeyData& data) : m_data(data)
+    explicit EthereumPrivateKey(const KeyData& data) : m_data(data)
     {
     }
 

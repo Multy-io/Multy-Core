@@ -250,7 +250,7 @@ public:
 class GolosTransactionSource
 {
 public:
-    GolosTransactionSource(BlockchainType blockchain_type)
+    explicit GolosTransactionSource(BlockchainType blockchain_type)
         : properties("Source"),
           address(properties, "address", Property::REQUIRED,
                 [blockchain_type](const std::string& new_address) {
@@ -278,7 +278,7 @@ public:
 class GolosTransactionDestination
 {
 public:
-    GolosTransactionDestination(BlockchainType blockchain_type)
+    explicit GolosTransactionDestination(BlockchainType blockchain_type)
         : properties("Destination"),
           address(properties, "address", Property::REQUIRED,
                 [blockchain_type](const std::string& new_address) {

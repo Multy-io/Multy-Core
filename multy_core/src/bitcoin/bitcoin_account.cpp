@@ -98,7 +98,7 @@ struct BitcoinPublicKey : public PublicKey
 public:
     typedef std::vector<uint8_t> KeyData;
 
-    BitcoinPublicKey(KeyData key_data)
+    explicit BitcoinPublicKey(KeyData key_data)
         : m_data(std::move(key_data))
     {
     }

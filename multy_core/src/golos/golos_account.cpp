@@ -83,7 +83,7 @@ class GolosPublicKey : public PublicKey
 {
 public:
     typedef std::vector<uint8_t> KeyData;
-    GolosPublicKey(KeyData data)
+    explicit GolosPublicKey(KeyData data)
         : m_data(std::move(data))
     {}
 
@@ -127,7 +127,7 @@ class GolosPrivateKey : public PrivateKey
 {
 public:
     typedef std::vector<uint8_t> KeyData;
-    GolosPrivateKey(const KeyData& data)
+    explicit GolosPrivateKey(const KeyData& data)
         : m_data(data)
     {}
 
