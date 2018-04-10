@@ -41,7 +41,7 @@ struct MnemonicTestCase
     {
     }
 
-    MnemonicTestCase(const BIP39TestCase& bip39_test_case)
+    explicit MnemonicTestCase(const BIP39TestCase& bip39_test_case)
         : MnemonicTestCase(
                   bip39_test_case.entropy,
                   bip39_test_case.mnemonic,

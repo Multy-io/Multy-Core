@@ -131,7 +131,7 @@ public:
         : m_data(data)
     {}
 
-    GolosPrivateKey(const BinaryData& data)
+    explicit GolosPrivateKey(const BinaryData& data)
         : m_data(data.data, data.data + data.len)
     {}
 
