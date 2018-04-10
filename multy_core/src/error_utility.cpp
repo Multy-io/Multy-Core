@@ -26,12 +26,12 @@ using namespace multy_core::internal;
 class ErrorWrapperException : public Exception
 {
 public:
-    ErrorWrapperException(ErrorPtr error)
+    explicit ErrorWrapperException(ErrorPtr error)
         : ErrorWrapperException(error.get())
     {
     }
 
-    ErrorWrapperException(Error* error)
+    explicit ErrorWrapperException(Error* error)
         : Exception("", error ? error->location : CodeLocation{nullptr, 0}),
           m_error(std::move(error))
     {
