@@ -41,10 +41,13 @@ struct Error
 
     // Points to the location in code where error occured.
     struct CodeLocation location;
+
+    const char* backtrace;
 };
 
 /** Allocates Error object, assumes that message is satic and shouldn't be copied. **/
 MULTY_CORE_API struct Error* make_error(enum ErrorCode code, const char* message, struct CodeLocation location);
+MULTY_CORE_API struct Error* make_error_with_backtrace(enum ErrorCode code, const char* message, struct CodeLocation location, const char* backtrace);
 
 /** Frees Error object, can take nullptr. **/
 MULTY_CORE_API void free_error(struct Error* error);

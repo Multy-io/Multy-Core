@@ -7,7 +7,9 @@
 #include "multy_core/src/exception.h"
 
 #include "multy_core/error.h"
+#include "multy_core/src/backtrace.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/error_utility.h"
 
 #include <iostream>
 
@@ -19,17 +21,20 @@ namespace internal
 Exception::Exception(
         ErrorCode error_code,
         const char* message,
-        CodeLocation location)
+        CodeLocation location,
+        const char* backtrace)
     : m_error_code(error_code),
-      m_message(message),
-      m_location(location)
+      m_message((message ? message : "")),
+      m_location(location),
+      m_backtrace(backtrace ? backtrace : get_error_backtrace(2))
 {
 }
 
 Exception::Exception(
         const char* message,
-        CodeLocation location)
-    : Exception(ERROR_GENERAL_ERROR, message, location)
+        CodeLocation location,
+        const char* backtrace)
+    : Exception(ERROR_GENERAL_ERROR, message, location, backtrace)
 {
 }
 
@@ -45,7 +50,9 @@ const char* Exception::what() const noexcept
 Error* Exception::make_error() const
 {
     CharPtr message(copy_string(m_message));
-    Error* result = ::make_error(m_error_code, message.get(), m_location);
+    Error* result = ::make_error_with_backtrace(
+            m_error_code, message.get(), m_location, m_backtrace.c_str());
+
     result->owns_message = true;
     message.release();
 

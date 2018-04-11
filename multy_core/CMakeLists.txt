@@ -16,6 +16,10 @@ if (MULTY_MORE_WARNINGS)
     endif()
 endif()
 
+if("${CMAKE_BUILD_TYPE}" MATCHES ".*Debug.*" OR MULTY_FORCE_ENABLE_ERROR_BACKTRACE)
+    add_definitions(-DMULTY_ENABLE_ERROR_BACKTRACE=1)
+endif()
+
 if (MULTY_WARNINGS_AS_ERRORS)
     add_definitions(-Werror)
 endif()
@@ -59,6 +63,7 @@ add_library(multy_core
     src/ec_key_utils.cpp
     src/hash.cpp
     src/blockchain_facade_base.cpp
+    src/backtrace.cpp
 
     src/binary_data_utility.cpp
     src/error_utility.cpp

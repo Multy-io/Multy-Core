@@ -8,6 +8,7 @@
 
 #include "multy_core/error.h"
 
+#include "multy_core/src/backtrace.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
@@ -23,6 +24,8 @@ namespace
 {
 using namespace multy_core::internal;
 
+const CodeLocation NULL_LOCATION {nullptr, 0};
+
 class ErrorWrapperException : public Exception
 {
 public:
@@ -32,7 +35,9 @@ public:
     }
 
     explicit ErrorWrapperException(Error* error)
-        : Exception("", error ? error->location : CodeLocation{nullptr, 0}),
+        : Exception("",
+                (error ? error->location : NULL_LOCATION),
+                (error ? error->backtrace : "")),
           m_error(std::move(error))
     {
         assert(m_error.get());
@@ -141,6 +146,16 @@ Error* exception_to_error(const CodeLocation& location)
     {
         return make_error(ERROR_GENERAL_ERROR, "Unknown exception", location);
     }
+}
+
+std::string get_error_backtrace(size_t ignore_frames)
+{
+#ifdef MULTY_ENABLE_ERROR_BACKTRACE
+    return get_backtrace(ignore_frames + 1);
+#else
+    (void)(ignore_frames);
+    return std::string();
+#endif
 }
 
 } // namespace internal

@@ -15,6 +15,7 @@ option(MULTY_ENABLE_SIMULATE_ERROR "Enable simulating errors in multy_core, see 
 option(BUILD_SHARED_LIBS "Build as shared libraries." OFF)
 option(MULTY_WITH_TEST_APP "Build sample app that runs the tests (consider MULTY_WITH_TESTS)." OFF)
 option(MULTY_TEST_DISABLE_DEATH_TESTS "Explicitly disable death tests." ON)
+option(MULTY_FORCE_ENABLE_ERROR_BACKTRACE "Force collecting backtrace for Release builds." OFF)
 
 project(multy C CXX)
 
@@ -35,6 +36,14 @@ else()
     message("Multy Desktop flavour.")
     add_definitions(-DMULTY_BUILD_FOR_DESKTOP=1)
     # Desktop specific options, must be prefixed with MULTY_DESKTOP_
+
+    if (UNIX)
+        if (APPLE)
+            add_definitions(-DMULTY_BUILD_FOR_OSX=1)
+        else()
+            add_definitions(-DMULTY_BUILD_FOR_UNIX=1)
+        endif()
+    endif()
 
 endif()
 

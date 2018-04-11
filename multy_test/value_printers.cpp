@@ -82,6 +82,10 @@ void PrintTo(const Error& e, std::ostream* out)
     {
         *out << " @ " << e.location.file << " : " << e.location.line;
     }
+    if (e.backtrace && strlen(e.backtrace) > 0)
+    {
+        *out << "\nBacktrace:\n" << e.backtrace;
+    }
 }
 
 void PrintTo(const BinaryData& data, std::ostream* out)
