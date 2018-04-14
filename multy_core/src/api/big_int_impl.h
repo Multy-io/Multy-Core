@@ -39,9 +39,14 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     BigInt(const BigInt& other);
     BigInt& operator=(const BigInt& other);
 
+    BigInt(BigInt&& other);
+    BigInt& operator=(BigInt&& other);
+
     ~BigInt();
 
     void set_value(const char* value);
+    void set_value_int64(int64_t value);
+
     std::string get_value() const;
 
     // Returns value as int64_t, throws exception if value is too big.
@@ -62,6 +67,8 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     BigInt& operator+=(const BigInt& other);
     BigInt& operator-=(const BigInt& other);
     BigInt& operator*=(const BigInt& other);
+    BigInt& operator/=(const BigInt& other);
+    BigInt operator-() const;
 
     template <typename T>
     BigInt& operator+=(const T& value)
@@ -79,6 +86,11 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     BigInt& operator*=(const T& value)
     {
         return *this *= BigInt(value);
+    }
+    template <typename T>
+    BigInt& operator/=(const T& value)
+    {
+        return *this /= BigInt(value);
     }
 
     bool operator==(const BigInt& other) const;
@@ -148,6 +160,7 @@ inline std::string BigInt::get<std::string>() const
 MULTY_BIG_INT_DEFINE_OP(+)
 MULTY_BIG_INT_DEFINE_OP(-)
 MULTY_BIG_INT_DEFINE_OP(*)
+MULTY_BIG_INT_DEFINE_OP(/)
 
 #undef MULTY_BIG_INT_DEFINE_OP
 

@@ -53,6 +53,7 @@ multy_core::internal::ExtendedKeyPtr make_dummy_extended_key_ptr();
 EntropySource make_dummy_entropy_source();
 
 void throw_exception(const char* message);
+void throw_exception_if_error(const Error* message);
 bool blockchain_can_derive_address_from_private_key(Blockchain blockchain);
 
 std::string minify_json(const std::string &input_json);

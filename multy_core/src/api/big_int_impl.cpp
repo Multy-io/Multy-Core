@@ -12,6 +12,7 @@
 #include "multy_test/value_printers.h"
 
 #include <cmath>
+#include <cstring>
 
 namespace
 {
@@ -57,6 +58,25 @@ BigInt::BigInt(const BigInt& other)
     mpz_init_set(m_value, other.m_value);
 }
 
+BigInt::BigInt(BigInt&& other)
+{
+    std::swap(m_value, other.m_value);
+    mpz_init(other.m_value);
+}
+
+BigInt& BigInt::operator=(BigInt&& other)
+{
+    if (this == &other)
+    {
+        return *this;
+    }
+
+    memmove(m_value, other.m_value, sizeof(m_value));
+    mpz_init(other.m_value);
+
+    return *this;
+}
+
 BigInt::BigInt(int64_t value)
 {
     mpz_init(m_value);
@@ -78,6 +98,7 @@ BigInt& BigInt::operator=(const BigInt& other)
 
     mpz_clear(m_value);
     mpz_init_set(m_value, other.m_value);
+
     return *this;
 }
 
@@ -88,8 +109,12 @@ BigInt::~BigInt()
 
 void BigInt::set_value(const char* value)
 {
-    BigInt tmp(value);
-    std::swap(m_value, tmp.m_value);
+    *this = BigInt(value);
+}
+
+void BigInt::set_value_int64(int64_t value)
+{
+    *this = BigInt(value);
 }
 
 std::string BigInt::get_value() const
@@ -98,6 +123,7 @@ std::string BigInt::get_value() const
     std::string result(mpz_sizeinbase(m_value, 10) + 2, '\0');
     mpz_get_str(const_cast<char*>(result.data()), 10, m_value);
     trim_excess_trailing_null(&result);
+
     return result;
 }
 
@@ -109,6 +135,7 @@ uint64_t BigInt::get_value_as_uint64() const
     }
     uint64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);
+
     return result;
 }
 
@@ -125,6 +152,7 @@ int64_t BigInt::get_value_as_int64() const
     {
         result *= -1;
     }
+
     return result;
 }
 
@@ -138,6 +166,7 @@ size_t BigInt::get_exported_size_in_bytes() const
     {
         result += get_bytes_len(limbs[i]);
     }
+
     return result;
 }
 
@@ -160,19 +189,42 @@ BinaryDataPtr BigInt::export_as_binary_data(BigInt::ExportFormat format) const
 BigInt& BigInt::operator+=(const BigInt& other)
 {
     mpz_add(m_value, m_value, other.m_value);
+
     return *this;
 }
 
 BigInt& BigInt::operator-=(const BigInt& other)
 {
     mpz_sub(m_value, m_value, other.m_value);
+
     return *this;
 }
 
 BigInt& BigInt::operator*=(const BigInt& other)
 {
     mpz_mul(m_value, m_value, other.m_value);
+
     return *this;
+}
+
+BigInt& BigInt::operator/=(const BigInt& other)
+{
+    if (other == 0)
+    {
+        THROW_EXCEPTION("Division by zero.");
+    }
+
+    mpz_tdiv_q(m_value, m_value, other.m_value);
+
+    return *this;
+}
+
+BigInt BigInt::operator-() const
+{
+    BigInt tmp(*this);
+    mpz_mul_si(tmp.m_value, tmp.m_value, -1);
+
+    return tmp;
 }
 
 bool BigInt::operator==(const BigInt& other) const

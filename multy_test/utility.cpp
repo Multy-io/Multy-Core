@@ -9,6 +9,9 @@
 #include "multy_core/account.h"
 #include "multy_core/common.h"
 #include "multy_core/src/api/key_impl.h"
+
+#include "multy_test/value_printers.h"
+
 #include "wally_core.h"
 
 #include <exception>
@@ -91,6 +94,17 @@ EntropySource make_dummy_entropy_source()
 void throw_exception(const char* message)
 {
     throw std::runtime_error(message);
+}
+
+void throw_exception_if_error(const Error* error)
+{
+    if (error)
+    {
+        std::stringstream sstr;
+        PrintTo(*error, &sstr);
+
+        throw_exception(sstr.str().c_str());
+    }
 }
 
 bool blockchain_can_derive_address_from_private_key(Blockchain blockchain)
