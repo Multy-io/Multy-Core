@@ -16,6 +16,7 @@
 #include "multy_core/error.h"
 
 #include <cassert>
+#include <string>
 
 struct Error;
 
@@ -98,6 +99,9 @@ namespace multy_core
 {
 namespace internal
 {
+
+// Can return empty string if taking error backtrace is disabled.
+MULTY_CORE_API std::string get_error_backtrace(size_t ignore_frames);
 
 MULTY_CORE_API void throw_if_error(struct Error* err);
 

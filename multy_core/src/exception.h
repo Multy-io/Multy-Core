@@ -22,7 +22,7 @@ namespace internal
 
 /** Exception class used in multy_core.
  *
- * Message can be modified with append_message() and\or overloaded operator<<().
+ * Message can be modified with append_message() and/or overloaded operator<<().
  *
  * Please use THROW_EXCEPTION() to throw Exception with proper CodeLocation set.
  *
@@ -33,8 +33,15 @@ namespace internal
 class MULTY_CORE_API Exception : public std::exception
 {
 public:
-    Exception(ErrorCode error_code, const char* message, CodeLocation location);
-    Exception(const char* message, CodeLocation location);
+    Exception(ErrorCode error_code,
+            const char* message,
+            CodeLocation location,
+            const char* backtrace = nullptr);
+
+    Exception(const char* message,
+            CodeLocation location,
+            const char* backtrace = nullptr);
+
     virtual ~Exception();
 
     virtual Error* make_error() const;
@@ -47,6 +54,7 @@ private:
     const ErrorCode m_error_code;
     mutable std::string m_message;
     const CodeLocation m_location;
+    const std::string m_backtrace;
 };
 
 #define THROW_EXCEPTION(msg) \
