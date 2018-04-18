@@ -72,9 +72,9 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
         HANDLE_ERROR(make_big_int("1", reset_sp(amount)));
         HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
 
-        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
-        const BinaryData address_data = as_binary_data(address);
-        HANDLE_ERROR(properties_set_binary_data_value(destination, "address", &address_data));
+        HANDLE_ERROR(properties_set_string_value(destination,
+                "address",
+                "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19"));
     }
 
     {
@@ -129,9 +129,8 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     }
 
     {
-        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         destination.set_property_value("amount", value);
     }
 
@@ -177,9 +176,8 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     }
 
     {
-        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         destination.set_property_value("amount", value);
     }
 
@@ -231,9 +229,8 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     }
 
     {
-        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         Properties& destination = transaction->add_destination();
-        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         destination.set_property_value("amount", value);
     }
 
@@ -315,8 +312,7 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
     {
         Properties& destination = transaction->add_destination();
 
-        const bytes address = from_hex("d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
-        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("address", "d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19");
         destination.set_property_value("amount", sent);
     }
 
@@ -368,9 +364,8 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
     }
 
     {
-        const bytes address = from_hex("6b4be1fc5fa05c5d959d27155694643b8af72fd8");
         Properties& destination = transaction->add_destination();
-        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("address", "6b4be1fc5fa05c5d959d27155694643b8af72fd8");
         destination.set_property_value("amount", value);
     }
 
@@ -419,9 +414,8 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
     }
 
     {
-        const bytes address = from_hex("6b4be1fc5fa05c5d959d27155694643b8af72fd8");
         Properties& destination = transaction->add_destination();
-        destination.set_property_value("address", as_binary_data(address));
+        destination.set_property_value("address", "6b4be1fc5fa05c5d959d27155694643b8af72fd8");
         destination.set_property_value("amount", value);
     }
 

@@ -7,6 +7,8 @@
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 
 #include "multy_core/ethereum.h"
+#include "multy_core/src/ethereum/ethereum_account.h"
+
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
@@ -351,8 +353,13 @@ struct EthereumTransactionSource : public TransactionSourceBase
 struct EthereumTransactionDestination : public TransactionDestinationBase
 {
     EthereumTransactionDestination()
-        : address(get_properties(), "address"),
-          amount(get_properties(), "amount")
+        : string_address(get_properties(), "address", Property::REQUIRED,
+            [this](const std::string& new_address)
+            {
+                this->address = ethereum_parse_address(new_address.c_str());
+            }),
+          amount(get_properties(), "amount"),
+          address()
     {}
 
     void serialize_to(EthereumDataStream* stream)
@@ -360,8 +367,9 @@ struct EthereumTransactionDestination : public TransactionDestinationBase
         (*stream) << address << amount;
     }
 public:
-    PropertyT<BinaryDataPtr> address;
+    PropertyT<std::string> string_address;
     PropertyT<BigInt> amount;
+    BinaryDataPtr address;
 };
 
 EthereumTransaction::EthereumTransaction(const Account& account)
