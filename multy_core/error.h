@@ -9,6 +9,8 @@
 
 #include "multy_core/api.h"
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,7 +37,7 @@ struct CodeLocation
  */
 struct Error
 {
-    ErrorCode code;
+    enum ErrorCode code;
     const char* message;
     bool owns_message;
 

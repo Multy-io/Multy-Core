@@ -12,29 +12,54 @@
 #include "multy_core/src/utility.h"
 
 #include "multy_test/value_printers.h"
+#include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <unordered_map>
 
 namespace
 {
-
 using namespace multy_core::internal;
+
+const int64_t DEFAULT_INT64_VALUE = static_cast<int64_t>(std::numeric_limits<int>::max()) + 1;
 
 enum ArithmeticOperation {
     ADD,
     SUB,
-    MUL
+    MUL,
+    DIV,
 };
 
 struct BigIntArithmeticTestCase
 {
     const ArithmeticOperation op;
-    const char* number;
-    const BigInt amount;
+    const char* left;
+    const BigInt right;
     const char * answer;
 };
+
+std::ostream& operator<<(std::ostream& ostr, const ArithmeticOperation& op)
+{
+    const static std::unordered_map<int, const char*> OP_NAMES =
+    {
+        {ADD, "+"},
+        {SUB, "-'"},
+        {MUL, "*"},
+        {DIV, "/"}
+    };
+
+    return ostr << OP_NAMES.at(op);
+}
+
+std::ostream& operator<<(std::ostream& ostr, const BigIntArithmeticTestCase& test_case)
+{
+    return ostr << "BigIntArithmeticTestCase{\n"
+            << "\t" << test_case.left << " " << test_case.op
+            << " " << test_case.right << " = " << test_case.answer << "\n"
+            << "}";
+}
 
 BigIntArithmeticTestCase TEST_CASES[] = {
     { ADD, "1", BigInt("1"), "2" },
@@ -65,7 +90,84 @@ BigIntArithmeticTestCase TEST_CASES[] = {
     { SUB, "-5", BigInt("1"), "-6" },
     { SUB, "6", BigInt("-3"), "9" },
     { SUB, "-9999999999999999999999999999999999999999", BigInt("-9999999999999999999999999999999999999999"), "0" },
+
+    { DIV, "4", BigInt("-9999999999999999999999999999999999999999"), "0" },
+    { DIV, "3", BigInt(5), "0" },
+    { DIV, "5", BigInt(3), "1" },
+    { DIV, "3", BigInt(3), "1" },
+    { DIV, "5", BigInt(-5), "-1" },
 };
+
+template <typename L, typename R>
+auto do_binary_op(ArithmeticOperation op, const L& left, const R& right) -> decltype(left + right)
+{
+    switch (op)
+    {
+        case ADD:
+            return left + right;
+        case SUB:
+            return left - right;
+        case MUL:
+            return left * right;
+        case DIV:
+            return left / right;
+        default:
+            assert(false && "Unknown operator.");
+    }
+}
+
+template <typename L, typename R>
+const L& do_binary_eq_op(ArithmeticOperation op, L& left, const R& right)
+{
+    switch (op)
+    {
+        case ADD:
+            return left += right;
+        case SUB:
+            return left -= right;
+        case MUL:
+            return left *= right;
+        case DIV:
+            return left /= right;
+        default:
+            assert(false && "Unknown operator.");
+    }
+}
+
+const BigInt& do_binary_op_api_big_int(ArithmeticOperation op, BigInt& left, const BigInt& right)
+{
+    static const std::unordered_map<int, decltype(big_int_add)*> functions =
+    {
+        {ADD, big_int_add},
+        {SUB, big_int_sub},
+        {MUL, big_int_mul},
+        {DIV, big_int_div},
+    };
+    ErrorPtr error(functions.at(op)(&left, &right));
+    test_utility::throw_exception_if_error(error.get());
+
+    return left;
+}
+
+const BigInt& do_binary_op_api_int64(ArithmeticOperation op, BigInt& left, const int64_t& right)
+{
+    static const std::unordered_map<int, decltype(big_int_add_int64)*> functions =
+    {
+        {ADD, big_int_add_int64},
+        {SUB, big_int_sub_int64},
+        {MUL, big_int_mul_int64},
+        {DIV, big_int_div_int64},
+    };
+    ErrorPtr error(functions.at(op)(&left, right));
+    test_utility::throw_exception_if_error(error.get());
+
+    return left;
+}
+
+bool is_commutative(ArithmeticOperation op)
+{
+    return op == ADD || op == MUL;
+}
 
 template <typename T>
 struct BigIntInitTestCase
@@ -104,7 +206,7 @@ BigIntInitTestCase<uint64_t> UINT64_INIT_TEST_CASES[] = {
 
 } // namespace
 
-GTEST_TEST(AmountClassTest, BasicMethod)
+GTEST_TEST(BigIntTest, BasicMethod)
 {
     EXPECT_STREQ("1", BigInt("1").get_value().c_str());
     BigInt temp(4);
@@ -115,7 +217,7 @@ GTEST_TEST(AmountClassTest, BasicMethod)
     EXPECT_EQ("5", temp);
 }
 
-GTEST_TEST(AmountClassTest, get_value)
+GTEST_TEST(BigIntTest, get_value)
 {
     // get_value used to return sting with extra '\0' symbols at the end.
     BigInt amount("3");
@@ -124,58 +226,123 @@ GTEST_TEST(AmountClassTest, get_value)
     EXPECT_TRUE(amount.get_value() == str);
 }
 
-
-GTEST_TEST(AmountClassTest, BasicArithmetic)
+GTEST_TEST(BigIntApiTest, BasicArithmetic)
 {
-    for (BigIntArithmeticTestCase test_case: TEST_CASES) {
-        switch (test_case.op) {
-        case ADD:
+    for (BigIntArithmeticTestCase test_case: TEST_CASES)
+    {
+        SCOPED_TRACE(test_case);
         {
-            ASSERT_EQ(test_case.answer, (test_case.number + test_case.amount));
-            ASSERT_EQ(test_case.answer, (test_case.amount + test_case.number));
+            BigInt tmp(test_case.left);
+            EXPECT_EQ(test_case.answer,
+                      do_binary_op_api_big_int(test_case.op, tmp, test_case.right));
+        }
+
+        {
+            BigInt tmp(test_case.left);
+            int64_t right = 0;
+            ErrorPtr error(big_int_get_int64_value(&test_case.right, &right));
+            if (error == nullptr)
+            {
+                EXPECT_EQ(test_case.answer,
+                          do_binary_op_api_int64(test_case.op, tmp, right));
+            }
+        }
+
+        if (is_commutative(test_case.op))
+        {
+            {
+                BigInt tmp(test_case.right);
+                EXPECT_EQ(test_case.answer,
+                          do_binary_op_api_big_int(test_case.op, tmp, BigInt(test_case.left)));
+            }
 
             {
-                // Testing commutativity, i.e. A + B == B + A
-                BigInt temp_ADD_amount1(test_case.number);
-                temp_ADD_amount1 += test_case.amount;
-                ASSERT_EQ(test_case.answer, temp_ADD_amount1);
+                BigInt tmp(test_case.right);
 
-                BigInt temp_ADD_amount2(test_case.amount);
-                temp_ADD_amount2 += test_case.number;
-                ASSERT_EQ(test_case.answer, temp_ADD_amount2);
+                int64_t left = 0;
+                BigInt left_big_int(test_case.left);
+                ErrorPtr error(big_int_get_int64_value(&left_big_int, &left));
+                if (error == nullptr)
+                {
+                    EXPECT_EQ(test_case.answer,
+                              do_binary_op_api_int64(test_case.op, tmp, left));
+                }
             }
-            break;
-        }
-        case MUL:
-        {
-            ASSERT_EQ(test_case.answer, (test_case.number * test_case.amount));
-            ASSERT_EQ(test_case.answer, (test_case.amount * test_case.number));
-            {
-                // Testing commutativity, i.e. A * B == B * A
-                BigInt temp_MUL_amount1(test_case.number);
-                temp_MUL_amount1 *= test_case.amount;
-                ASSERT_EQ(test_case.answer, temp_MUL_amount1);
-
-                BigInt temp_MUL_amount2(test_case.amount);
-                temp_MUL_amount2 *= test_case.number;
-                ASSERT_EQ(test_case.answer, temp_MUL_amount2);
-            }
-            break;
-        }
-        case SUB:
-        {
-            ASSERT_EQ(test_case.answer, (test_case.number - test_case.amount));
-
-            BigInt temp_SUB_amount(test_case.number);
-            temp_SUB_amount -= test_case.amount;
-            ASSERT_EQ(test_case.answer, temp_SUB_amount);
-
-            break;
-        }
-        default:
-        break;
         }
     }
+}
+
+GTEST_TEST(BigIntTest, zero_division)
+{
+    EXPECT_THROW(BigInt{1}/BigInt{0}, Exception);
+}
+
+GTEST_TEST(BigIntTest, same_result_as_int64)
+{
+    // Verify that BigInt works just as builtin int type for all operation
+    // in given range.
+
+    const int64_t OFFSETS[] = {0, 1000, 100*1000*1000};
+    const int LIMIT = 42;
+    const ArithmeticOperation OPERATIONS[] = {ADD, SUB, MUL, DIV};
+
+    for (int l = 1; l < LIMIT; ++l)
+    {
+        for (int r = 1; r < LIMIT; ++r)
+        {
+            for (const auto op : OPERATIONS)
+            {
+                for (const auto offset : OFFSETS)
+                {
+                    const int64_t left = l + offset;
+                    const int64_t right = r + offset;
+
+                    SCOPED_TRACE(left);
+                    SCOPED_TRACE(right);
+
+                    const int64_t result = do_binary_op(op, left, right);
+
+                    EXPECT_EQ(
+                            result,
+                            // BigInt @ BigInt
+                            do_binary_op(op, BigInt(left), BigInt(right))
+                    );
+
+                    EXPECT_EQ(
+                            result,
+                            // int64 @ BigInt
+                            do_binary_op(op, left, BigInt(right))
+                    );
+
+                    EXPECT_EQ(
+                            result,
+                            // BigInt @ int64
+                            do_binary_op(op, BigInt(left), right)
+                    );
+
+                    {
+                        BigInt big_int_tmp(left);
+
+                        EXPECT_EQ(
+                                result,
+                                // BigInt @= BigInt
+                                do_binary_eq_op(op, big_int_tmp, BigInt(right))
+                        );
+                    }
+
+                    {
+                        BigInt big_int_tmp(left);
+
+                        EXPECT_EQ(
+                                result,
+                                // BigInt @= int64
+                                do_binary_eq_op(op, big_int_tmp, BigInt(right))
+                        );
+                    }
+                } // OFFSETS
+            } // OPERATIONS
+        } // r
+    } // l
 }
 
 GTEST_TEST(BigIntTestInvalidArgs, make_big_int)
@@ -191,17 +358,17 @@ GTEST_TEST(BigIntTestInvalidArgs, make_big_int)
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(BigIntTestInvalidArgs, big_int_to_string)
+GTEST_TEST(BigIntTestInvalidArgs, big_int_get_value)
 {
     ErrorPtr error;
     BigInt amount(1);
     ConstCharPtr str;
 
-    error.reset(big_int_to_string(nullptr, reset_sp(str)));
+    error.reset(big_int_get_value(nullptr, reset_sp(str)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, str);
 
-    error.reset(big_int_to_string(&amount, nullptr));
+    error.reset(big_int_get_value(&amount, nullptr));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ("1", amount);
 }
@@ -264,6 +431,26 @@ GTEST_TEST(BigIntTestInvalidValue, big_int_set_value)
     EXPECT_EQ("1", amount);
 }
 
+GTEST_TEST(BigIntTestAPI, big_int_get_int64_value)
+{
+    const int64_t expected = DEFAULT_INT64_VALUE;
+
+    BigInt big_int(expected);
+
+    int64_t actual = 0;
+    HANDLE_ERROR(big_int_get_int64_value(&big_int, &actual));
+    EXPECT_EQ(expected, actual);
+}
+
+GTEST_TEST(BigIntTestAPI, big_int_set_int64_value)
+{
+    const int64_t expected = DEFAULT_INT64_VALUE;
+
+    BigInt big_int(0);
+
+    HANDLE_ERROR(big_int_set_int64_value(&big_int, expected));
+    EXPECT_EQ(expected, big_int);
+}
 
 GTEST_TEST(BigIntTest, make_big_int)
 {
@@ -275,13 +462,13 @@ GTEST_TEST(BigIntTest, make_big_int)
     EXPECT_EQ("1", *amount);
 }
 
-GTEST_TEST(BigIntTest, big_int_to_string)
+GTEST_TEST(BigIntTest, big_int_get_value)
 {
     ErrorPtr error;
     BigInt amount(1);
     ConstCharPtr test_str;
 
-    error.reset(big_int_to_string(&amount, reset_sp(test_str)));
+    error.reset(big_int_get_value(&amount, reset_sp(test_str)));
     EXPECT_EQ(nullptr, error);
     EXPECT_NE(nullptr, test_str);
     EXPECT_EQ("1", amount);

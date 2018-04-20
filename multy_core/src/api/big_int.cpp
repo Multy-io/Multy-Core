@@ -26,9 +26,24 @@ Error* make_big_int(const char* value, BigInt** new_big_int)
     return nullptr;
 }
 
-Error* big_int_to_string(const BigInt* big_int, const char** out_string_value)
+Error* make_big_int_from_int64(int64_t value, BigInt** new_big_int)
 {
-    ARG_CHECK(big_int);
+    ARG_CHECK(new_big_int);
+
+    try
+    {
+        *new_big_int = new BigInt(value);
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    OUT_CHECK_OBJECT(*new_big_int);
+
+    return nullptr;
+}
+
+Error* big_int_get_value(const BigInt* big_int, const char** out_string_value)
+{
+    ARG_CHECK_OBJECT(big_int);
     ARG_CHECK(out_string_value);
 
     try
@@ -45,7 +60,7 @@ Error* big_int_to_string(const BigInt* big_int, const char** out_string_value)
 
 Error* big_int_set_value(BigInt* big_int, const char* value)
 {
-    ARG_CHECK(big_int);
+    ARG_CHECK_OBJECT(big_int);
     ARG_CHECK(value);
 
     try
@@ -53,6 +68,116 @@ Error* big_int_set_value(BigInt* big_int, const char* value)
         big_int->set_value(value);
     }
     CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
+
+Error* big_int_get_int64_value(const BigInt* big_int, int64_t* out_value)
+{
+    ARG_CHECK_OBJECT(big_int);
+    ARG_CHECK(out_value);
+
+    try
+    {
+        *out_value = big_int->get_value_as_int64();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
+
+Error* big_int_set_int64_value(BigInt* big_int, int64_t value)
+{
+    ARG_CHECK_OBJECT(big_int);
+
+    try
+    {
+        big_int->set_value_int64(value);
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    return nullptr;
+}
+
+#define BIG_INT_OP(statement) \
+    try \
+    { \
+        statement; \
+    } \
+    CATCH_EXCEPTION_RETURN_ERROR()
+
+Error* big_int_add(BigInt* target, const BigInt* value)
+{
+    ARG_CHECK_OBJECT(target);
+    ARG_CHECK_OBJECT(value);
+
+    BIG_INT_OP(*target += *value);
+
+    return nullptr;
+}
+
+Error* big_int_add_int64(BigInt* target, int64_t value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target += value);
+
+    return nullptr;
+}
+
+Error* big_int_sub(BigInt* target, const BigInt* value)
+{
+    ARG_CHECK_OBJECT(target);
+    ARG_CHECK_OBJECT(value);
+
+    BIG_INT_OP(*target -= *value);
+
+    return nullptr;
+}
+
+Error* big_int_sub_int64(BigInt* target, int64_t value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target -= value);
+
+    return nullptr;
+}
+
+Error* big_int_mul(BigInt* target, const BigInt* value)
+{
+    ARG_CHECK_OBJECT(target);
+    ARG_CHECK_OBJECT(value);
+
+    BIG_INT_OP(*target *= *value);
+
+    return nullptr;
+}
+
+Error* big_int_mul_int64(BigInt* target, int64_t value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target *= value);
+
+    return nullptr;
+}
+
+Error* big_int_div(BigInt* target, const BigInt* value)
+{
+    ARG_CHECK_OBJECT(target);
+    ARG_CHECK_OBJECT(value);
+
+    BIG_INT_OP(*target /= *value);
+
+    return nullptr;
+}
+
+Error* big_int_div_int64(BigInt* target, int64_t value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target /= value);
 
     return nullptr;
 }
