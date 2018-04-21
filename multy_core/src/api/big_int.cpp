@@ -26,6 +26,22 @@ Error* make_big_int(const char* value, BigInt** new_big_int)
     return nullptr;
 }
 
+Error* make_big_int_clone(const BigInt* original, BigInt** new_big_int)
+{
+    ARG_CHECK_OBJECT(original);
+    ARG_CHECK(new_big_int);
+
+    try
+    {
+        *new_big_int = new BigInt(*original);
+    }
+    CATCH_EXCEPTION_RETURN_ERROR();
+
+    OUT_CHECK_OBJECT(*new_big_int);
+
+    return nullptr;
+}
+
 Error* make_big_int_from_int64(int64_t value, BigInt** new_big_int)
 {
     ARG_CHECK(new_big_int);
@@ -125,6 +141,16 @@ Error* big_int_add_int64(BigInt* target, int64_t value)
     return nullptr;
 }
 
+Error* big_int_add_double(BigInt* target, double value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target += value);
+
+    return nullptr;
+}
+
+
 Error* big_int_sub(BigInt* target, const BigInt* value)
 {
     ARG_CHECK_OBJECT(target);
@@ -136,6 +162,15 @@ Error* big_int_sub(BigInt* target, const BigInt* value)
 }
 
 Error* big_int_sub_int64(BigInt* target, int64_t value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target -= value);
+
+    return nullptr;
+}
+
+Error* big_int_sub_double(BigInt* target, double value)
 {
     ARG_CHECK_OBJECT(target);
 
@@ -163,6 +198,15 @@ Error* big_int_mul_int64(BigInt* target, int64_t value)
     return nullptr;
 }
 
+Error* big_int_mul_double(BigInt* target, double value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target *= value);
+
+    return nullptr;
+}
+
 Error* big_int_div(BigInt* target, const BigInt* value)
 {
     ARG_CHECK_OBJECT(target);
@@ -178,6 +222,46 @@ Error* big_int_div_int64(BigInt* target, int64_t value)
     ARG_CHECK_OBJECT(target);
 
     BIG_INT_OP(*target /= value);
+
+    return nullptr;
+}
+
+Error* big_int_div_double(BigInt* target, double value)
+{
+    ARG_CHECK_OBJECT(target);
+
+    BIG_INT_OP(*target /= value);
+
+    return nullptr;
+}
+
+Error* big_int_cmp(struct BigInt* left, struct BigInt* right, int* out_result)
+{
+    ARG_CHECK_OBJECT(left);
+    ARG_CHECK_OBJECT(right);
+    ARG_CHECK(out_result);
+
+    BIG_INT_OP(*out_result = left->compare(*right));
+
+    return nullptr;
+}
+
+Error* big_int_cmp_int64(struct BigInt* left, int64_t right, int* out_result)
+{
+    ARG_CHECK_OBJECT(left);
+    ARG_CHECK(out_result);
+
+    BIG_INT_OP(*out_result = left->compare(right));
+
+    return nullptr;
+}
+
+Error* big_int_cmp_double(struct BigInt* left, double right, int* out_result)
+{
+    ARG_CHECK_OBJECT(left);
+    ARG_CHECK(out_result);
+
+    BIG_INT_OP(*out_result = left->compare(right));
 
     return nullptr;
 }

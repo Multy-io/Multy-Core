@@ -7,6 +7,7 @@
 #include "multy_core/src/api/big_int_impl.h"
 
 #include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 
 #include "multy_test/value_printers.h"
@@ -17,6 +18,22 @@
 namespace
 {
 using namespace multy_core::internal;
+
+// Throws an exception if value is not sutable for integer math.
+// returns value category otherwise.
+int validate_for_math(const double& value)
+{
+    const int category = std::fpclassify(value);
+    switch(category)
+    {
+        case FP_INFINITE:
+            THROW_EXCEPTION("Can't do math with infinite value:") << value;
+        case FP_NAN:
+            THROW_EXCEPTION("Can't do math with NaN.");
+    }
+
+    return category;
+}
 
 template <typename T>
 void unsigned_import(T value, mpz_t gmp_value)
@@ -89,6 +106,12 @@ BigInt::BigInt(uint64_t value)
     unsigned_import(value, m_value);
 }
 
+BigInt::BigInt(double value)
+{
+    validate_for_math(value);
+    mpz_init_set_d(m_value, value);
+}
+
 BigInt& BigInt::operator=(const BigInt& other)
 {
     if (&other == this)
@@ -139,13 +162,19 @@ uint64_t BigInt::get_value_as_uint64() const
     return result;
 }
 
+bool BigInt::is_representable_as_int64() const
+{
+    // < due to sign bit.
+    return mpz_sizeinbase(m_value, 2) < sizeof(int64_t) * 8;
+}
+
 int64_t BigInt::get_value_as_int64() const
 {
-    // >= due to the sign bit
-    if (mpz_sizeinbase(m_value, 2) >= sizeof(int64_t) * 8)
+    if (!is_representable_as_int64())
     {
         THROW_EXCEPTION("BigInt value is too big for int64_t");
     }
+
     int64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);
     if (mpz_sgn(m_value) < 0)
@@ -219,12 +248,73 @@ BigInt& BigInt::operator/=(const BigInt& other)
     return *this;
 }
 
+BigInt& BigInt::operator+=(const double& value)
+{
+    validate_for_math(value);
+    mpz_set_d(m_value, mpz_get_d(m_value) + value);
+
+    return *this;
+}
+
+BigInt& BigInt::operator-=(const double& value)
+{
+    validate_for_math(value);
+    mpz_set_d(m_value, mpz_get_d(m_value) - value);
+
+    return *this;
+}
+
+BigInt& BigInt::operator*=(const double& value)
+{
+    validate_for_math(value);
+    mpz_set_d(m_value, mpz_get_d(m_value) * value);
+
+    return *this;
+}
+
+BigInt& BigInt::operator/=(const double& value)
+{
+    if (validate_for_math(value) == FP_ZERO)
+    {
+        THROW_EXCEPTION("Division by zero.");
+    }
+
+    mpz_set_d(m_value, mpz_get_d(m_value) / value);
+
+    return *this;
+}
+
 BigInt BigInt::operator-() const
 {
     BigInt tmp(*this);
     mpz_mul_si(tmp.m_value, tmp.m_value, -1);
 
     return tmp;
+}
+
+int BigInt::compare(const BigInt& other) const
+{
+    return mpz_cmp(m_value, other.m_value);
+}
+
+int BigInt::compare(const int64_t& other) const
+{
+    if (is_representable_as_int64())
+    {
+        const int64_t diff = get_value_as_int64() - other;
+        if (diff)
+        {
+            return static_cast<int>((diff) / std::abs(diff));
+        }
+        return diff;
+    }
+
+    return compare(BigInt(other));
+}
+
+int BigInt::compare(const double& other) const
+{
+    return mpz_cmp_d(m_value, other);
 }
 
 bool BigInt::operator==(const BigInt& other) const
