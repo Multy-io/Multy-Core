@@ -16,6 +16,8 @@
 
 #include "gtest/gtest.h"
 
+#include <cmath>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 
@@ -45,7 +47,7 @@ std::ostream& operator<<(std::ostream& ostr, const ArithmeticOperation& op)
     const static std::unordered_map<int, const char*> OP_NAMES =
     {
         {ADD, "+"},
-        {SUB, "-'"},
+        {SUB, "-"},
         {MUL, "*"},
         {DIV, "/"}
     };
@@ -164,6 +166,21 @@ const BigInt& do_binary_op_api_int64(ArithmeticOperation op, BigInt& left, const
     return left;
 }
 
+const BigInt& do_binary_op_api_double(ArithmeticOperation op, BigInt& left, const double& right)
+{
+    static const std::unordered_map<int, decltype(big_int_add_double)*> functions =
+    {
+        {ADD, big_int_add_double},
+        {SUB, big_int_sub_double},
+        {MUL, big_int_mul_double},
+        {DIV, big_int_div_double},
+    };
+    ErrorPtr error(functions.at(op)(&left, right));
+    test_utility::throw_exception_if_error(error.get());
+
+    return left;
+}
+
 bool is_commutative(ArithmeticOperation op)
 {
     return op == ADD || op == MUL;
@@ -226,15 +243,24 @@ GTEST_TEST(BigIntTest, get_value)
     EXPECT_TRUE(amount.get_value() == str);
 }
 
-GTEST_TEST(BigIntApiTest, BasicArithmetic)
+GTEST_TEST(BigIntTest, CreateFromDouble)
+{
+    EXPECT_EQ(0, BigInt(0.0).get_value_as_int64());
+    EXPECT_EQ(0, BigInt(0.5).get_value_as_int64());
+    EXPECT_EQ(1, BigInt(1.0).get_value_as_int64());
+    EXPECT_EQ(1, BigInt(1.1).get_value_as_int64());
+}
+
+GTEST_TEST(BigIntTest_Math, BasicArithmeticAPI)
 {
     for (BigIntArithmeticTestCase test_case: TEST_CASES)
     {
         SCOPED_TRACE(test_case);
+        const BigInt answer(test_case.answer);
         {
             BigInt tmp(test_case.left);
-            EXPECT_EQ(test_case.answer,
-                      do_binary_op_api_big_int(test_case.op, tmp, test_case.right));
+            EXPECT_EQ(answer,
+                    do_binary_op_api_big_int(test_case.op, tmp, test_case.right));
         }
 
         {
@@ -243,8 +269,13 @@ GTEST_TEST(BigIntApiTest, BasicArithmetic)
             ErrorPtr error(big_int_get_int64_value(&test_case.right, &right));
             if (error == nullptr)
             {
-                EXPECT_EQ(test_case.answer,
-                          do_binary_op_api_int64(test_case.op, tmp, right));
+                EXPECT_EQ(answer,
+                        do_binary_op_api_int64(test_case.op, tmp, right));
+
+                tmp = BigInt(test_case.left);
+                const double double_right = 1.0 * right;
+                EXPECT_EQ(answer,
+                        do_binary_op_api_double(test_case.op, tmp, double_right));
             }
         }
 
@@ -252,8 +283,8 @@ GTEST_TEST(BigIntApiTest, BasicArithmetic)
         {
             {
                 BigInt tmp(test_case.right);
-                EXPECT_EQ(test_case.answer,
-                          do_binary_op_api_big_int(test_case.op, tmp, BigInt(test_case.left)));
+                EXPECT_EQ(answer,
+                        do_binary_op_api_big_int(test_case.op, tmp, BigInt(test_case.left)));
             }
 
             {
@@ -264,27 +295,27 @@ GTEST_TEST(BigIntApiTest, BasicArithmetic)
                 ErrorPtr error(big_int_get_int64_value(&left_big_int, &left));
                 if (error == nullptr)
                 {
-                    EXPECT_EQ(test_case.answer,
-                              do_binary_op_api_int64(test_case.op, tmp, left));
+                    EXPECT_EQ(answer,
+                            do_binary_op_api_int64(test_case.op, tmp, left));
+
+                    tmp = BigInt(test_case.right);
+                    const double double_left = 1.0 * left;
+                    EXPECT_EQ(answer,
+                            do_binary_op_api_double(test_case.op, tmp, double_left));
                 }
             }
         }
     }
 }
 
-GTEST_TEST(BigIntTest, zero_division)
+GTEST_TEST(BigIntTest_Math, same_result_as_int64)
 {
-    EXPECT_THROW(BigInt{1}/BigInt{0}, Exception);
-}
+    // Verify that BigInt works just as builtin int type for all operations
+    // in given range, for BigInt, int64 and double values
 
-GTEST_TEST(BigIntTest, same_result_as_int64)
-{
-    // Verify that BigInt works just as builtin int type for all operation
-    // in given range.
-
-    const int64_t OFFSETS[] = {0, 1000, 100*1000*1000};
-    const int LIMIT = 42;
+    const int64_t OFFSETS[] = {0, 1 << 8, 1 << 16, 1 << 32};
     const ArithmeticOperation OPERATIONS[] = {ADD, SUB, MUL, DIV};
+    const int LIMIT = 42;
 
     for (int l = 1; l < LIMIT; ++l)
     {
@@ -298,9 +329,12 @@ GTEST_TEST(BigIntTest, same_result_as_int64)
                     const int64_t right = r + offset;
 
                     SCOPED_TRACE(left);
+                    SCOPED_TRACE(op);
                     SCOPED_TRACE(right);
 
                     const int64_t result = do_binary_op(op, left, right);
+                    const int64_t double_result =
+                            static_cast<int64_t>(do_binary_op(op, left, right * 1.0));
 
                     EXPECT_EQ(
                             result,
@@ -320,6 +354,12 @@ GTEST_TEST(BigIntTest, same_result_as_int64)
                             do_binary_op(op, BigInt(left), right)
                     );
 
+                    EXPECT_EQ(
+                            double_result,
+                            // BigInt @ double
+                            do_binary_op(op, BigInt(left), right * 1.0)
+                    );
+
                     {
                         BigInt big_int_tmp(left);
 
@@ -336,7 +376,17 @@ GTEST_TEST(BigIntTest, same_result_as_int64)
                         EXPECT_EQ(
                                 result,
                                 // BigInt @= int64
-                                do_binary_eq_op(op, big_int_tmp, BigInt(right))
+                                do_binary_eq_op(op, big_int_tmp, right)
+                        );
+                    }
+
+                    {
+                        BigInt big_int_tmp(left);
+
+                        EXPECT_EQ(
+                                double_result,
+                                // BigInt @= double
+                                do_binary_eq_op(op, big_int_tmp, right * 1.0)
                         );
                     }
                 } // OFFSETS
@@ -345,7 +395,167 @@ GTEST_TEST(BigIntTest, same_result_as_int64)
     } // l
 }
 
-GTEST_TEST(BigIntTestInvalidArgs, make_big_int)
+GTEST_TEST(BigIntTest_Math, same_result_as_int64_with_double_fractions)
+{
+    // Common double math with fractional values on all operators.
+
+    const int64_t OFFSETS[] = {0, 1 << 8, 1L << 32};
+    const int64_t DIVISORS[] = {1, 2, 3, 5, 7, 11, 13};
+    const ArithmeticOperation OPERATIONS[] = {ADD, SUB, MUL, DIV};
+    const int LIMIT = 17;
+
+    for (int l = 1; l < LIMIT; ++l)
+    {
+        for (int r = 1; r < LIMIT; ++r)
+        {
+            for (const auto op : OPERATIONS)
+            {
+                for (const auto divisor : DIVISORS)
+                {
+                    for (const auto offset : OFFSETS)
+                    {
+                        SCOPED_TRACE(::testing::Message()
+                                << "l:" << l << ", r:" << r << ", op:" << op
+                                << ", divisor:" << divisor << ", offset:" << offset);
+
+                        const int64_t left = l + offset;
+                        const double right = (r * 1.0) / divisor;
+                        const double dresult = do_binary_op(op, left, right);
+                        const int64_t result = static_cast<int64_t>(dresult);
+
+                        SCOPED_TRACE(::testing::Message("Test: ") << left << " "
+                                << op << " " << right << " = " << result << " (" << dresult << ")");
+
+                        EXPECT_EQ(
+                                result,
+                                // BigInt @ double
+                                do_binary_op(op, BigInt(left), right)
+                        );
+
+                        {
+                            BigInt big_int_tmp(left);
+
+                            EXPECT_EQ(
+                                    result,
+                                    // BigInt @= double
+                                    do_binary_eq_op(op, big_int_tmp, right)
+                            );
+                        }
+                    } // OFFSETS
+                } // DIVISORS
+            } // OPERATIONS
+        } // r
+    } // l
+}
+
+GTEST_TEST(BigIntTest_Math, zero_division)
+{
+    EXPECT_THROW(BigInt(1) / 0, Exception);
+    EXPECT_THROW(BigInt(1) / 0.0, Exception);
+    EXPECT_THROW(BigInt(1) / -0.0, Exception);
+}
+
+GTEST_TEST(BigIntTest_Math, double_special_values)
+{
+    const double SPECIAL_VALUES[] = {
+        std::numeric_limits<double>::quiet_NaN(),
+        std::numeric_limits<double>::signaling_NaN(),
+        std::numeric_limits<double>::infinity(),
+        -1 * std::numeric_limits<double>::infinity()
+    };
+
+    const ArithmeticOperation OPERATIONS[] = {ADD, SUB, MUL, DIV};
+
+    const BigInt DEFAULT_VALUE(1);
+    for (const auto special_value : SPECIAL_VALUES)
+    {
+        for (const auto op : OPERATIONS)
+        {
+            EXPECT_THROW(do_binary_op(op, DEFAULT_VALUE, special_value), Exception);
+
+            BigInt tmp(DEFAULT_VALUE);
+            EXPECT_THROW(do_binary_eq_op(op, tmp, special_value), Exception);
+            ASSERT_EQ(tmp, DEFAULT_VALUE);
+        }
+    }
+}
+
+int cmp(const BigInt& left, const BigInt& right)
+{
+    return left.compare(right);
+}
+
+template <typename T>
+int cmp(const BigInt& left, const T& right)
+{
+    return left.compare(right);
+}
+
+template <typename T>
+int cmp(const T& left, const BigInt& right)
+{
+    return right.compare(left) * -1;
+}
+
+// Overload when both left and right are fundamental types, like int64_t or double.
+template <typename L, typename R>
+auto cmp(const L& left, const R& right)
+        -> typename std::enable_if<
+                std::is_same<
+                        typename std::is_fundamental<L>::type,
+                        typename std::is_fundamental<R>::type
+                >::value,
+                int
+        >::type
+{
+    const auto diff = left - right;
+    if (diff)
+    {
+        return diff / std::abs(diff);
+    }
+    return diff;
+}
+
+GTEST_TEST(BigIntTest_Math, cmp_api)
+{
+    // Verify that BigInt works just as builtin int type for compare operations
+    // in given range.
+
+    const int LIMIT = 42;
+    const int64_t OFFSETS[] = {-1*LIMIT/2, 1000L*1000L*1000L*1000L, -1000L*1000L*1000L*1000L};
+
+    for (int l = 0; l < LIMIT; ++l)
+    {
+        for (int r = 0; r < LIMIT; ++r)
+        {
+            for (const auto offset : OFFSETS)
+            {
+                const int64_t left = l + offset;
+                const int64_t right = r + offset;
+
+                SCOPED_TRACE(left);
+                SCOPED_TRACE(" compare ");
+                SCOPED_TRACE(right);
+
+                const int result = cmp(left, right);
+
+                EXPECT_EQ(result,
+                    cmp(BigInt(left), BigInt(right))
+                );
+
+                EXPECT_EQ(result,
+                    cmp(BigInt(left), right)
+                );
+
+                EXPECT_EQ(result,
+                    cmp(BigInt(left), static_cast<double>(right))
+                );
+            } // offset
+        } // r
+    } // l
+}
+
+GTEST_TEST(BigIntTest_API_InvalidArgs, make_big_int)
 {
     ErrorPtr error;
     BigIntPtr amount;
@@ -358,7 +568,18 @@ GTEST_TEST(BigIntTestInvalidArgs, make_big_int)
     EXPECT_NE(nullptr, error);
 }
 
-GTEST_TEST(BigIntTestInvalidArgs, big_int_get_value)
+GTEST_TEST(BigIntTest_API_InvalidArgs, make_big_int_clone)
+{
+    BigInt origin(1);
+    BigIntPtr dest;
+
+    EXPECT_ERROR(make_big_int_clone(&origin,  nullptr));
+
+    EXPECT_ERROR(make_big_int_clone(nullptr,  reset_sp(dest)));
+    ASSERT_EQ(nullptr, dest);
+}
+
+GTEST_TEST(BigIntTest_API_InvalidArgs, big_int_get_value)
 {
     ErrorPtr error;
     BigInt amount(1);
@@ -373,7 +594,7 @@ GTEST_TEST(BigIntTestInvalidArgs, big_int_get_value)
     EXPECT_EQ("1", amount);
 }
 
-GTEST_TEST(BigIntTestInvalidArgs, big_int_set_value)
+GTEST_TEST(BigIntTest_API_InvalidArgs, big_int_set_value)
 {
     ErrorPtr error;
     BigInt amount(1);
@@ -387,7 +608,7 @@ GTEST_TEST(BigIntTestInvalidArgs, big_int_set_value)
 }
 
 
-GTEST_TEST(BigIntTestInvalidValue, make_big_int)
+GTEST_TEST(BigIntTest_API_InvalidValue, make_big_int)
 {
     ErrorPtr error;
     BigIntPtr amount(new BigInt(1));
@@ -409,7 +630,7 @@ GTEST_TEST(BigIntTestInvalidValue, make_big_int)
     EXPECT_EQ("1", *amount);
 }
 
-GTEST_TEST(BigIntTestInvalidValue, big_int_set_value)
+GTEST_TEST(BigIntTest_API_InvalidValue, big_int_set_value)
 {
     ErrorPtr error;
     BigInt amount("1");
@@ -431,7 +652,7 @@ GTEST_TEST(BigIntTestInvalidValue, big_int_set_value)
     EXPECT_EQ("1", amount);
 }
 
-GTEST_TEST(BigIntTestAPI, big_int_get_int64_value)
+GTEST_TEST(BigIntTest_API, big_int_get_int64_value)
 {
     const int64_t expected = DEFAULT_INT64_VALUE;
 
@@ -442,7 +663,7 @@ GTEST_TEST(BigIntTestAPI, big_int_get_int64_value)
     EXPECT_EQ(expected, actual);
 }
 
-GTEST_TEST(BigIntTestAPI, big_int_set_int64_value)
+GTEST_TEST(BigIntTest_API, big_int_set_int64_value)
 {
     const int64_t expected = DEFAULT_INT64_VALUE;
 
@@ -452,7 +673,7 @@ GTEST_TEST(BigIntTestAPI, big_int_set_int64_value)
     EXPECT_EQ(expected, big_int);
 }
 
-GTEST_TEST(BigIntTest, make_big_int)
+GTEST_TEST(BigIntTest_API, make_big_int)
 {
     ErrorPtr error;
     BigIntPtr amount;
@@ -462,7 +683,16 @@ GTEST_TEST(BigIntTest, make_big_int)
     EXPECT_EQ("1", *amount);
 }
 
-GTEST_TEST(BigIntTest, big_int_get_value)
+GTEST_TEST(BigIntTest_API, make_big_int_clone)
+{
+    BigInt origin(1);
+    BigIntPtr result;
+
+    HANDLE_ERROR(make_big_int_clone(&origin, reset_sp(result)));
+    EXPECT_EQ(origin, *result);
+}
+
+GTEST_TEST(BigIntTest_API, big_int_get_value)
 {
     ErrorPtr error;
     BigInt amount(1);
@@ -474,7 +704,7 @@ GTEST_TEST(BigIntTest, big_int_get_value)
     EXPECT_EQ("1", amount);
 }
 
-GTEST_TEST(BigIntTest, big_int_set_value)
+GTEST_TEST(BigIntTest_API, big_int_set_value)
 {
     ErrorPtr error;
     BigInt amount(5);
@@ -484,7 +714,7 @@ GTEST_TEST(BigIntTest, big_int_set_value)
     EXPECT_EQ("1", amount);
 }
 
-GTEST_TEST(BigIntTest, free_big_int)
+GTEST_TEST(BigIntTest_API, free_big_int)
 {
     BigInt* amount;
     make_big_int("1", &amount);
@@ -492,7 +722,7 @@ GTEST_TEST(BigIntTest, free_big_int)
     EXPECT_NO_THROW(free_big_int(amount));
 }
 
-GTEST_TEST(BigIntTest, get_value_as_int64)
+GTEST_TEST(BigIntTest_API, get_value_as_int64)
 {
     const int64_t MAX_INT64 = std::numeric_limits<int64_t>::max();
     BigInt value(MAX_INT64);
@@ -506,7 +736,7 @@ GTEST_TEST(BigIntTest, get_value_as_int64)
     EXPECT_NO_THROW(value.get_value());
 }
 
-GTEST_TEST(BigIntTest, get_value_as_uint64)
+GTEST_TEST(BigIntTest_API, get_value_as_uint64)
 {
     const uint64_t MAX_UINT64 = std::numeric_limits<uint64_t>::max();
     BigInt value(MAX_UINT64);
@@ -534,6 +764,7 @@ TEST_P(P_int64_t, initialization)
     EXPECT_EQ(param.value, value.get_value_as_int64());
     EXPECT_EQ(param.value_str, value.get_value());
 }
+
 TEST_P(P_uint64_t, initialization)
 {
     const auto& param = GetParam();

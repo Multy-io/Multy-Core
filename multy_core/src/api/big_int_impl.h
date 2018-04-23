@@ -34,6 +34,7 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     explicit BigInt(int32_t value = 0);
     explicit BigInt(int64_t value);
     explicit BigInt(uint64_t value);
+    explicit BigInt(double value);
     // TODO: implement template constructor that would choose appropriate overload based on signess and size of the int argument.
 
     BigInt(const BigInt& other);
@@ -52,6 +53,8 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     // Returns value as int64_t, throws exception if value is too big.
     int64_t get_value_as_int64() const;
 
+    bool is_representable_as_int64() const;
+
     // Returns value as uint64_t, throws exception if value is too big.
     uint64_t get_value_as_uint64() const;
 
@@ -68,6 +71,12 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     BigInt& operator-=(const BigInt& other);
     BigInt& operator*=(const BigInt& other);
     BigInt& operator/=(const BigInt& other);
+
+    BigInt& operator+=(const double& value);
+    BigInt& operator-=(const double& value);
+    BigInt& operator*=(const double& value);
+    BigInt& operator/=(const double& value);
+
     BigInt operator-() const;
 
     template <typename T>
@@ -92,6 +101,18 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     {
         return *this /= BigInt(value);
     }
+
+    /** C-style comparison:
+     * almost equivalent to this - other
+     *
+     * @return:
+     *      <0  if this < other
+     *      ==0 if this == other
+     *      >0  if this > other
+     */
+    int compare(const BigInt& other) const;
+    int compare(const int64_t& other) const;
+    int compare(const double& other) const;
 
     bool operator==(const BigInt& other) const;
     bool operator!=(const BigInt& other) const;
