@@ -70,20 +70,20 @@ Error* make_hd_leaf_account(
 }
 
 Error* make_account(
-        Blockchain blockchain,
+        BlockchainType blockchain,
         const char* serialized_private_key,
         Account** new_account)
 {
-    ARG_CHECK(blockchain == BLOCKCHAIN_BITCOIN
-            || blockchain == BLOCKCHAIN_ETHEREUM
-            || blockchain == BLOCKCHAIN_GOLOS);
+    ARG_CHECK(blockchain.blockchain == BLOCKCHAIN_BITCOIN
+            || blockchain.blockchain == BLOCKCHAIN_ETHEREUM
+            || blockchain.blockchain == BLOCKCHAIN_GOLOS);
     ARG_CHECK(serialized_private_key);
     ARG_CHECK(new_account);
 
     try
     {
-        *new_account = get_blockchain(blockchain)
-                .make_account(serialized_private_key).release();
+        *new_account = get_blockchain(blockchain.blockchain)
+                .make_account(blockchain, serialized_private_key).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR();
 

@@ -34,7 +34,8 @@ public:
             uint32_t index) const override;
 };
 
-AccountPtr make_golos_account(const char* serialized_private_key);
+AccountPtr make_golos_account(BlockchainType blockchain_type,
+        const char* serialized_private_key);
 
 class MULTY_CORE_API GolosAccount : public AccountBase
 {

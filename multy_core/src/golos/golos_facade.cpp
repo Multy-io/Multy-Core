@@ -38,9 +38,10 @@ HDAccountPtr GolosFacade::make_hd_account(
     return HDAccountPtr(new GolosHDAccount(blockchain_type, master_key, index));
 }
 
-AccountPtr GolosFacade::make_account(const char* serialized_private_key)
+AccountPtr GolosFacade::make_account(BlockchainType blockchain_type,
+        const char* serialized_private_key)
 {
-    return make_golos_account(serialized_private_key);
+    return make_golos_account(blockchain_type, serialized_private_key);
 }
 
 TransactionPtr GolosFacade::make_transaction(const Account& account)

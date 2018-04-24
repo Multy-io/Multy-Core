@@ -13,6 +13,7 @@
 #include "multy_core/src/utility.h"
 
 #include "multy_test/mocks.h"
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
@@ -30,7 +31,7 @@ GTEST_TEST(TransactionTestInvalidArgs, make_transaction)
     TransactionPtr transaction;
 
     HANDLE_ERROR(make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_MAIN_NET,
                     "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
                     reset_sp(account)));
 
@@ -148,7 +149,7 @@ GTEST_TEST(TransactionTest, make_transaction)
 
     HANDLE_ERROR(
             make_account(
-                BLOCKCHAIN_BITCOIN,
+                BITCOIN_MAIN_NET,
                 "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
                 reset_sp(account_transaction)));
 

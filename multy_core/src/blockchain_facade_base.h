@@ -33,8 +33,12 @@ public:
             BlockchainType blockchain_type,
             const ExtendedKey& master_key,
             uint32_t index) = 0;
-    virtual AccountPtr make_account(const char* serialized_private_key) = 0;
+
+    virtual AccountPtr make_account(BlockchainType,
+            const char* serialized_private_key) = 0;
+
     virtual TransactionPtr make_transaction(const Account&) = 0;
+
     virtual void validate_address(BlockchainType, const char* ) = 0;
 };
 

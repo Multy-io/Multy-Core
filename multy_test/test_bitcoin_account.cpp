@@ -14,6 +14,7 @@
 #include "multy_core/src/utility.h"
 
 #include "multy_test/serialized_keys_test_base.h"
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
@@ -148,35 +149,35 @@ INSTANTIATE_TEST_CASE_P(
         Bitcoin,
         SerializedKeyTestP,
         ::testing::Combine(
-                ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}),
+                ::testing::Values(BITCOIN_MAIN_NET),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_MAINNET_P2PKH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}),
+            ::testing::Values(BITCOIN_MAIN_NET),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2PKH)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_TESTNET_P2PKH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_TESTNET}),
+            ::testing::Values(BITCOIN_TEST_NET),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_TESTNET_P2PKH)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_MAINNET_P2SH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}),
+            ::testing::Values(BITCOIN_MAIN_NET),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_MAINNET_P2SH)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_TESTNET_P2SH,
         CheckAddressTestP,
         ::testing::Combine(
-            ::testing::Values(BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_TESTNET}),
+            ::testing::Values(BITCOIN_TEST_NET),
             ::testing::ValuesIn(BITCOIN_ADDRESSES_TESTNET_P2SH)));
 
 struct SignTestCase
@@ -227,7 +228,7 @@ TEST_P(BitcoinTestSign, SignWithPrivateKey)
     ErrorPtr error;
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN, private_key_data, reset_sp(account)));
+                    BITCOIN_MAIN_NET, private_key_data, reset_sp(account)));
     EXPECT_EQ(nullptr, error);
     ASSERT_NE(nullptr, account);
 

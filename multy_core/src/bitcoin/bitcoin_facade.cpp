@@ -12,6 +12,7 @@
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 #include "multy_core/src/bitcoin/bitcoin_transaction.h"
+#include "multy_core/src/utility.h"
 
 namespace
 {
@@ -37,9 +38,17 @@ HDAccountPtr BitcoinFacade::make_hd_account(BlockchainType blockchain_type,
     return HDAccountPtr(new BitcoinHDAccount(blockchain_type, master_key, index));
 }
 
-AccountPtr BitcoinFacade::make_account(const char* serialized_private_key)
+AccountPtr BitcoinFacade::make_account(BlockchainType blockchain_type, const char* serialized_private_key)
 {
-    return make_bitcoin_account(serialized_private_key);
+    AccountPtr account = make_bitcoin_account(serialized_private_key);
+    if (account->get_blockchain_type() != blockchain_type)
+    {
+        THROW_EXCEPTION("Private key doesn't match requested blockchain type.")
+                << " Private key type:" << to_string(account->get_blockchain_type())
+                << " Requested blockchain type:" << to_string(blockchain_type) << ".";
+    }
+
+    return account;
 }
 
 TransactionPtr BitcoinFacade::make_transaction(const Account& account)

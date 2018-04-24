@@ -18,6 +18,7 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
@@ -34,7 +35,7 @@ using namespace test_utility;
 GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
 {
     AccountPtr account;
-    HANDLE_ERROR(make_account(BLOCKCHAIN_GOLOS,
+    HANDLE_ERROR(make_account(GOLOS_MAIN_NET,
             "5JpDgood17pE47zB6pDJixg9Sw47QiHcQ9qCc3MeKYoYzRiMcnF",
             reset_sp(account)));
 
@@ -107,7 +108,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
 GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
 {
     AccountPtr account;
-    HANDLE_ERROR(make_account(BLOCKCHAIN_GOLOS,
+    HANDLE_ERROR(make_account(GOLOS_MAIN_NET,
             "5JpDgood17pE47zB6pDJixg9Sw47QiHcQ9qCc3MeKYoYzRiMcnF",
             reset_sp(account)));
 
@@ -181,7 +182,7 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
 GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api_with_message)
 {
     AccountPtr account;
-    HANDLE_ERROR(make_account(BLOCKCHAIN_GOLOS,
+    HANDLE_ERROR(make_account(GOLOS_MAIN_NET,
             "5JpDgood17pE47zB6pDJixg9Sw47QiHcQ9qCc3MeKYoYzRiMcnF",
             reset_sp(account)));
 

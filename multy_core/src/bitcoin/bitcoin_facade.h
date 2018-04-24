@@ -22,7 +22,7 @@ public:
 
     HDAccountPtr make_hd_account(BlockchainType blockchain_type,
             const ExtendedKey& master_key, uint32_t index) override;
-    AccountPtr make_account(const char* serialized_private_key) override;
+    AccountPtr make_account(BlockchainType blockchain_type, const char* serialized_private_key) override;
     TransactionPtr make_transaction(const Account&) override;
     void validate_address(BlockchainType blockchain_type, const char*) override;
 };

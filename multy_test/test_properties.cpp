@@ -16,6 +16,7 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 #include "multy_test/mocks.h"
 
@@ -155,7 +156,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
 
     AccountPtr account1;
     HANDLE_ERROR(make_account(
-            BLOCKCHAIN_BITCOIN,
+            BITCOIN_TEST_NET,
             "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
             reset_sp(account1)));
 
@@ -258,7 +259,7 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
     AccountPtr account;
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_TEST_NET,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
@@ -302,7 +303,7 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
     AccountPtr account;
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_TEST_NET,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
@@ -346,7 +347,7 @@ GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
     AccountPtr account;
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_TEST_NET,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
@@ -391,7 +392,7 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
     AccountPtr account;
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_TEST_NET,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
 
@@ -529,7 +530,7 @@ GTEST_TEST(PropertiesTest, properties_set_private_key_value)
     AccountPtr account1;
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_TEST_NET,
                     "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
                     reset_sp(account1)));
     const PrivateKeyPtr priv_key_property1 = account1->get_private_key();

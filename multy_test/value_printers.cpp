@@ -38,28 +38,15 @@ std::ostream& operator<<(std::ostream& ostr, HDPath const& path)
 
 std::ostream& operator<<(std::ostream& ostr, Blockchain blockchain)
 {
-    switch (blockchain)
-    {
-        case BLOCKCHAIN_BITCOIN:
-            ostr << "BLOCKCHAIN_BITCOIN";
-            break;
-        case BLOCKCHAIN_ETHEREUM:
-            ostr << "BLOCKCHAIN_ETHEREUM";
-            break;
-        case BLOCKCHAIN_GOLOS:
-            ostr << "BLOCKCHAIN_GOLOS";
-            break;
-        default:
-            ostr << "unknown Blockchain " << static_cast<uint32_t>(blockchain);
-            break;
-    }
+    ostr << to_string(blockchain);
+
     return ostr;
 }
 
 std::ostream& operator<<(std::ostream& ostr, const BlockchainType& blockchain_type)
 {
-    ostr << blockchain_type.blockchain << "/"
-            << "NetType(" << blockchain_type.net_type << ")";
+    ostr << to_string(blockchain_type.blockchain);
+
     return ostr;
 }
 
