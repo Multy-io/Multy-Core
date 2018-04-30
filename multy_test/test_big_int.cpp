@@ -8,6 +8,7 @@
 #include "multy_core/src/api/big_int_impl.h"
 
 #include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
@@ -51,8 +52,13 @@ std::ostream& operator<<(std::ostream& ostr, const ArithmeticOperation& op)
         {MUL, "*"},
         {DIV, "/"}
     };
+    const auto& p = OP_NAMES.find(op);
+    if (p == OP_NAMES.end())
+    {
+        return ostr << "ArithmeticOperation(" << static_cast<int>(op) << ")";
+    }
 
-    return ostr << OP_NAMES.at(op);
+    return ostr << p->second;
 }
 
 std::ostream& operator<<(std::ostream& ostr, const BigIntArithmeticTestCase& test_case)
@@ -114,8 +120,13 @@ auto do_binary_op(ArithmeticOperation op, const L& left, const R& right) -> decl
         case DIV:
             return left / right;
         default:
-            assert(false && "Unknown operator.");
+            ADD_FAILURE() << "Unknown operator: \"" << op << "\".";
     }
+
+    // To avoid "control may reach end of non-void function" warning
+    // and give incorrect result almost all the time, since ADD_FAILURE above
+    // doesn't abort the function.
+    return L() + R();
 }
 
 template <typename L, typename R>
@@ -132,8 +143,13 @@ const L& do_binary_eq_op(ArithmeticOperation op, L& left, const R& right)
         case DIV:
             return left /= right;
         default:
-            assert(false && "Unknown operator.");
+            ADD_FAILURE() << "Unknown operator: " << op << ".";
     }
+
+    // To avoid "control may reach end of non-void function" warning
+    // and give incorrect result almost all the time, since ADD_FAILURE above
+    // doesn't abort the function.
+    return left;
 }
 
 const BigInt& do_binary_op_api_big_int(ArithmeticOperation op, BigInt& left, const BigInt& right)
@@ -313,7 +329,8 @@ GTEST_TEST(BigIntTest_Math, same_result_as_int64)
     // Verify that BigInt works just as builtin int type for all operations
     // in given range, for BigInt, int64 and double values
 
-    const int64_t OFFSETS[] = {0, 1 << 8, 1 << 16, 1 << 32};
+    // multiplication on (1 << 32) and above would overflow int64.
+    const int64_t OFFSETS[] = {0, 1 << 8, 1 << 16, 1 << 31};
     const ArithmeticOperation OPERATIONS[] = {ADD, SUB, MUL, DIV};
     const int LIMIT = 42;
 
