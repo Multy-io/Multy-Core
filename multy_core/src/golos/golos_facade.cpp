@@ -51,16 +51,13 @@ TransactionPtr GolosFacade::make_transaction(const Account& account)
 void GolosFacade::validate_address(
         BlockchainType, const char* address)
 {
-    if (!address)
-    {
-        THROW_EXCEPTION("Invalid Golos accont address: nullptr.");
-    }
+    INVARIANT(address != nullptr);
 
     const size_t address_length = strlen(address);
     if (address_length < GOLOS_ACCOUNT_MIN_LENGTH
         || address_length > GOLOS_ACCOUNT_MAX_LENGTH)
     {
-        THROW_EXCEPTION("Invalid Golos account length.")
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Invalid Golos account length.")
                 << " Expected: between " << GOLOS_ACCOUNT_MIN_LENGTH
                 << " and " << GOLOS_ACCOUNT_MAX_LENGTH
                 << ", actual: " << address_length << ".";
@@ -70,7 +67,7 @@ void GolosFacade::validate_address(
     static const std::regex golos_account_name_re(GOLOS_ACCOUNT_NAME_RE);
     if (!std::regex_match(address, golos_account_name_re))
     {
-        THROW_EXCEPTION("Invalid Golos account.")
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Invalid Golos account address.")
                 << "Should match pattern: \"" << GOLOS_ACCOUNT_NAME_RE << "\".";
     }
 }

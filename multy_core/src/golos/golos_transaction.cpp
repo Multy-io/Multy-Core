@@ -247,18 +247,17 @@ public:
     std::string memo;
 };
 
-class GolosTransactionSource
+class GolosTransactionSource : public TransactionSourceBase
 {
 public:
     explicit GolosTransactionSource(BlockchainType blockchain_type)
-        : properties("Source"),
-          address(properties, "address", Property::REQUIRED,
+        : address(m_properties, "address", Property::REQUIRED,
                 [blockchain_type](const std::string& new_address) {
                     get_blockchain(BLOCKCHAIN_GOLOS)
                             .validate_address(blockchain_type,
                                     new_address.c_str());
                 }),
-          amount(properties, "amount", Property::OPTIONAL,
+          amount(m_properties, "amount", Property::OPTIONAL,
                 [](const BigInt& new_amount)
                 {
                     if (new_amount < BigInt(0))
@@ -270,23 +269,21 @@ public:
     {}
 
 public:
-    Properties properties;
     PropertyT<std::string> address;
     PropertyT<BigInt> amount;
 };
 
-class GolosTransactionDestination
+class GolosTransactionDestination : public TransactionDestinationBase
 {
 public:
     explicit GolosTransactionDestination(BlockchainType blockchain_type)
-        : properties("Destination"),
-          address(properties, "address", Property::REQUIRED,
+        : address(m_properties, "address", Property::REQUIRED,
                 [blockchain_type](const std::string& new_address) {
                     get_blockchain(BLOCKCHAIN_GOLOS)
                             .validate_address(blockchain_type,
                                     new_address.c_str());
                 }),
-          amount(properties, "amount", Property::OPTIONAL,
+          amount(m_properties, "amount", Property::OPTIONAL,
                 [](const BigInt& new_amount)
                 {
                     if (new_amount < BigInt(0))
@@ -298,7 +295,6 @@ public:
     {}
 
 public:
-    Properties properties;
     PropertyT<std::string> address;
     PropertyT<BigInt> amount;
 };
@@ -367,12 +363,14 @@ void GolosTransaction::verify()
 {
     if (!m_source)
     {
-        THROW_EXCEPTION("Golos transaction should have one source.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_SOURCES,
+                "Golos transaction should have one source.");
     }
 
     if (!m_destination)
     {
-        THROW_EXCEPTION("Golos transaction should have one destination.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_DESTINATIONS,
+                "Golos transaction should have one destination.");
     }
 
     if (!m_expires_in_seconds.is_set() && !m_explicit_expiration.is_set())
@@ -472,26 +470,28 @@ Properties& GolosTransaction::add_source()
 {
     if (m_source)
     {
-        THROW_EXCEPTION("Golos transaction can have only one source.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOO_MANY_SOURCES,
+                "Golos transaction can have only one source.");
     }
 
     m_source = GolosTransactionSourcePtr(new GolosTransactionSource(
             get_blockchain_type()));
 
-    return m_source->properties;
+    return m_source->get_properties();
 }
 
 Properties& GolosTransaction::add_destination()
 {
     if (m_destination)
     {
-        THROW_EXCEPTION("Golos transaction can have only one destination.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOO_MANY_DESTINATIONS,
+                "Golos transaction can have only one destination.");
     }
 
     m_destination = GolosTransactionDestinationPtr(
             new GolosTransactionDestination(get_blockchain_type()));
 
-    return m_destination->properties;
+    return m_destination->get_properties();
 }
 
 Properties& GolosTransaction::get_fee()

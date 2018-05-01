@@ -12,10 +12,13 @@
 #include "multy_core/src/utility.h"
 #include "multy_core/src/hash.h"
 
+#include "multy_test/value_printers.h"
+
 #include "gtest/gtest.h"
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define HANDLE_ERROR(statement)                                                \
     do                                                                         \
@@ -31,6 +34,22 @@
         EXPECT_NE(nullptr, error);                                             \
     } while (0)
 
+#define EXPECT_ERROR_WITH_CODE(statement, error_code)                          \
+    do                                                                         \
+    {                                                                          \
+        multy_core::internal::ErrorPtr error(statement);                       \
+        EXPECT_NE(nullptr, error);                                             \
+        EXPECT_EQ(error_code, error->code);                                    \
+    } while (0)
+
+#define EXPECT_ERROR_WITH_SCOPE(statement, error_scope)                        \
+    do                                                                         \
+    {                                                                          \
+        multy_core::internal::ErrorPtr error(statement);                       \
+        EXPECT_NE(nullptr, error);                                             \
+        EXPECT_EQ(error_scope, error_get_scope(error->code));                  \
+    } while (0)
+
 #define E(statement)                                                           \
     if ((statement) != 0)                                                      \
     {                                                                          \
@@ -40,6 +59,7 @@
 struct BinaryData;
 struct ExtendedKey;
 struct BlockchainType;
+struct Error;
 
 namespace test_utility
 {
@@ -53,7 +73,7 @@ multy_core::internal::ExtendedKeyPtr make_dummy_extended_key_ptr();
 EntropySource make_dummy_entropy_source();
 
 void throw_exception(const char* message);
-void throw_exception_if_error(const Error* message);
+void throw_exception_if_error(Error* error);
 bool blockchain_can_derive_address_from_private_key(Blockchain blockchain);
 
 std::string minify_json(const std::string &input_json);

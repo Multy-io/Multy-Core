@@ -61,18 +61,17 @@ BlockchainFacadeBase& BlockchainFacadeRegistry::get_blockchain(
         const auto& factory = m_factory_functions.find(blockchain_type);
         if (factory == m_factory_functions.end())
         {
-            THROW_EXCEPTION("Not supported blockchain type.")
-                    << " Blockchain type: " << blockchain_type;
+            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                    "Not supported blockchain type.")
+                    << " Requested type: " << blockchain_type;
         }
 
         BlockchainBasePtr new_instance{factory->second()};
         const auto inserted = m_instances.emplace(blockchain_type,
                 std::move(new_instance));
-        if (!inserted.second)
-        {
-            THROW_EXCEPTION("Failed to save new blockchain instance.")
-                    << " Blockchain type: " << blockchain_type;
-        }
+
+        INVARIANT2(inserted.second == true, blockchain_type);
+
         instance = inserted.first;
     }
 
@@ -85,11 +84,8 @@ void BlockchainFacadeRegistry::register_blockchain(
 {
     const auto p = m_factory_functions.emplace(blockchain_type,
             std::move(factory_function));
-    if (!p.second)
-    {
-        THROW_EXCEPTION("Failed to register blockchain.")
-                << " Blockchain type: " << blockchain_type;
-    }
+
+    INVARIANT2(p.second == true, blockchain_type);
 }
 
 } // namespace internal

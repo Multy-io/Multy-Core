@@ -20,6 +20,10 @@ if("${CMAKE_BUILD_TYPE}" MATCHES ".*Debug.*" OR MULTY_FORCE_ENABLE_ERROR_BACKTRA
     add_definitions(-DMULTY_ENABLE_ERROR_BACKTRACE=1)
 endif()
 
+if("${CMAKE_BUILD_TYPE}" MATCHES ".*Release.*")
+    add_definitions(-DMULTY_INVARIANT_THROWS_EXCEPTION=1)
+endif()
+
 if (MULTY_WARNINGS_AS_ERRORS)
     add_definitions(-Werror)
 endif()

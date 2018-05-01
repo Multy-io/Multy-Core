@@ -79,7 +79,7 @@ Error* make_version_string(const char** out_version_string)
     {
         *out_version_string = copy_string(format_version(CURRENT_VERSION));
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     OUT_CHECK(*out_version_string);
     return nullptr;

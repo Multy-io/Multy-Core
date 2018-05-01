@@ -21,12 +21,18 @@ Error* validate_address(BlockchainType blockchain_type, const char* address)
 {
     ARG_CHECK(address);
 
+    BlockchainFacadeBase* blockchain = nullptr;
     try
     {
-        get_blockchain(blockchain_type.blockchain)
-                .validate_address(blockchain_type, address);
+        blockchain = &get_blockchain(blockchain_type.blockchain);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_API);
+
+    try
+    {
+        blockchain->validate_address(blockchain_type, address);
+    }
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }

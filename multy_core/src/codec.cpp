@@ -110,8 +110,7 @@ CodecPtr make_codec(CodecType codec_type)
         case CODEC_BASE58:
             return CodecPtr(new Base58Codec);
         default:
-            THROW_EXCEPTION("Unknown codec type.")
-                    << " Codec type:" << codec_type;
+            INVARIANT2(false && "Unknown codec type.", codec_type);
     }
 
     return CodecPtr(nullptr);
@@ -136,6 +135,8 @@ BinaryDataPtr decode(const std::string& string, CodecType codec_type)
 
 BinaryDataPtr decode(const char* string, size_t len, CodecType codec_type)
 {
+    INVARIANT(string);
+
     return make_codec(codec_type)->decode(string, len);
 }
 

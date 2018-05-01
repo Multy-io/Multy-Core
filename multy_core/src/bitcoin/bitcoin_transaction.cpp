@@ -10,6 +10,7 @@
 
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/codec.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/api/properties_impl.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
@@ -64,7 +65,7 @@ void verify_non_negative_amount(const BigInt& amount)
 {
     if (amount < BigInt(0))
     {
-        THROW_EXCEPTION("BigInt value is negative.");
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "BigInt value is negative.");
     }
 }
 
@@ -119,12 +120,10 @@ public:
 
     BitcoinDataStream& write_data(const uint8_t* data, uint32_t len) override
     {
-        if (!data)
-        {
-            THROW_EXCEPTION("Attempt to write null data.");
-        }
+        INVARIANT(data != nullptr);
 
         m_data.insert(m_data.end(), data, data + len);
+
         return *this;
     }
 
@@ -359,13 +358,13 @@ BinaryDataPtr make_script_pub_key_from_address(const BitcoinNetType expected_net
 
     if (address_type != BITCOIN_ADDRESS_P2PKH && address_type != BITCOIN_ADDRESS_P2SH)
     {
-        THROW_EXCEPTION("Unsupported address type.")
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Unsupported address type.")
                 << " Address type: " << address_type;
     }
 
     if (expected_net_type != net_type)
     {
-        THROW_EXCEPTION("Wrong net type for address.")
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Wrong net type for address.")
                 << " Expected: " << expected_net_type
                 << " actual:" << net_type;
     }
@@ -373,25 +372,25 @@ BinaryDataPtr make_script_pub_key_from_address(const BitcoinNetType expected_net
     return make_script_pub_key(*binary_address, address_type);
 }
 
-class BitcoinTransactionDestination
+class BitcoinTransactionDestination : public TransactionDestinationBase
 {
 public:
     explicit BitcoinTransactionDestination(BitcoinNetType net_type)
-        : properties("TransactionDestination"),
-          amount(properties,
+        : amount(m_properties,
                  "amount",
                  Property::REQUIRED,
                  verify_non_negative_amount),
-          address(properties, "address", Property::REQUIRED,
+          address(m_properties, "address", Property::REQUIRED,
                   [this](const std::string &new_address) {
                         this->sig_script = make_script_pub_key_from_address(this->m_net_type, new_address);
                         this->m_is_segwit_destination = false;
                   }),
-          is_change(false, properties, "is_change", Property::OPTIONAL,
+          is_change(false, m_properties, "is_change", Property::OPTIONAL,
                   [this](int32_t new_value) {
                       if (new_value < 0)
                       {
-                          THROW_EXCEPTION("is_change can't be negative");
+                          THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                                "is_change can't be negative.");
                       }
                       this->on_change_set(new_value);
                   }),
@@ -411,11 +410,7 @@ public:
             BitcoinStream& stream,
             const BitcoinTransactionDestination& destination)
     {
-        if (!destination.sig_script)
-        {
-            THROW_EXCEPTION(
-                    "BitcoinTransactionDestination: sig_script is nullptr.");
-        }
+        INVARIANT(destination.sig_script != nullptr);
 
         stream << destination.amount;
         stream << as_compact_size(destination.sig_script->len);
@@ -425,8 +420,6 @@ public:
     }
 
 public:
-    Properties properties;
-
     PropertyT<BigInt> amount;
     PropertyT<std::string> address;
     PropertyT<int32_t> is_change;
@@ -436,20 +429,20 @@ public:
     bool m_is_segwit_destination;
 };
 
-class BitcoinTransactionFee
+class BitcoinTransactionFee : public TransactionFeeBase
 {
 public:
     BitcoinTransactionFee()
-        : properties("TransactionFee"),
-          amount_per_byte(
-                  properties,
+        : amount_per_byte(
+                  m_properties,
                   "amount_per_byte",
                   Property::OPTIONAL,
                   [](const BigInt& amount)
                   {
                       if (amount < BigInt(1))
                       {
-                          THROW_EXCEPTION("Value should be> 1.");
+                          THROW_EXCEPTION2(ERROR_TRANSACTION_FEE_TOO_LOW,
+                                "Value should be > 1.");
                       }
                   })
     {
@@ -466,41 +459,40 @@ public:
 
         if (leftover < min_transaction_fee)
         {
-            THROW_EXCEPTION("Transaction total fee is too low. ")
+            THROW_EXCEPTION2(ERROR_TRANSACTION_FEE_TOO_LOW,
+                    "Transaction total fee is too low. ")
                     << leftover.get_value() << " < " << min_transaction_fee.get_value();
         }
     }
 
 public:
-    Properties properties;
-
     PropertyT<BigInt> amount_per_byte;
 };
 
-class BitcoinTransactionSource
+class BitcoinTransactionSource : public TransactionSourceBase
 {
 public:
     BitcoinTransactionSource()
-        : properties("TransactionSource"),
-          prev_transaction_hash(
-                  properties,
+        : prev_transaction_hash(
+                  m_properties,
                   "prev_tx_hash",
                   Property::REQUIRED,
                   [](const BinaryData& new_tx_out_hash) {
                       if (new_tx_out_hash.len != 32)
                       {
-                          THROW_EXCEPTION(
+                          THROW_EXCEPTION2(
+                                  ERROR_TRANSACTION_SOURCE_INVALID_PREV_TX_HASH,
                                   "Previous transaction hash should be"
-                                  "exactly 32 bytes long");
+                                  "exactly 32 bytes long.");
                       }
                   }),
-          prev_transaction_out_index(properties, "prev_tx_out_index"),
+          prev_transaction_out_index(m_properties, "prev_tx_out_index"),
           prev_transaction_out_script_pubkey(
-                  properties, "prev_tx_out_script_pubkey"),
-          private_key(properties, "private_key", Property::REQUIRED),
+                  m_properties, "prev_tx_out_script_pubkey"),
+          private_key(m_properties, "private_key", Property::REQUIRED),
           script_signature(),
           script_witness(),
-          amount(properties, "amount", Property::REQUIRED)
+          amount(m_properties, "amount", Property::REQUIRED)
     {
     }
 
@@ -530,8 +522,6 @@ public:
     }
 
 public:
-    Properties properties;
-
     PropertyT<BinaryDataPtr> prev_transaction_hash;
     PropertyT<int32_t> prev_transaction_out_index;
     PropertyT<BinaryDataPtr> prev_transaction_out_script_pubkey;
@@ -559,7 +549,7 @@ BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
 {
     //    m_properties.bind_property("segwit_mode", &m_is_segwit_transaction);
     //    m_properties.bind_property("lock_time", &m_lock_time);
-    register_properties("", m_fee->properties);
+    register_properties("", m_fee->get_properties());
 }
 
 BinaryDataPtr BitcoinTransaction::serialize()
@@ -690,26 +680,29 @@ void BitcoinTransaction::verify() const
 {
     if (m_sources.empty())
     {
-        THROW_EXCEPTION("Transaction should have at least one source.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_SOURCES,
+                "Transaction should have at least one source.");
     }
 
     if (m_destinations.empty())
     {
-        THROW_EXCEPTION("Transaction should have at least one destination.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_DESTINATIONS,
+                "Transaction should have at least one destination.");
     }
 
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        THROW_EXCEPTION("Not all required properties set.")
-                << "\n" << missing_properties;
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NOT_ALL_REQUIRED_PROPERTIES_SET,
+                "Not all required properties set.")
+                << "\n" << missing_properties << ".";
     }
 
     const BigInt diff = calculate_diff();
     if (diff < 0)
     {
-        THROW_EXCEPTION("Transaction is trying to spend more than available in "
-                "inputs")
+        THROW_EXCEPTION2(ERROR_TRANSACTION_INSUFFICIENT_FUNDS,
+                "Transaction is trying to spend more than available in inputs")
                 << " : available - spent = "<< diff.get_value();
     }
 
@@ -722,11 +715,17 @@ void BitcoinTransaction::verify() const
 
         bitcoin_hash_160(public_key->get_content(), &public_key_hash_data);
         BinaryDataPtr sig_script = make_script_pub_key(public_key_hash_data, BITCOIN_ADDRESS_P2PKH);
+
         if (*sig_script != **s->prev_transaction_out_script_pubkey)
         {
             AccountPtr error_account = make_bitcoin_account(s->private_key->to_string().c_str());
-            THROW_EXCEPTION("Source can't be spent using given private key.")
-                    << " Source index: " << source_index << ", corresponding address: "<< error_account->get_address();
+            THROW_EXCEPTION2(ERROR_TRANSACTION_INVALID_PRIVATE_KEY,
+                    "Source can't be spent using given private key.")
+                    << " Source index: " << source_index
+                    << ", corresponding address: "<< error_account->get_address()
+                    << ", given prev_tx_out_script_pubkey: "
+                    << encode(**s->prev_transaction_out_script_pubkey, CODEC_HEX)
+                    << ".";
         }
         ++source_index;
     }
@@ -736,7 +735,9 @@ void BitcoinTransaction::verify() const
         {
             if (!*d->is_change && is_dust_amount(d->amount.get_value(), d->m_is_segwit_destination))
             {
-                THROW_EXCEPTION("Bitcoin dust output.");
+                THROW_EXCEPTION2(ERROR_TRANSACTION_TRANSFER_AMOUNT_TOO_SMALL,
+                        // Destination # amount is considered dust and will be rejected by the node.
+                        "Bitcoin dust output.");
             }
         }
     }
@@ -771,10 +772,10 @@ void BitcoinTransaction::update()
     }
     if (change_destinations_count > 1)
     {
-        THROW_EXCEPTION("Transaction should have only one change address.")
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOO_MANY_CHANGE_DESTINATIONS,
+                "Transaction should have only one change address.")
                 << " Currenctly there are: " << change_destinations_count;
     }
-
 
     // In order to compute transaction total cost we'll have to serialize tx.
     if (change_destination)
@@ -886,20 +887,15 @@ void BitcoinTransaction::sign()
                 source->prev_transaction_out_script_pubkey.get_value());
 
         const auto p = sig_scripts.emplace(source.get(), std::move(sig_script));
-        if (!p.second)
-        {
-            THROW_EXCEPTION("Failed to save transaction source signature");
-        }
+        INVARIANT(p.second == true);
     }
 
     // restore all sig scripts
     for (auto& source : m_sources)
     {
         const auto p = sig_scripts.find(source.get());
-        if (p == sig_scripts.end())
-        {
-            THROW_EXCEPTION("Failed to set transaction source signature");
-        }
+        INVARIANT(p != sig_scripts.end());
+
         source->script_signature.swap(p->second);
     }
 }
@@ -909,7 +905,8 @@ Properties& BitcoinTransaction::add_source()
     BitcoinTransactionSourcePtr source(new BitcoinTransactionSource());
     m_sources.emplace_back(std::move(source));
     return register_properties(
-            make_id("#", m_sources.size() - 1), m_sources.back()->properties);
+            make_id("#", m_sources.size() - 1),
+            m_sources.back()->get_properties());
 }
 
 Properties& BitcoinTransaction::add_destination()
@@ -919,15 +916,17 @@ Properties& BitcoinTransaction::add_destination()
     m_destinations.emplace_back(std::move(destination));
     return register_properties(
             make_id("#", m_destinations.size() - 1),
-            m_destinations.back()->properties);
+            m_destinations.back()->get_properties());
 }
 
 void BitcoinTransaction::set_message(const BinaryData& value)
 {
     if (value.len > BITCOIN_MAX_MESSAGE_LENGTH)
     {
-        THROW_EXCEPTION("Transaction message is too big.") << " Max length: "
-                        << BITCOIN_MAX_MESSAGE_LENGTH << " actual length: " << value.len;
+        THROW_EXCEPTION2(ERROR_TRANSACTION_PAYLOAD_TO_BIG,
+                "Transaction message is too big.")
+                << " Max length: " << BITCOIN_MAX_MESSAGE_LENGTH
+                << " actual length: " << value.len << ".";
     }
     if (!m_message)
     {
@@ -944,7 +943,7 @@ void BitcoinTransaction::set_message(const BinaryData& value)
 
 Properties& BitcoinTransaction::get_fee()
 {
-    return m_fee->properties;
+    return m_fee->get_properties();
 }
 
 } // namespace internal

@@ -221,14 +221,11 @@ EthereumDataStream& operator<<(EthereumDataStream& stream, const BigInt& data)
 }
 
 template <typename T, typename D>
-EthereumDataStream& operator<<(EthereumDataStream& stream, const std::unique_ptr<T, D>& data)
+EthereumDataStream& operator<<(EthereumDataStream& stream, const std::unique_ptr<T, D>& ptr)
 {
-    if (!data)
-    {
-        THROW_EXCEPTION("Attempt to serialize nullptr.");
-    }
+    INVARIANT(ptr != nullptr);
 
-    return stream << *data;
+    return stream << *ptr;
 }
 
 template <typename T>
@@ -307,7 +304,8 @@ struct EthereumTransactionSignature
     {
         if (signature_data->len != 65)
         {
-            THROW_EXCEPTION("Invalid signature size.")
+            THROW_EXCEPTION2(ERROR_TRANSACTION_INVALID_SIGNATURE,
+                    "Invalid signature size.")
                     << " Expected: 65 bytes, got:" << signature_data->len;
         }
         m_signature_data.swap(signature_data);
@@ -380,7 +378,8 @@ EthereumTransaction::EthereumTransaction(const Account& account)
               {
                     if (new_nonce < -1)
                     {
-                        THROW_EXCEPTION("Nonce should be non-negative.");
+                        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                                "Nonce should be non-negative.");
                     }
               }),
       m_chain_id(ETHEREUM_CHAIN_ID_PRE_EIP155,
@@ -429,10 +428,7 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
 
     if (mode == SERIALIZE_WITH_SIGNATURE)
     {
-        if (!m_signature)
-        {
-            THROW_EXCEPTION("Can't serialize unsigned transaction.");
-        }
+        INVARIANT(m_signature != nullptr);
 
         const uint32_t offset = (*m_chain_id)*2 + 35;
         m_signature->write_to_stream(offset, &list);
@@ -459,18 +455,21 @@ void EthereumTransaction::verify()
 {
     if (!m_source)
     {
-        THROW_EXCEPTION("Transaction doesn't have a source.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_SOURCES,
+                "Transaction doesn't have a source.");
     }
 
     if (!m_destination)
     {
-        THROW_EXCEPTION("Transaction doesn't have a destination.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_DESTINATIONS,
+                "Transaction doesn't have a destination.");
     }
 
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        THROW_EXCEPTION("Not all required properties set.")
+        THROW_EXCEPTION2(ERROR_TRANSACTION_NOT_ALL_REQUIRED_PROPERTIES_SET,
+                "Not all required properties set.")
                 << "\n" << missing_properties;
     }
 }
@@ -485,7 +484,8 @@ void EthereumTransaction::update()
     diff -= gas * *m_fee->gas_price;
     if (diff < 0)
     {
-        THROW_EXCEPTION("Transaction is trying to spend more than available.");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_INSUFFICIENT_FUNDS,
+                "Transaction is trying to spend more than available.");
     }
     m_gas = gas;
 }
@@ -520,7 +520,8 @@ Properties& EthereumTransaction::add_source()
 {
     if (m_source)
     {
-        THROW_EXCEPTION("Multiple sources are not supported");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOO_MANY_SOURCES,
+                "Multiple sources are not supported.");
     }
     m_source.reset(new EthereumTransactionSource);
     return m_source->get_properties();
@@ -530,7 +531,8 @@ Properties& EthereumTransaction::add_destination()
 {
     if (m_destination)
     {
-        THROW_EXCEPTION("Multiple sources are not supported");
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOO_MANY_DESTINATIONS,
+                "Multiple destinations are not supported.");
     }
     m_destination.reset(new EthereumTransactionDestination);
     return m_destination->get_properties();

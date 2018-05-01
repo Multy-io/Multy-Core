@@ -64,5 +64,20 @@ void Exception::append_message(const char* message) const
     m_message += message;
 }
 
+ErrorCode Exception::get_error_code() const
+{
+    return m_error_code;
+}
+
+std::string Exception::get_message() const
+{
+    return m_message;
+}
+
+CodeLocation Exception::get_location() const
+{
+    return m_location;
+}
+
 } // namespace internal
 } // namespace multy_core

@@ -26,7 +26,7 @@ Error* make_master_key(const BinaryData* seed, ExtendedKey** new_master_key)
     {
         *new_master_key = make_master_key(*seed).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_KEY);
 
     OUT_CHECK(*new_master_key);
 
@@ -43,7 +43,7 @@ Error* make_user_id_from_master_key(
     {
         *out_user_id = make_user_id_from_master_key(*master_key).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_KEY);
 
     OUT_CHECK(*out_user_id);
 
@@ -62,7 +62,7 @@ Error* make_child_key(
     {
         *new_child_key = make_child_key(*parent_key, chain_code).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_KEY);
 
     OUT_CHECK(*new_child_key);
 
@@ -79,7 +79,7 @@ Error* extended_key_to_string(
     {
         *new_str = copy_string(extended_key->to_string());
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_KEY);
     OUT_CHECK(*new_str);
 
     return nullptr;
@@ -93,7 +93,7 @@ Error* key_to_string(const Key* key, const char** new_str)
     {
         *new_str = copy_string(key->to_string());
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_KEY);
     OUT_CHECK(*new_str);
 
     return nullptr;

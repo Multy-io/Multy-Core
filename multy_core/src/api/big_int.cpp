@@ -19,7 +19,7 @@ Error* make_big_int(const char* value, BigInt** new_big_int)
     {
         *new_big_int = new BigInt(value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     OUT_CHECK_OBJECT(*new_big_int);
 
@@ -35,7 +35,7 @@ Error* make_big_int_clone(const BigInt* original, BigInt** new_big_int)
     {
         *new_big_int = new BigInt(*original);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     OUT_CHECK_OBJECT(*new_big_int);
 
@@ -50,7 +50,7 @@ Error* make_big_int_from_int64(int64_t value, BigInt** new_big_int)
     {
         *new_big_int = new BigInt(value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     OUT_CHECK_OBJECT(*new_big_int);
 
@@ -67,7 +67,7 @@ Error* big_int_get_value(const BigInt* big_int, const char** out_string_value)
         *out_string_value
                 = multy_core::internal::copy_string(big_int->get_value());
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     OUT_CHECK(*out_string_value);
 
@@ -83,7 +83,7 @@ Error* big_int_set_value(BigInt* big_int, const char* value)
     {
         big_int->set_value(value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     return nullptr;
 }
@@ -97,7 +97,7 @@ Error* big_int_get_int64_value(const BigInt* big_int, int64_t* out_value)
     {
         *out_value = big_int->get_value_as_int64();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     return nullptr;
 }
@@ -110,7 +110,7 @@ Error* big_int_set_int64_value(BigInt* big_int, int64_t value)
     {
         big_int->set_value_int64(value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 
     return nullptr;
 }
@@ -120,7 +120,7 @@ Error* big_int_set_int64_value(BigInt* big_int, int64_t value)
     { \
         statement; \
     } \
-    CATCH_EXCEPTION_RETURN_ERROR()
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT)
 
 Error* big_int_add(BigInt* target, const BigInt* value)
 {

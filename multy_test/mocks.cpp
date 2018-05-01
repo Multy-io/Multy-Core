@@ -127,7 +127,7 @@ ExtendedKeyPtr TestHDAccount::get_account_key() const
 
 TestTransaction::TestTransaction(const BigInt& total_value)
     : m_total(total_value),
-      m_properties("TestTransaction")
+      m_properties(ERROR_SCOPE_TRANSACTION, "TestTransaction")
 {}
 
 BlockchainType TestTransaction::get_blockchain_type() const

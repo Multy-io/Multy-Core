@@ -21,7 +21,7 @@ Error* properties_set_int32_value(
     {
         properties->set_property_value(name, value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -36,7 +36,7 @@ Error* properties_set_string_value(
     {
         properties->set_property_value(name, value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -51,7 +51,7 @@ Error* properties_set_big_int_value(
     {
         properties->set_property_value(name, *value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -66,7 +66,7 @@ Error* properties_set_binary_data_value(
     {
         properties->set_property_value(name, *value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -81,7 +81,7 @@ Error* properties_set_private_key_value(
     {
         properties->set_property_value(name, *value);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -94,7 +94,7 @@ Error* properties_reset_value(Properties* properties, const char* name)
     {
         properties->reset_property(name);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -119,7 +119,7 @@ Error* properties_validate(const Properties* properties)
             return make_error(ERROR_GENERAL_ERROR, report.c_str(), MULTY_CODE_LOCATION);
         }
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }
@@ -137,7 +137,7 @@ Error* properties_get_specification(const Properties* properties, const char** o
         }
         *out_specification = multy_core::internal::copy_string(sstr.str());
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
     OUT_CHECK(out_specification);
 
     return nullptr;

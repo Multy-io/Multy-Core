@@ -67,6 +67,11 @@ Error* make_error_with_backtrace(
     return nullptr;
 }
 
+ErrorScope error_get_scope(ErrorCode code)
+{
+    return static_cast<ErrorScope>(code >> MULTY_ERROR_SCOPE_SHIFT);
+}
+
 void free_error(Error* error)
 {
     if (!error || error == &OutOfMemoryError)

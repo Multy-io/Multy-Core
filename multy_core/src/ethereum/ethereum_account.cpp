@@ -47,10 +47,7 @@ public:
     explicit EthereumPublicKey(KeyData key_data)
         : m_data(std::move(key_data))
     {
-        if (m_data.size() != DATA_SIZE)
-        {
-            THROW_EXCEPTION("Invalid public key length.");
-        }
+        INVARIANT(m_data.size() == DATA_SIZE);
     }
 
     std::string to_string() const override
@@ -108,7 +105,8 @@ struct EthereumPrivateKey : public PrivateKey
 
         if (key_data[0] != 0x04)
         {
-            THROW_EXCEPTION("Invalid uncompressed public key prefix.");
+            THROW_EXCEPTION2(ERROR_KEY_CORRUPT,
+                    "Invalid uncompressed public key prefix.");
         }
         key_data.erase(key_data.begin());
         return PublicKeyPtr(new EthereumPublicKey(std::move(key_data)));
@@ -127,7 +125,8 @@ struct EthereumPrivateKey : public PrivateKey
         if (!secp256k1_ecdsa_sign_recoverable(secp_ctx(), &signature,
                 data_hash.data(), m_data.data(), nullptr, nullptr))
         {
-            THROW_EXCEPTION("Failed to sign with private key.");
+            THROW_EXCEPTION2(ERROR_KEY_CANT_SIGN_WITH_PRIVATE_KEY,
+                    "Failed to sign with private key.");
         }
 
         std::array<unsigned char, 65> signature_data;
@@ -161,7 +160,7 @@ EthereumAddressValue make_address(const EthereumPublicKey& key)
     EthereumAddressValue result;
     static_assert(
             sizeof(address_hash) - result.size() == 12,
-            "Invalid EthereumAddressValue size");
+            "Invalid EthereumAddressValue size.");
 
     // Copy right 20 bytes
     memcpy(result.data(), address_hash.data() + 12, result.size());
@@ -197,7 +196,7 @@ public:
         if (!hex_encode(address.data(), address.size(),
                 const_cast<char*>(result.data()), result.size()))
         {
-            THROW_EXCEPTION("Faield to hex-encode Ethereum address.");
+            INVARIANT2(false, "Faield to hex-encode Ethereum address.");
         }
         result.insert(0, ETHEREUM_ADDRESS_PREFIX);
         trim_excess_trailing_null(&result);
@@ -267,24 +266,31 @@ AccountPtr EthereumHDAccount::make_account(
 
 AccountPtr make_ethereum_account(const char* serialized_private_key)
 {
+    INVARIANT(serialized_private_key);
+
     const size_t private_key_len = strlen(serialized_private_key);
     EthereumPrivateKey::KeyData key_data;
     if (private_key_len != key_data.max_size() * 2)
     {
-        THROW_EXCEPTION("Serialized private key has invalid length");
+        THROW_EXCEPTION2(ERROR_KEY_INVALID_SERIALIZED_STRING,
+                "Serialized private key has invalid length.");
     }
+
     size_t resulting_size = 0;
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             wally_hex_to_bytes(serialized_private_key,
                     key_data.data(), key_data.size(), &resulting_size),
+            ERROR_KEY_INVALID_SERIALIZED_STRING,
             "Failed to convert private key from hex string.");
     if (resulting_size != key_data.size())
     {
-        THROW_EXCEPTION("Failed to deserialize private key");
+        THROW_EXCEPTION2(ERROR_KEY_INVALID_SERIALIZED_STRING,
+                "Failed to deserialize private key");
     }
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
-            "Failed to verify private key");
+            ERROR_KEY_CORRUPT,
+            "Failed to verify private key.");
 
     const BlockchainType blockchain_type{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET};
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
@@ -293,10 +299,7 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
 
 BinaryDataPtr ethereum_parse_address(const char* address)
 {
-    if (!address)
-    {
-        THROW_EXCEPTION("Invalid address: nullptr.");
-    }
+    INVARIANT(address != nullptr);
 
     if (strncmp(address, ETHEREUM_ADDRESS_PREFIX, strlen(ETHEREUM_ADDRESS_PREFIX)) == 0)
     {
@@ -309,7 +312,8 @@ BinaryDataPtr ethereum_parse_address(const char* address)
 
     if (binary_address->len != ETHEREUM_BINARY_ADDRESS_SIZE)
     {
-        THROW_EXCEPTION("Invalid decoded address size.")
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS,
+                "Invalid decoded address size.")
                 << " Expected size: " << ETHEREUM_BINARY_ADDRESS_SIZE
                 << " Actual size: " << binary_address->len;
     }

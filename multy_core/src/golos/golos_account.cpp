@@ -166,12 +166,14 @@ public:
             if (!secp256k1_ecdsa_sign(secp_ctx(), &signature,
                     data_hash.data(), m_data.data(), extended_nonce_function, &counter, &recovery_id))
             {
-                THROW_EXCEPTION("Failed to sign with private key.");
+                THROW_EXCEPTION2(ERROR_KEY_CANT_SIGN_WITH_PRIVATE_KEY,
+                        "Failed to sign with private key.");
             }
 
             if (!secp256k1_ecdsa_signature_serialize_compact(secp_ctx(), result.data() + 1, &signature))
             {
-                THROW_EXCEPTION("Failed to make compact size from signature.");
+                THROW_EXCEPTION2(ERROR_KEY_CANT_SIGN_WITH_PRIVATE_KEY,
+                        "Failed to make compact size from signature.");
             }
         } while(!is_canonical_signature(result));
 
@@ -234,7 +236,7 @@ AccountPtr GolosHDAccount::make_account(
 
 AccountPtr make_golos_account(const char* serialized_private_key)
 {
-    assert(serialized_private_key);
+    INVARIANT(serialized_private_key);
 
     GolosPrivateKey::KeyData private_key_bytes(strlen(serialized_private_key), 0);
     BinaryData private_key_bytes_data = as_binary_data(private_key_bytes);
@@ -249,14 +251,16 @@ AccountPtr make_golos_account(const char* serialized_private_key)
             "Failed to decode base58 private key");
     if (private_key_size < GOLOS_KEY_HASH_SIZE + sizeof(GOLOS_KEY_PREFIX))
     {
-        THROW_EXCEPTION("Invalid decoded private key size.")
+        THROW_EXCEPTION2(ERROR_KEY_INVALID_SERIALIZED_STRING,
+                "Invalid decoded private key size.")
                 << " Actual: " << private_key_size
                 << ", expected at least: " << GOLOS_KEY_HASH_SIZE + sizeof(GOLOS_KEY_PREFIX);
     }
     if (!std::equal(std::begin(GOLOS_KEY_PREFIX), std::end(GOLOS_KEY_PREFIX),
             private_key_bytes_data.data))
     {
-        THROW_EXCEPTION("Invalid private key prefix.");
+        THROW_EXCEPTION2(ERROR_KEY_INVALID_SERIALIZED_STRING,
+                "Invalid private key prefix.");
     }
 
     private_key_bytes_data.len = private_key_size;
@@ -273,7 +277,7 @@ AccountPtr make_golos_account(const char* serialized_private_key)
     if (key_hash != slice(as_binary_data(hash1), 0, GOLOS_KEY_HASH_SIZE)
         && key_hash != slice(as_binary_data(hash2), 0, GOLOS_KEY_HASH_SIZE))
     {
-        THROW_EXCEPTION("Invalid private key checksum.");
+        THROW_EXCEPTION2(ERROR_KEY_CORRUPT, "Invalid private key checksum.");
     }
     // skipping prefix
     key_data = slice(key_data, sizeof(GOLOS_KEY_PREFIX), key_data.len - sizeof(GOLOS_KEY_PREFIX));
@@ -292,7 +296,8 @@ GolosAccount::GolosAccount(BlockchainType blockchain_type, GolosPrivateKeyPtr ke
 
 std::string GolosAccount::get_address() const
 {
-    THROW_EXCEPTION("Not supported: can't derive address from private key "
+    THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
+            "Not supported: can't derive address from private key "
             "for Golos blockchain.");
 }
 

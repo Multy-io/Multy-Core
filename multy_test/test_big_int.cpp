@@ -145,8 +145,7 @@ const BigInt& do_binary_op_api_big_int(ArithmeticOperation op, BigInt& left, con
         {MUL, big_int_mul},
         {DIV, big_int_div},
     };
-    ErrorPtr error(functions.at(op)(&left, &right));
-    test_utility::throw_exception_if_error(error.get());
+    test_utility::throw_exception_if_error(functions.at(op)(&left, &right));
 
     return left;
 }
@@ -160,8 +159,7 @@ const BigInt& do_binary_op_api_int64(ArithmeticOperation op, BigInt& left, const
         {MUL, big_int_mul_int64},
         {DIV, big_int_div_int64},
     };
-    ErrorPtr error(functions.at(op)(&left, right));
-    test_utility::throw_exception_if_error(error.get());
+    test_utility::throw_exception_if_error(functions.at(op)(&left, right));
 
     return left;
 }
@@ -175,8 +173,7 @@ const BigInt& do_binary_op_api_double(ArithmeticOperation op, BigInt& left, cons
         {MUL, big_int_mul_double},
         {DIV, big_int_div_double},
     };
-    ErrorPtr error(functions.at(op)(&left, right));
-    test_utility::throw_exception_if_error(error.get());
+    test_utility::throw_exception_if_error(functions.at(op)(&left, right));
 
     return left;
 }
@@ -453,6 +450,13 @@ GTEST_TEST(BigIntTest_Math, zero_division)
     EXPECT_THROW(BigInt(1) / 0, Exception);
     EXPECT_THROW(BigInt(1) / 0.0, Exception);
     EXPECT_THROW(BigInt(1) / -0.0, Exception);
+    EXPECT_THROW(BigInt(1) / BigInt(0), Exception);
+
+    BigInt big_int(1);
+    const BigInt zero(0);
+    EXPECT_ERROR_WITH_CODE(big_int_div(&big_int, &zero), ERROR_BIG_INT_ZERO_DIVISION);
+    EXPECT_ERROR_WITH_CODE(big_int_div_double(&big_int, 0.0), ERROR_BIG_INT_ZERO_DIVISION);
+    EXPECT_ERROR_WITH_CODE(big_int_div_int64(&big_int, 0), ERROR_BIG_INT_ZERO_DIVISION);
 }
 
 GTEST_TEST(BigIntTest_Math, double_special_values)
@@ -471,11 +475,32 @@ GTEST_TEST(BigIntTest_Math, double_special_values)
     {
         for (const auto op : OPERATIONS)
         {
-            EXPECT_THROW(do_binary_op(op, DEFAULT_VALUE, special_value), Exception);
+            SCOPED_TRACE("BigInt");
+            SCOPED_TRACE(op);
+            SCOPED_TRACE(special_value);
 
             BigInt tmp(DEFAULT_VALUE);
             EXPECT_THROW(do_binary_eq_op(op, tmp, special_value), Exception);
+            EXPECT_THROW(do_binary_op(op, DEFAULT_VALUE, special_value), Exception);
+
             ASSERT_EQ(tmp, DEFAULT_VALUE);
+
+            try
+            {
+                do_binary_op_api_double(op, tmp, special_value);
+            }
+            catch (const Exception& e)
+            {
+                const int fp_class = std::fpclassify(special_value);
+                if (fp_class == FP_INFINITE)
+                {
+                    EXPECT_EQ(ERROR_BIG_INT_MATH_WITH_INFINITY, e.get_error_code());
+                }
+                else if (fp_class == FP_NAN)
+                {
+                    EXPECT_EQ(ERROR_BIG_INT_MATH_WITH_NAN, e.get_error_code());
+                }
+            }
         }
     }
 }

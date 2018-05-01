@@ -50,6 +50,10 @@ public:
 
     void append_message(const char* message) const;
 
+    ErrorCode get_error_code() const;
+    std::string get_message() const;
+    CodeLocation get_location() const;
+
 private:
     const ErrorCode m_error_code;
     mutable std::string m_message;
