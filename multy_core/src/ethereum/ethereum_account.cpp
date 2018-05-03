@@ -265,7 +265,8 @@ AccountPtr EthereumHDAccount::make_account(
     return result;
 }
 
-AccountPtr make_ethereum_account(const char* serialized_private_key)
+AccountPtr make_ethereum_account(BlockchainType blockchain_type,
+        const char* serialized_private_key)
 {
     const size_t private_key_len = strlen(serialized_private_key);
     EthereumPrivateKey::KeyData key_data;
@@ -286,7 +287,6 @@ AccountPtr make_ethereum_account(const char* serialized_private_key)
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
             "Failed to verify private key");
 
-    const BlockchainType blockchain_type{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET};
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
     return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
 }

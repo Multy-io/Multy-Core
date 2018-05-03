@@ -1,6 +1,8 @@
 #ifndef MULTY_TRANSACTION_ETHEREUM_TRANSACTION_H
 #define MULTY_TRANSACTION_ETHEREUM_TRANSACTION_H
 
+#include "multy_core/ethereum.h"
+
 #include "multy_core/src/transaction_base.h"
 #include "multy_core/src/api/properties_impl.h"
 
@@ -52,7 +54,7 @@ private:
     const Account& m_account;
 
     PropertyT<BigInt> m_nonce;
-    PropertyT<int32_t> m_chain_id;
+    const EthereumChainId m_chain_id;
 
     EthereumTransactionFeePtr m_fee;
     EthereumTransactionSourcePtr m_source;

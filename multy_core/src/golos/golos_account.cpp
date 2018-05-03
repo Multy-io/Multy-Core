@@ -40,7 +40,6 @@ const size_t GOLOS_KEY_HASH_SIZE = 4;
 const char GOLOS_PUBLIC_KEY_STRING_PREFIX[] = "GLS";
 const uint8_t GOLOS_KEY_PREFIX[] = {0x80};
 
-const BlockchainType GOLOS_MAIN_NET{BLOCKCHAIN_GOLOS, GOLOS_NET_TYPE_MAINNET};
 
 uint32_t get_chain_index(BlockchainType blockchain_type)
 {
@@ -232,7 +231,8 @@ AccountPtr GolosHDAccount::make_account(
                             {type, index})));
 }
 
-AccountPtr make_golos_account(const char* serialized_private_key)
+AccountPtr make_golos_account(BlockchainType blockchain_type,
+        const char* serialized_private_key)
 {
     assert(serialized_private_key);
 
@@ -280,7 +280,7 @@ AccountPtr make_golos_account(const char* serialized_private_key)
 
     GolosPrivateKeyPtr private_key(new GolosPrivateKey(key_data));
     return AccountPtr(new GolosAccount(
-            GOLOS_MAIN_NET,
+            blockchain_type,
             std::move(private_key),
             HDPath{}));
 }

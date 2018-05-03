@@ -14,6 +14,7 @@
 #include "multy_core/src/utility.h"
 
 #include "multy_test/serialized_keys_test_base.h"
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
@@ -153,7 +154,7 @@ GTEST_TEST(EtheremAccountTest, PrivateKeySig)
     const char MESSAGE[] = "msg";
 
     AccountPtr account;
-    HANDLE_ERROR(make_account(BLOCKCHAIN_ETHEREUM, PRIVATE_KEY, reset_sp(account)));
+    HANDLE_ERROR(make_account(ETHEREUM_MAIN_NET, PRIVATE_KEY, reset_sp(account)));
 
     BinaryDataPtr message;
     HANDLE_ERROR(make_binary_data_from_bytes(

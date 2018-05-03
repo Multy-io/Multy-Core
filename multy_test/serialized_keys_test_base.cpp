@@ -38,7 +38,7 @@ void SerializedKeyTestP::SetUp()
 
     HANDLE_ERROR(
             make_account(
-                    blockchain_type.blockchain,
+                    blockchain_type,
                     test_data.private_key, reset_sp(account)));
     ASSERT_NE(nullptr, account);
 }

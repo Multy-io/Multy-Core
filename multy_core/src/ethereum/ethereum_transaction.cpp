@@ -383,10 +383,7 @@ EthereumTransaction::EthereumTransaction(const Account& account)
                         THROW_EXCEPTION("Nonce should be non-negative.");
                     }
               }),
-      m_chain_id(ETHEREUM_CHAIN_ID_PRE_EIP155,
-            get_transaction_properties(),
-            "chain_id",
-            Property::OPTIONAL),
+      m_chain_id(static_cast<EthereumChainId>(account.get_blockchain_type().net_type)),
       m_fee(new EthereumTransactionFee),
       m_source(),
       m_destination(),
@@ -434,12 +431,12 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
             THROW_EXCEPTION("Can't serialize unsigned transaction.");
         }
 
-        const uint32_t offset = (*m_chain_id)*2 + 35;
+        const uint32_t offset = m_chain_id*2 + 35;
         m_signature->write_to_stream(offset, &list);
     }
     else if (mode == SERIALIZE_WITH_CHAIN_ID)
     {
-        list << static_cast<uint32_t>(*m_chain_id) << 0u << 0u;
+        list << static_cast<uint32_t>(m_chain_id) << 0u << 0u;
     }
     stream << list;
 }
@@ -494,7 +491,7 @@ void EthereumTransaction::sign()
 {
     EthereumDataStream data_stream;
     serialize_to_stream(data_stream,
-            *m_chain_id > 0 ? SERIALIZE_WITH_CHAIN_ID : SERIALIZE);
+            m_chain_id > 0 ? SERIALIZE_WITH_CHAIN_ID : SERIALIZE);
 
     m_signature.reset(new EthereumTransactionSignature);
     m_signature->set_signature(m_account.get_private_key()->sign(

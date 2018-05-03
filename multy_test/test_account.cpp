@@ -48,7 +48,7 @@ GTEST_TEST(AccountTest, fake_account)
     const char* EXPECTED_ADDRESS = TEST_ADDRESS;
     const HDPath EXPECTED_PATH = TEST_PATH;
     const char* EXPECTED_PATH_STRING = TEST_PATH_STRING;
-    const BlockchainType EXPECTED_BLOCKCHAIN_TYPE{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET};
+    const BlockchainType EXPECTED_BLOCKCHAIN_TYPE = BITCOIN_MAIN_NET;
 
     ErrorPtr error;
     TestHDAccount root_account(
@@ -104,13 +104,13 @@ GTEST_TEST(AccountTestInvalidArgs, make_account)
     ErrorPtr error;
     AccountPtr account;
 
-    error.reset(make_account(INVALID_BLOCKCHAIN, "", reset_sp(account)));
+    error.reset(make_account(INVALID_BLOCKCHAIN_TYPE, "", reset_sp(account)));
     EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, account);
 
     error.reset(
             make_account(
-                    BLOCKCHAIN_BITCOIN,
+                    BITCOIN_MAIN_NET,
                     INVALID_PRIVATE_KEY,
                     reset_sp(account)));
     EXPECT_NE(nullptr, error);
@@ -121,7 +121,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_key)
 {
     const KeyType INVALID_KEY_TYPE = static_cast<KeyType>(-1);
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
+            BITCOIN_MAIN_NET,
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -146,7 +146,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_string)
     ConstCharPtr address_str;
 
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
+            BITCOIN_MAIN_NET,
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -164,7 +164,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
     ConstCharPtr path_str;
 
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
+            BITCOIN_MAIN_NET,
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -182,7 +182,7 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
     BlockchainType blockchain_type = INVALID_BLOCKCHAIN_TYPE;
 
     const TestAccount account(
-            {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
+            BITCOIN_MAIN_NET,
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
@@ -196,16 +196,16 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
 
 GTEST_TEST(AccountTestInvalidArgs, validate_address)
 {
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET}, nullptr));
+    EXPECT_ERROR(validate_address(BITCOIN_MAIN_NET, nullptr));
     EXPECT_ERROR(validate_address(INVALID_BLOCKCHAIN_TYPE, "test"));
 }
 
 GTEST_TEST(AccountTestInvalidAddress, validate_address)
 {
     // Invalid Checksum
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
+    EXPECT_ERROR(validate_address(BITCOIN_MAIN_NET,
             "12pWhnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
-    EXPECT_ERROR(validate_address({BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET},
+    EXPECT_ERROR(validate_address(BITCOIN_MAIN_NET,
             "12pshnTAfMro4rJVk32YjvFq1NqtwmBNwe"));
 
     // Invalid address

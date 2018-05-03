@@ -68,7 +68,7 @@ MULTY_CORE_API struct Error* make_hd_leaf_account(
  * free_account().
  */
 MULTY_CORE_API struct Error* make_account(
-        enum Blockchain blockchain,
+        struct BlockchainType blockchain,
         const char* serialized_private_key,
         struct Account** new_account);
 

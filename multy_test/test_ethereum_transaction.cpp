@@ -18,6 +18,7 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
+#include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
@@ -36,7 +37,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_TEST_NET,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -50,7 +51,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
 
         HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
         HANDLE_ERROR(properties_set_big_int_value(properties, "nonce", &nonce));
-        HANDLE_ERROR(properties_set_int32_value(properties, "chain_id", ETHEREUM_CHAIN_ID_RINKEBY));
     }
 
     {
@@ -104,7 +104,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_TEST_NET,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -120,7 +120,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     {
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt("0"));
-        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
     {
@@ -150,7 +149,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_TEST_NET,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -167,7 +166,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     {
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt("4"));
-        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
     {
@@ -203,7 +201,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_TEST_NET,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -220,7 +218,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     {
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt("3"));
-        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_RINKEBY);
     }
 
     {
@@ -260,7 +257,7 @@ GTEST_TEST(EthereumTransactionTest, transaction_update_empty_tx)
     // Verify that transaction_update() fails when called on empty TX.
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_TEST_NET,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -291,7 +288,7 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-            BLOCKCHAIN_ETHEREUM,
+            ETHEREUM_TEST_NET,
             "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
             reset_sp(account)));
 
@@ -338,7 +335,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_MAIN_NET,
                      "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -355,7 +352,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
     {
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt(0));
-        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_MAINNET);
     }
 
     {
@@ -388,7 +384,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     BLOCKCHAIN_ETHEREUM,
+                     ETHEREUM_MAIN_NET,
                      "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -405,7 +401,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
     {
         Properties& properties = transaction->get_transaction_properties();
         properties.set_property_value("nonce", BigInt(1));
-        properties.set_property_value("chain_id", ETHEREUM_CHAIN_ID_MAINNET);
     }
 
     {

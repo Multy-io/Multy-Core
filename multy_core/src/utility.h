@@ -16,6 +16,10 @@
 #include "multy_core/common.h"
 #include "multy_core/blockchain.h"
 
+#include "multy_core/bitcoin.h"
+#include "multy_core/ethereum.h"
+#include "multy_core/golos.h"
+
 #include "multy_core/src/binary_data_utility.h"
 #include "multy_core/src/error_utility.h"
 #include "multy_core/src/u_ptr.h"
@@ -171,6 +175,12 @@ inline bool operator!=(const BlockchainType& left, const BlockchainType& right)
 {
     return !(left == right);
 }
+
+MULTY_CORE_API std::string to_string(const BlockchainType& blockchain_type);
+MULTY_CORE_API std::string to_string(Blockchain blockchain);
+MULTY_CORE_API std::string to_string(BitcoinNetType net_type);
+MULTY_CORE_API std::string to_string(EthereumChainId net_type);
+MULTY_CORE_API std::string to_string(GolosNetType net_type);
 
 // remove excess '\0' chars at end of string.
 void trim_excess_trailing_null(std::string* str);

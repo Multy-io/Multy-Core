@@ -24,7 +24,8 @@ protected:
             const ExtendedKey& parent_key, AddressType type, uint32_t index) const override;
 };
 
-AccountPtr make_ethereum_account(const char* serialized_private_key);
+AccountPtr make_ethereum_account(BlockchainType blockchain_type,
+        const char* serialized_private_key);
 
 BinaryDataPtr ethereum_parse_address(const char* address);
 

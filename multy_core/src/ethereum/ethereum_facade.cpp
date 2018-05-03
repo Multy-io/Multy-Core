@@ -31,9 +31,10 @@ HDAccountPtr EthereumFacade::make_hd_account(
     return HDAccountPtr(new EthereumHDAccount(blockchain_type, master_key, index));
 }
 
-AccountPtr EthereumFacade::make_account(const char* serialized_private_key)
+AccountPtr EthereumFacade::make_account(BlockchainType blockchain_type,
+        const char* serialized_private_key)
 {
-    return make_ethereum_account(serialized_private_key);
+    return make_ethereum_account(blockchain_type, serialized_private_key);
 }
 
 TransactionPtr EthereumFacade::make_transaction(const Account& account)
