@@ -10,6 +10,10 @@ if (MULTY_MORE_WARNINGS)
     )
 endif()
 
+if (MULTY_WARNINGS_AS_ERRORS)
+    add_definitions(-Werror)
+endif()
+
 # Explicitly building multy_test as shared library, otherwise test cases would be thrown away by
 # linker as symbols with internal linkage with is never referenced.
 # That means that test cases can't be discovered by gtest runtime and hence not run.
