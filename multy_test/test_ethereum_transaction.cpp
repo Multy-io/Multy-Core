@@ -1,4 +1,4 @@
-/* Copyright 2018 by Multy.io
+﻿/* Copyright 2018 by Multy.io
  * Licensed under Multy.io license.
  *
  * See LICENSE for details
@@ -410,7 +410,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
 
     {
         Properties& destination = transaction->add_destination();
-        destination.set_property_value("address", "6b4be1fc5fa05c5d959d27155694643b8af72fd8");
+        destination.set_property_value("address", "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8");
         destination.set_property_value("amount", value);
     }
 
@@ -431,4 +431,107 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
             "f8790184ee6b28008301d8a8946b4be1fc5fa05c5d959d27155694643b8af72fd887071afd498d00008e4d554c54"
             "5920746865206265737426a03ae3469ccf47aaccfd8beb2c4f0b84e9db60aae7fd3b27aeae85c928e8f56131a00f"
             "f0b0db2532b40782640aad46cbd2bc7e3911af0547fcd7272ae801cc98cc4d")), *serialied);
+}
+
+GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+                     ETHEREUM_MAIN_NET,
+                     "c8aea1b4d991e2bb7c17b1cb8b8dbda9fb59717df552e98ec3aca80410565a9f",
+                     reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance("100000000000000000");
+    const BigInt value("1000000000000000000");
+    const BigInt gas_limit(153327);
+    const BigInt gas_price("1000000000");
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(11));
+        properties.set_property_value("token_transfer", "ERC20:0xfdf88a23d6058789c6a37bd997d3ed4760feb3b2:transfer");
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", "0x2b74679d2a190fd679a85ce7767c05605237f030");
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // TXid: 0x01f0ec13cb9714f38da904b8e5c9652912f7e332566ef27a6592235e6c9359ee
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f8a90b843b9aca00830256ef94fdf88a23d6058789c6a37bd997d3ed4760feb3b280b844a9059cbb000000"
+            "0000000000000000002b74679d2a190fd679a85ce7767c05605237f0300000000000000000000000000000"
+            "000000000000000000000de0b6b3a76400002ba02e8d834c6b53c91aa6c69d9f1d4ffff761adc3f7d60df0"
+            "ddcfdf2b6990b5f7f5a01efc5f0c3c6fc3863adef7f2bd2c4affaf4f138f77fbbd3e348fc674e8d070a9")), *serialied);
+}
+
+
+GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer_2)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+                     ETHEREUM_MAIN_NET,
+                     "0xb81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+                     reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance("100000000000000000");
+    const BigInt value("500000000000000000");
+    const BigInt gas_limit(153327);
+    const BigInt gas_price("1000000000");
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(0));
+        properties.set_property_value("token_transfer", "ERC20:0xfdf88a23d6058789c6a37bd997d3ed4760feb3b2:transfer");
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8");
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // TXid: 0x570eaad2551a64a3180b394c30df48226866adf9cd4280c7130a805aa9051f2f0x570ea
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f8a980843b9aca00830256ef94fdf88a23d6058789c6a37bd997d3ed4760feb3b280b844a9059cbb0000"
+            "000000000000000000006b4be1fc5fa05c5d959d27155694643b8af72fd800000000000000000000000000"
+            "000000000000000000000006f05b59d3b200002ba0f85db5aacaea5a50d2761b9b6f52939c21848116b187"
+            "c8c05da800011a963860a027e9189fdee28faac1092441903d59371c84a0cd5cacea0410bcc2ab000646d0")), *serialied);
 }
