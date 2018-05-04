@@ -35,7 +35,9 @@ public:
     }
 
     explicit ErrorWrapperException(Error* error)
-        : Exception("",
+        : Exception(
+                (error ? error->code : ERROR_GENERAL_ERROR),
+                nullptr,
                 (error ? error->location : NULL_LOCATION),
                 (error ? error->backtrace : "")),
           m_error(std::move(error))
@@ -80,7 +82,7 @@ ErrorCode convert_error_code(int code)
     switch (code)
     {
         case WALLY_EINVAL:
-            return ERROR_INTERNAL;
+            return ERROR_INVARIANT_FAILED;
         case WALLY_ENOMEM:
             return ERROR_OUT_OF_MEMORY;
         case WALLY_OK:
@@ -90,12 +92,34 @@ ErrorCode convert_error_code(int code)
     }
 }
 
+Error* set_error_scope(ErrorScope scope, Error* error)
+{
+    if (error && scope != ERROR_SCOPE_GENERIC)
+    {
+        error->code = multy_core::internal::set_error_scope(scope, error->code);
+    }
+
+    return error;
+}
+
 } // namespace
 
 namespace multy_core
 {
 namespace internal
 {
+
+ErrorCode set_error_scope(ErrorScope error_scope, ErrorCode error_code)
+{
+    // Reset error scope if it is not set already.
+    if ((error_code & MULTY_ERROR_SCOPE_MASK) == 0)
+    {
+        error_code = static_cast<ErrorCode>(
+                (error_scope << MULTY_ERROR_SCOPE_SHIFT) | error_code);
+    }
+
+    return error_code;
+}
 
 void throw_if_error(Error* error)
 {
@@ -126,7 +150,15 @@ void throw_if_wally_error(int err_code, const char* message, const CodeLocation&
     }
 }
 
-Error* exception_to_error(const CodeLocation& location)
+void throw_if_wally_error(int err_code, ErrorCode error, const char* message, const CodeLocation& location)
+{
+    if (err_code != 0)
+    {
+        throw_if_error(make_error(error, message, location));
+    }
+}
+
+Error* exception_to_error(ErrorScope scope, const CodeLocation& location)
 {
     try
     {
@@ -134,17 +166,18 @@ Error* exception_to_error(const CodeLocation& location)
     }
     catch (const multy_core::internal::Exception& exception)
     {
-        return exception.make_error();
+        return ::set_error_scope(scope, exception.make_error());
     }
     catch (const std::exception& exception)
     {
         Error* result = make_error_from_string(exception.what());
         result->location = location;
-        return result;
+        return ::set_error_scope(scope, result);
     }
     catch (...)
     {
-        return make_error(ERROR_GENERAL_ERROR, "Unknown exception", location);
+        return ::set_error_scope(scope,
+                make_error(ERROR_GENERAL_ERROR, "Unknown exception", location));
     }
 }
 

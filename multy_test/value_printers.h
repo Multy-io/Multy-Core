@@ -50,6 +50,14 @@ inline std::ostream& operator<<(std::ostream& out, const BinaryData& value)
     return out;
 }
 
+inline std::ostream& operator<<(std::ostream& out, const Error& e)
+{
+    PrintTo(e, &out);
+
+    return out;
+}
+
+
 template <typename T, typename D>
 inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)
 {

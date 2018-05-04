@@ -42,7 +42,7 @@ using namespace test_utility;
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_int32_value)
 {
     //    ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_property = 0;
 
     ASSERT_ERROR(properties_set_int32_value(&properties, "v", 2));
@@ -62,7 +62,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_int32_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_string_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     std::string value_property = "2";
 
     error.reset(properties_set_string_value(&properties, "v", "1"));
@@ -90,7 +90,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_string_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_big_int_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     BigInt amount_property(0);
     const BigInt invalid_amount(1);
 
@@ -116,7 +116,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_big_int_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_binary_data_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     const unsigned char data_2_vals[] = {4U, 2U};
     BinaryDataPtr binaty_data_property;
     BinaryData binary_data2{data_2_vals, 2};
@@ -150,7 +150,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_binary_data_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     PrivateKeyPtr priv_key_property;
     PrivateKeyPtr priv_key_property1;
 
@@ -192,7 +192,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_set_private_key_value)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_reset_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_property = 1;
 
     properties.bind_property("v", &int_property);
@@ -221,7 +221,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_validate)
 GTEST_TEST(PropertiesTestInvalidArgs, properties_get_specification)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     ConstCharPtr specification;
 
     error.reset(properties_get_specification(&properties, nullptr));
@@ -234,7 +234,7 @@ GTEST_TEST(PropertiesTestInvalidArgs, properties_get_specification)
 GTEST_TEST(PropertiesTestInvalidValue, properties_validate)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_property = 1;
 
     properties.bind_property("v", &int_property);
@@ -247,7 +247,7 @@ GTEST_TEST(PropertiesTestInvalidValue, properties_validate)
 GTEST_TEST(PropertiesTestInvalidType, int32_properties)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_value = 1;
     const std::string str = "0";
     const BigInt amount(0);
@@ -291,7 +291,7 @@ GTEST_TEST(PropertiesTestInvalidType, int32_properties)
 GTEST_TEST(PropertiesTestInvalidType, String_properties)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     const int32_t int_value = 1;
     std::string str = "0";
     const BigInt amount(0);
@@ -335,7 +335,7 @@ GTEST_TEST(PropertiesTestInvalidType, String_properties)
 GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
     BigInt amount(2);
@@ -379,7 +379,7 @@ GTEST_TEST(PropertiesTestInvalidType, Amount_properties)
 GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
     const BigInt amount(2);
@@ -422,7 +422,7 @@ GTEST_TEST(PropertiesTestInvalidType, BinaryData_properties)
 GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     const std::string str = "0";
     const int32_t int_value = 1;
     const BigInt amount(2);
@@ -457,7 +457,7 @@ GTEST_TEST(PropertiesTestInvalidType, PublicKey_properties)
 GTEST_TEST(PropertiesTest, properties_set_int32_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_property = 0;
 
     properties.bind_property("v", &int_property);
@@ -470,7 +470,7 @@ GTEST_TEST(PropertiesTest, properties_set_int32_value)
 GTEST_TEST(PropertiesTest, properties_set_string_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     std::string str = "2";
 
     properties.bind_property("v", &str);
@@ -483,7 +483,7 @@ GTEST_TEST(PropertiesTest, properties_set_string_value)
 GTEST_TEST(PropertiesTest, properties_set_big_int_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     BigInt amount(0);
     const BigInt amount1(1);
 
@@ -497,7 +497,7 @@ GTEST_TEST(PropertiesTest, properties_set_big_int_value)
 GTEST_TEST(PropertiesTest, properties_set_binary_data_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     const unsigned char data_4_vals[] = {1U, 2U, 3U, 4U};
     const unsigned char data_2_vals[] = {4U, 2U};
     const BinaryData reference_data_2_value{data_2_vals, 2};
@@ -524,7 +524,7 @@ GTEST_TEST(PropertiesTest, properties_set_binary_data_value)
 GTEST_TEST(PropertiesTest, properties_set_private_key_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     PrivateKeyPtr priv_key_property;
 
     AccountPtr account1;
@@ -547,7 +547,7 @@ GTEST_TEST(PropertiesTest, properties_set_private_key_value)
 GTEST_TEST(PropertiesTest, properties_reset_value)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_property = 1;
     properties.bind_property("v", &int_property);
 
@@ -559,7 +559,7 @@ GTEST_TEST(PropertiesTest, properties_reset_value)
 GTEST_TEST(PropertiesTest, properties_validate)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     int32_t int_property = 1;
 
     error.reset(properties_validate(&properties));
@@ -579,7 +579,7 @@ GTEST_TEST(PropertiesTest, properties_validate)
 GTEST_TEST(PropertiesTest, properties_get_specification)
 {
     ErrorPtr error;
-    Properties properties("TEST");
+    Properties properties(ERROR_SCOPE_GENERIC, "TEST");
     ConstCharPtr specification;
     int int_property = 3;
 
@@ -684,7 +684,7 @@ TYPED_TEST_P(PropertyT_TestP, Properties_SmokeTest)
     const TypeParam& DATA = get_test_data<TypeParam>();
     const auto& NEW_VALUE = strip_unique_ptr(DATA);
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
 
@@ -710,7 +710,7 @@ TYPED_TEST_P(PropertyT_TestP, DynamicProperty)
     const TypeParam& DATA = get_test_data<TypeParam>();
     const auto& NEW_VALUE = strip_unique_ptr(DATA);
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     {
         // Testing that PropertyT unbinds itself when it gets out of scope.
@@ -730,7 +730,7 @@ TYPED_TEST_P(PropertyT_TestP, is_dirty)
     const TypeParam& DATA = get_test_data<TypeParam>();
     const auto& NEW_VALUE = strip_unique_ptr(DATA);
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
 
@@ -758,7 +758,7 @@ TYPED_TEST_P(PropertyT_TestP, set_value)
     const TypeParam& DATA = get_test_data<TypeParam>();
     const auto& NEW_VALUE = strip_unique_ptr(DATA);
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
 
@@ -774,7 +774,7 @@ TYPED_TEST_P(PropertyT_TestP, get_value)
     const TypeParam& DATA = get_test_data<TypeParam>();
     const auto& NEW_VALUE = strip_unique_ptr(DATA);
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
 
@@ -792,7 +792,7 @@ TYPED_TEST_P(PropertyT_TestP, operator_star)
     const TypeParam& DATA = get_test_data<TypeParam>();
     const auto& NEW_VALUE = strip_unique_ptr(DATA);
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
 
@@ -807,7 +807,7 @@ TYPED_TEST_P(PropertyT_TestP, get_default_value)
 {
     const TypeParam& DATA = get_test_data<TypeParam>();
     const char* property_name = "p";
-    Properties properties("Test");
+    Properties properties(ERROR_SCOPE_GENERIC, "Test");
 
     PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
 

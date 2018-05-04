@@ -109,7 +109,7 @@ public:
         THROW_IF_WALLY_ERROR(
                 wally_base58_from_bytes(
                         m_data.data(), m_data.size(), 0, reset_sp(out_str)),
-                "Failed to serialize Bitcoin public key");
+                "Failed to serialize Bitcoin public key.");
         return std::string(out_str.get());
     }
 
@@ -166,7 +166,7 @@ struct BitcoinPrivateKey : public PrivateKey
                         data.data(), data.size(),
                         BASE58_FLAG_CHECKSUM,
                         reset_sp(out_str)),
-                "Failed to serialize Bitcoin private key");
+                "Failed to serialize Bitcoin private key.");
         wally_bzero(data.data(), data.size());
 
         return std::string(out_str.get());
@@ -202,7 +202,7 @@ struct BitcoinPrivateKey : public PrivateKey
                         m_data.data(), m_data.size(),
                         data_hash.data(), data_hash.size(),
                         EC_FLAG_ECDSA, signature.data(), signature.size()),
-                "Failed to sign binary data with private key");
+                "Failed to sign binary data with private key.");
         wally_bzero(data_hash.data(), data_hash.size());
 
         std::array<uint8_t, EC_SIGNATURE_DER_MAX_LEN> der_signature;
@@ -211,7 +211,7 @@ struct BitcoinPrivateKey : public PrivateKey
                 wally_ec_sig_to_der(
                         signature.data(), signature.size(),
                         der_signature.data(), der_signature.size(), &written),
-                "Failed to convert signature to DER format");
+                "Failed to convert signature to DER format.");
         wally_bzero(signature.data(), signature.size());
 
         return make_clone(BinaryData{der_signature.data(), written});
@@ -239,10 +239,7 @@ BitcoinAccount::~BitcoinAccount()
 
 void bitcoin_hash_160(const BinaryData& input, BinaryData* output)
 {
-    if (!output)
-    {
-        THROW_EXCEPTION("Invalid argument: output is null.");
-    }
+    INVARIANT(output != nullptr);
 
     THROW_IF_WALLY_ERROR(
             wally_hash160(
@@ -287,7 +284,7 @@ std::string BitcoinAccount::get_address() const
             wally_base58_from_bytes(
                     pub_hash, sizeof(pub_hash), BASE58_FLAG_CHECKSUM,
                     reset_sp(base58_string_ptr)),
-            "Converting to base58 failed");
+            "Converting to base58 failed.");
     std::string result(base58_string_ptr.get());
 
     return result;
@@ -327,10 +324,12 @@ AccountPtr BitcoinHDAccount::make_account(
 
 AccountPtr make_bitcoin_account(const char* private_key)
 {
+    INVARIANT(private_key != nullptr);
+
     size_t resulting_size = 0;
     THROW_IF_WALLY_ERROR(
             wally_base58_get_length(private_key, &resulting_size),
-            "Faield to process base-58 encoded private key");
+            "Faield to process base-58 encoded private key.");
 
     std::vector<unsigned char> key_data(resulting_size, 0);
 
@@ -338,11 +337,11 @@ AccountPtr make_bitcoin_account(const char* private_key)
             wally_base58_to_bytes(
                     private_key, BASE58_FLAG_CHECKSUM, key_data.data(),
                     key_data.size(), &resulting_size),
-            "Faield to deserialize base-58 encoded private key");
+            "Faield to deserialize base-58 encoded private key.");
 
     if (resulting_size > key_data.size() || resulting_size < EC_PRIVATE_KEY_LEN)
     {
-        THROW_EXCEPTION("Failed to deserialize private key");
+        THROW_EXCEPTION("Failed to deserialize private key.");
     }
     key_data.resize(resulting_size);
 
@@ -365,7 +364,7 @@ AccountPtr make_bitcoin_account(const char* private_key)
 
     THROW_IF_WALLY_ERROR(
             wally_ec_private_key_verify(key_data.data(), key_data.size()),
-            "Failed to verify private key");
+            "Failed to verify private key.");
 
     BitcoinPrivateKeyPtr key(new BitcoinPrivateKey(std::move(key_data),
             net_type,
@@ -380,6 +379,10 @@ BinaryDataPtr bitcoin_parse_address(const char* address,
                                     BitcoinNetType* net_type,
                                     BitcoinAddressType* address_type)
 {
+    INVARIANT(address != nullptr);
+    INVARIANT(net_type != nullptr);
+    INVARIANT(address_type != nullptr);
+
     BinaryDataPtr out_binary_data;
     size_t binary_size = strlen(address);
     std::vector<uint8_t> decoded(binary_size, 0);

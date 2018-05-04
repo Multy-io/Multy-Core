@@ -38,7 +38,7 @@ Error* make_hd_account(
         *new_account = get_blockchain(blockchain_type.blockchain)
                 .make_hd_account(blockchain_type, *master_key, index).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     OUT_CHECK_OBJECT(*new_account);
 
@@ -62,7 +62,7 @@ Error* make_hd_leaf_account(
         *new_account = base_account->make_leaf_account(address_type, index)
                                .release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     OUT_CHECK_OBJECT(*new_account);
 
@@ -85,7 +85,7 @@ Error* make_account(
         *new_account = get_blockchain(blockchain.blockchain)
                 .make_account(blockchain, serialized_private_key).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     OUT_CHECK_OBJECT(*new_account);
 
@@ -109,7 +109,7 @@ Error* account_get_key(const Account* account, KeyType key_type, Key** out_key)
             *out_key = account->get_public_key().release();
         }
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     OUT_CHECK(*out_key);
 
@@ -126,7 +126,7 @@ Error* account_get_address_string(
     {
         *out_address = copy_string(account->get_address());
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     OUT_CHECK(*out_address);
 
@@ -143,7 +143,7 @@ Error* account_get_address_path(
     {
         *out_address_path = copy_string(to_string(account->get_path()));
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     OUT_CHECK(*out_address_path);
 
@@ -161,7 +161,7 @@ Error* account_get_blockchain_type(
     {
         *out_blockchain_type = account->get_blockchain_type();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
     return nullptr;
 }

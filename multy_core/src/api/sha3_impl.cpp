@@ -35,7 +35,7 @@ static const size_t HASH_SIZES[] = {
             ::sha3_##size(                                                     \
                     const_cast<uint8_t*>(output->data), output->len,           \
                     input.data, input.len),                                    \
-            "Failed to SHA3-" #size " input data");
+            "Failed to SHA3-" #size " input data.");
 
 void do_sha3(const BinaryData& input, BinaryData* output)
 {
@@ -63,7 +63,8 @@ void do_sha3(const BinaryData& input, BinaryData* output)
         }
         default:
         {
-            THROW_EXCEPTION("unsupported hash size.")
+            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                    "Unsupported hash size for SHA3.")
                     << " Size:" << output->len;
         }
     }
@@ -77,7 +78,8 @@ size_t get_biggest_of_supported_sizes(size_t size, const size_t (&supported_size
             supported_sizes, default_value, size);
     if (hash_size == default_value)
     {
-        THROW_EXCEPTION("output BinaryData has not enough space available.")
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                "Output BinaryData has not enough space available.")
                 << " Need at least " << supported_sizes[0] << " bytes.";
     }
     return hash_size;
@@ -95,7 +97,7 @@ BinaryDataPtr sha3(const size_t hash_size, const BinaryData& input)
     if (std::find(std::begin(HASH_SIZES), std::end(HASH_SIZES), hash_size/8)
                     == std::end(HASH_SIZES))
     {
-        THROW_EXCEPTION("Unsupported hash_size");
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unsupported hash_size.");
     }
 
     BinaryDataPtr result;
@@ -116,10 +118,8 @@ BinaryDataPtr keccak_256(const BinaryData& input)
 
 void sha3(const BinaryData& input, BinaryData* output)
 {
-    if (!output)
-    {
-        THROW_EXCEPTION("output BinaryData is nullprt");
-    }
+    INVARIANT(output != nullptr);
+    INVARIANT(input.data != nullptr);
 
     // Copy to keep output intact in case of exception.
     BinaryData tmp = *output;
@@ -131,10 +131,8 @@ void sha3(const BinaryData& input, BinaryData* output)
 
 void keccak_256(const BinaryData& input, BinaryData* output)
 {
-    if (!output)
-    {
-        THROW_EXCEPTION("output BinaryData is nullprt");
-    }
+    INVARIANT(output != nullptr);
+    INVARIANT(input.data != nullptr);
 
     const size_t HASH_SIZES[] = {256 / 8};
     const size_t hash_size = get_biggest_of_supported_sizes(output->len, HASH_SIZES);
@@ -142,7 +140,7 @@ void keccak_256(const BinaryData& input, BinaryData* output)
     THROW_IF_WALLY_ERROR(
             ::keccak_256(const_cast<unsigned char*>(output->data), hash_size,
                     input.data, input.len),
-            "Failed to hash input with keccack_256");
+            "Failed to hash input with keccack_256.");
 
     output->len = hash_size;
 }

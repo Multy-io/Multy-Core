@@ -37,7 +37,7 @@ Error* make_binary_data(size_t size, BinaryData** new_binary_data)
 
         data.release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     OUT_CHECK(*new_binary_data);
 
@@ -59,7 +59,7 @@ Error* make_binary_data_from_bytes(
         }
         *new_binary_data = result.release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     OUT_CHECK(*new_binary_data);
 
@@ -75,7 +75,7 @@ Error* make_binary_data_from_hex(
     {
         *new_binary_data = decode(hex_str, strlen(hex_str), CODEC_HEX).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     OUT_CHECK(*new_binary_data);
 

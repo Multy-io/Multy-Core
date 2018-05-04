@@ -14,7 +14,7 @@ namespace internal
 {
 
 TransactionFeeBase::TransactionFeeBase()
-    : m_properties("TransactionFee")
+    : m_properties(ERROR_SCOPE_TRANSACTION_FEE, "TransactionFee")
 {
 }
 
@@ -28,7 +28,7 @@ Properties& TransactionFeeBase::get_properties()
 }
 
 TransactionDestinationBase::TransactionDestinationBase()
-    : m_properties("TransactionDestination")
+    : m_properties(ERROR_SCOPE_TRANSACTION_DESTINATION, "TransactionDestination")
 {
 }
 
@@ -42,7 +42,7 @@ Properties& TransactionDestinationBase::get_properties()
 }
 
 TransactionSourceBase::TransactionSourceBase()
-    : m_properties("TransactionSource")
+    : m_properties(ERROR_SCOPE_TRANSACTION_SOURCE, "TransactionSource")
 {
 }
 
@@ -56,7 +56,7 @@ Properties& TransactionSourceBase::get_properties()
 }
 
 TransactionBase::TransactionBase(BlockchainType blockchain_type)
-    : m_properties("Transaction"),
+    : m_properties(ERROR_SCOPE_TRANSACTION, "Transaction"),
       m_blockchain_type(blockchain_type),
       m_all_properties()
 {

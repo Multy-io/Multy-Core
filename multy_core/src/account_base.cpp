@@ -133,14 +133,7 @@ AccountPtr HDAccountBase::make_leaf_account(
                     m_account_key.get(), static_cast<uint32_t>(type),
                     reset_sp(key_ptr)));
 
-    AccountPtr new_account = make_account(*key_ptr, type, index);
-    // TODO: use glsl::not_null
-    if (!new_account)
-    {
-        THROW_EXCEPTION("Internal error: make_account() returned a null");
-    }
-
-    return new_account;
+    return  make_account(*key_ptr, type, index);
 }
 
 } // namespace multy_core

@@ -8,6 +8,7 @@
 
 #include "multy_core/bitcoin.h"
 
+#include "multy_core/src/error_utility.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
@@ -58,17 +59,20 @@ TransactionPtr BitcoinFacade::make_transaction(const Account& account)
 
 void BitcoinFacade::validate_address(BlockchainType blockchain_type, const char* address)
 {
+    INVARIANT(address);
+
     BitcoinAddressType address_type;
     BitcoinNetType net_type;
     bitcoin_parse_address(address, &net_type, &address_type);
     if (address_type != BITCOIN_ADDRESS_P2PKH && address_type != BITCOIN_ADDRESS_P2SH)
     {
-        THROW_EXCEPTION("Not supported address type, only P2PKH and P2SH are supported.")
-                        << " Address type: " << address_type;
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Not supported address type.")
+                << " Only P2PKH and P2SH are supported, "
+                << " given address type: " << address_type;
     }
     if (net_type != blockchain_type.net_type)
     {
-        THROW_EXCEPTION("Incompatitable net_type.")
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Incompatitable net_type.")
                 << " Requested: " << blockchain_type.net_type
                 << ", address net type:" << net_type;
     }

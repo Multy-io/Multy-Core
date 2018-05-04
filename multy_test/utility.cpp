@@ -96,15 +96,9 @@ void throw_exception(const char* message)
     throw std::runtime_error(message);
 }
 
-void throw_exception_if_error(const Error* error)
+void throw_exception_if_error(Error* error)
 {
-    if (error)
-    {
-        std::stringstream sstr;
-        PrintTo(*error, &sstr);
-
-        throw_exception(sstr.str().c_str());
-    }
+    multy_core::internal::throw_if_error(error);
 }
 
 bool blockchain_can_derive_address_from_private_key(Blockchain blockchain)

@@ -18,7 +18,7 @@ Error* sha3(const BinaryData* input, BinaryData* output)
     {
         multy_core::internal::sha3(*input, output);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_GENERIC);
 
     return nullptr;
 }

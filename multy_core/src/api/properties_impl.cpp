@@ -19,7 +19,8 @@
 #include <string>
 #include <vector>
 
-#define THROW_PROPERTY_EXCEPTION(msg) throw_exception(msg , MULTY_CODE_LOCATION)
+#define THROW_PROPERTY_EXCEPTION(msg) throw_exception(ERROR_GENERAL_ERROR, msg , MULTY_CODE_LOCATION)
+#define THROW_PROPERTY_EXCEPTION2(err, msg) throw_exception(err, msg , MULTY_CODE_LOCATION)
 
 namespace
 {
@@ -121,9 +122,9 @@ struct BinderBase : public Binder
     {
     }
 
-    void throw_exception(std::string message, const CodeLocation& location) const
+    void throw_exception(ErrorCode error_code, std::string message, const CodeLocation& location) const
     {
-        m_properties.throw_exception(message, location);
+        m_properties.throw_exception(error_code, message, location);
     }
 
     template <typename T>
@@ -226,14 +227,22 @@ struct BinderBase : public Binder
         {
             throw;
         }
+        catch (const Exception& e)
+        {
+            throw_exception(e.get_error_code(),
+                    e.get_message(), e.get_location());
+        }
         catch (const std::exception& e)
         {
-            throw_exception(std::string(" Failed to ") + action
-                    + " of property \"" + m_name + "\" : " + e.what(), location);
+            throw_exception(ERROR_GENERAL_ERROR,
+                    std::string(" Failed to ") + action
+                    + " of property \"" + m_name + "\" : "
+                    + e.what(), location);
         }
         catch (...)
         {
-            throw_exception(std::string("Failed to ") + action
+            throw_exception(ERROR_GENERAL_ERROR,
+                    std::string("Failed to ") + action
                     + " of property \"" + m_name
                     + "\" due to unknown exception", location);
         }
@@ -293,8 +302,9 @@ const T& to_argument_type(const std::unique_ptr<T, D>& value)
 {
     if (!value)
     {
-        THROW_EXCEPTION("value is nullptr");
+        THROW_EXCEPTION2(ERROR_GENERAL_ERROR, "Value is nullptr.");
     }
+
     return *value;
 }
 
@@ -325,7 +335,7 @@ struct BinderT : public BinderBase
         {
             if (get_trait() == Property::READONLY)
             {
-                THROW_EXCEPTION("property is read-only");
+                THROW_EXCEPTION("property is read-only.");
             }
 
             if (m_predicate)
@@ -349,7 +359,8 @@ struct BinderT : public BinderBase
         {
             if (!out_value)
             {
-                THROW_EXCEPTION("out_value must not be nullptr");
+                THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                        "out_value must not be nullptr.");
             }
             copy_value(to_argument_type(*m_value), out_value);
         }
@@ -390,9 +401,9 @@ Property::~Property()
     }
 }
 
-void Property::throw_exception(std::string message, const CodeLocation& location) const
+void Property::throw_exception(ErrorCode err_code, std::string message, const CodeLocation& location) const
 {
-    return get_properties().throw_exception(message, location);
+    return get_properties().throw_exception(err_code, message, location);
 }
 
 void Property::throw_if_unset() const
@@ -430,10 +441,8 @@ Property::Trait Property::get_trait() const
 
 Properties& Property::get_properties()
 {
-    if (!m_properties.is_valid())
-    {
-        THROW_EXCEPTION("Properties object is unavaliable");
-    }
+    INVARIANT(m_properties.is_valid());
+
     return m_properties;
 }
 
@@ -446,8 +455,9 @@ Properties::Binder::~Binder()
 {
 }
 
-Properties::Properties(const std::string& name)
-    : m_name(name),
+Properties::Properties(ErrorScope error_scope, const std::string& name)
+    : m_error_scope(error_scope),
+      m_name(name),
       m_properties(),
       m_property_name_by_value(),
       m_is_dirty(true)
@@ -666,9 +676,10 @@ bool Properties::is_set(const void* value) const
     return false;
 }
 
-void Properties::throw_exception(const std::string& message, const CodeLocation& location) const
+void Properties::throw_exception(ErrorCode error_code, const std::string& message, const CodeLocation& location) const
 {
-    throw Exception(get_name().c_str(), location) << " : " << message;
+    throw Exception(set_error_scope(m_error_scope, error_code),
+            get_name().c_str(), location) << " : " << message;
 }
 
 const void* Properties::get_object_magic()

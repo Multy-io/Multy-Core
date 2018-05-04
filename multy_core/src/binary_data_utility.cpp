@@ -42,10 +42,8 @@ BinaryData power_slice(const BinaryData& data, int32_t offset, int32_t size)
 
 BinaryData slice(const BinaryData& data, size_t offset, size_t size)
 {
-    if (!data.data)
-    {
-        THROW_EXCEPTION("Can't slice BinaryData: data is nullptr.");
-    }
+    INVARIANT(data.data != nullptr);
+
     if (offset > data.len)
     {
         THROW_EXCEPTION("Can't slice BinaryData: offset > data length.")

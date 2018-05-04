@@ -8,6 +8,7 @@
 #define MULTY_CORE_SRC_API_PROPERTIES_IMPL_H
 
 #include "multy_core/api.h"
+#include "multy_core/error.h"
 
 #include "multy_core/src/object.h"
 #include "multy_core/src/u_ptr.h"
@@ -70,7 +71,7 @@ protected:
     explicit Property(Properties& properties, const void* value_ptr);
     virtual ~Property();
 
-    void throw_exception(std::string message, const CodeLocation& location) const;
+    void throw_exception(ErrorCode error_code, std::string message, const CodeLocation& location) const;
 
     // throws exception if value is unset.
     void throw_if_unset() const;
@@ -91,7 +92,7 @@ protected:
 struct MULTY_CORE_API Properties : public ::multy_core::internal::ObjectBase<Properties>
 {
 public:
-    explicit Properties(const std::string& name);
+    explicit Properties(ErrorScope error_scope, const std::string& name);
 
     struct MULTY_CORE_API Binder
     {
@@ -248,7 +249,7 @@ public:
     std::string get_name() const;
 
     // Not a part of public interface.
-    void throw_exception(const std::string& message, const CodeLocation& location) const;
+    void throw_exception(ErrorCode error, const std::string& message, const CodeLocation& location) const;
 
     static const void* get_object_magic();
 
@@ -264,6 +265,7 @@ protected:
     BinderPtr& make_property(const std::string& name, const void* value);
 
 private:
+    const ErrorScope m_error_scope;
     const std::string m_name;
     std::map<std::string, BinderPtr> m_properties;
     std::map<const void*, std::string> m_property_name_by_value;

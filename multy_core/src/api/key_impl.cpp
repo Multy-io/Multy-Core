@@ -35,16 +35,19 @@ std::string ExtendedKey::to_string() const
     using namespace multy_core::internal;
 
     unsigned char serialized_key[BIP32_SERIALIZED_LEN] = {'\0'};
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             bip32_key_serialize(
                     &key, 0, serialized_key, sizeof(serialized_key)),
-            "Failed to searialize ExtendedKey");
+            ERROR_KEY_CANT_SERIALIZE,
+            "Failed to searialize ExtendedKey.");
+
     CharPtr out_str;
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             wally_base58_from_bytes(
                     serialized_key, sizeof(serialized_key),
                     BASE58_FLAG_CHECKSUM, reset_sp(out_str)),
-            "Failed to convert serialized ExtendedKey to string");
+            ERROR_KEY_CANT_SERIALIZE,
+            "Failed to base58 encode serialized ExtendedKey to string.");
     return std::string(out_str.get());
 }
 
@@ -87,7 +90,7 @@ ExtendedKeyPtr make_master_key(const BinaryData& seed)
     if (result == WALLY_ERROR)
     {
         THROW_EXCEPTION2(
-                ERROR_BAD_ENTROPY,
+                ERROR_KEY_BAD_ENTROPY,
                 "Can't generate master key with given entropy.");
     }
     THROW_IF_WALLY_ERROR(result, "Failed to generate master key.");
@@ -100,11 +103,12 @@ ExtendedKeyPtr make_child_key(
         uint32_t chain_code)
 {
     ExtendedKeyPtr child_key(new ExtendedKey);
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             bip32_key_from_parent(
                     &parent_key.key, chain_code, BIP32_FLAG_KEY_PRIVATE,
                     &child_key->key),
-            "Failed to make child key");
+            ERROR_KEY_CANT_DERIVE_CHILD_KEY,
+            "Failed to make child key.");
 
     return child_key;
 }
@@ -113,7 +117,8 @@ CharPtr make_user_id_from_master_key(const ExtendedKey& master_key)
 {
     if (!(master_key.key.depth == 0 && master_key.key.child_num == 0))
     {
-        THROW_EXCEPTION("Can't create a user id from non-master key.");
+        THROW_EXCEPTION2(ERROR_KEY_CANT_MAKE_USER_ID_FROM_NON_ROOT_KEY,
+                "Can't create a user id from non-master key.");
     }
 
     const ExtendedKeyPtr multy_user_id_key = make_child_key(master_key,

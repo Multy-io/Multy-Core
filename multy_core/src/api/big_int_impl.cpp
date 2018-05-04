@@ -7,7 +7,6 @@
 #include "multy_core/src/api/big_int_impl.h"
 
 #include "multy_core/src/exception.h"
-#include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 
 #include "multy_test/value_printers.h"
@@ -27,9 +26,12 @@ int validate_for_math(const double& value)
     switch(category)
     {
         case FP_INFINITE:
-            THROW_EXCEPTION("Can't do math with infinite value:") << value;
+            THROW_EXCEPTION2(ERROR_BIG_INT_MATH_WITH_INFINITY,
+                    "Can't do math with infinite value.");
         case FP_NAN:
-            THROW_EXCEPTION("Can't do math with NaN.");
+            THROW_EXCEPTION2(
+                    ERROR_BIG_INT_MATH_WITH_NAN,
+                    "Can't do math with NaN.");
     }
 
     return category;
@@ -60,8 +62,9 @@ void signed_import(T value, mpz_t gmp_value)
 
 BigInt::BigInt(const char* value)
 {
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             mpz_init_set_str(m_value, value, 10),
+            ERROR_BIG_INT_INVALID_STRING,
             "Failed to initialize BigInt from string.");
 }
 
@@ -154,7 +157,8 @@ uint64_t BigInt::get_value_as_uint64() const
 {
     if (mpz_sgn(m_value) < 0 || mpz_sizeinbase(m_value, 2) > sizeof(uint64_t) * 8)
     {
-        THROW_EXCEPTION("BigInt value is not representable as int64_t");
+        THROW_EXCEPTION2(ERROR_BIG_INT_TOO_BIG_FOR_UINT64,
+                "BigInt value is not representable as uint64_t.");
     }
     uint64_t result = 0;
     mpz_export(&result, 0, -1, sizeof(result), 0, 0, m_value);
@@ -172,7 +176,8 @@ int64_t BigInt::get_value_as_int64() const
 {
     if (!is_representable_as_int64())
     {
-        THROW_EXCEPTION("BigInt value is too big for int64_t");
+        THROW_EXCEPTION2(ERROR_BIG_INT_TOO_BIG_FOR_INT64,
+                "BigInt value is too big for int64_t.");
     }
 
     int64_t result = 0;
@@ -240,7 +245,7 @@ BigInt& BigInt::operator/=(const BigInt& other)
 {
     if (other == 0)
     {
-        THROW_EXCEPTION("Division by zero.");
+        THROW_EXCEPTION2(ERROR_BIG_INT_ZERO_DIVISION, "Division by zero.");
     }
 
     mpz_tdiv_q(m_value, m_value, other.m_value);
@@ -276,7 +281,8 @@ BigInt& BigInt::operator/=(const double& value)
 {
     if (validate_for_math(value) == FP_ZERO)
     {
-        THROW_EXCEPTION("Division by zero.");
+        THROW_EXCEPTION2(ERROR_BIG_INT_ZERO_DIVISION,
+                "Division by zero.");
     }
 
     mpz_set_d(m_value, mpz_get_d(m_value) / value);

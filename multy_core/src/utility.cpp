@@ -65,15 +65,16 @@ char* copy_string(const char* str)
 
     wally_operations wally_ops;
     int result = wally_get_operations(&wally_ops);
-    if (result != WALLY_OK || !wally_ops.malloc_fn)
-    {
-        THROW_EXCEPTION("Failed to copy string.");
-    }
+
+    INVARIANT(result == WALLY_OK);
+    INVARIANT(wally_ops.malloc_fn != nullptr);
 
     char* new_message = static_cast<char*>(wally_ops.malloc_fn(len + 1));
     if (!new_message)
     {
-        THROW_EXCEPTION("Failed to allocate memory.")
+        // TODO: any better way for handling out of memory,
+        // cause throwing an exception, in fact, allocates more memory.
+        THROW_EXCEPTION2(ERROR_OUT_OF_MEMORY, "Failed to allocate memory.")
                 << " Requested: " << len + 1;
     }
 

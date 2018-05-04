@@ -18,10 +18,8 @@ namespace
 
 void copy_data(const BinaryData& source, BinaryData* dest)
 {
-    if (source.len > dest->len)
-    {
-        THROW_EXCEPTION("Failed to copy data: not enought space in dest.");
-    }
+    INVARIANT(source.len <= dest->len);
+
     memcpy(const_cast<uint8_t*>(dest->data), source.data, source.len);
     dest->len = source.len;
 }
@@ -35,9 +33,10 @@ namespace internal
 
 void ec_validate_private_key(const BinaryData& private_key_data)
 {
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             wally_ec_private_key_verify(private_key_data.data,
                     private_key_data.len),
+            ERROR_KEY_CORRUPT,
             "Failed to verify private key.");
 }
 
@@ -45,11 +44,14 @@ void ec_private_to_public_key(const BinaryData& private_key_data,
         PublicKeyFormat format,
         BinaryData* public_key_data)
 {
+    INVARIANT(public_key_data);
+
     std::array<uint8_t, EC_PUBLIC_KEY_LEN> key_data;
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             wally_ec_public_key_from_private_key(
                     private_key_data.data, private_key_data.len,
                     key_data.data(), key_data.size()),
+            ERROR_KEY_CANT_DERIVE_PUBLIC_KEY,
             "Failed to derive public key from private key.");
 
     if (format == EC_PUBLIC_KEY_COMPRESSED)
@@ -59,10 +61,11 @@ void ec_private_to_public_key(const BinaryData& private_key_data,
     }
 
     std::array<uint8_t, EC_PUBLIC_KEY_UNCOMPRESSED_LEN> uncompressed;
-    THROW_IF_WALLY_ERROR(
+    THROW_IF_WALLY_ERROR2(
             wally_ec_public_key_decompress(
                     key_data.data(), key_data.size(),
                     uncompressed.data(), uncompressed.size()),
+            ERROR_KEY_CORRUPT,
             "Failed to uncompress public key from data.");
 
     copy_data(as_binary_data(uncompressed), public_key_data);

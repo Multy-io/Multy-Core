@@ -65,6 +65,8 @@ public:
 
     std::string get_address() const override;
 
+    static std::string get_address_from_private_key(const PrivateKey& key);
+
 private:
     const BitcoinPrivateKeyPtr m_private_key;
 };

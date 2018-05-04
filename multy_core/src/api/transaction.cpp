@@ -27,7 +27,7 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
         *new_transaction = get_blockchain(account->get_blockchain_type().blockchain)
                 .make_transaction(*account).release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
     OUT_CHECK_OBJECT(*new_transaction);
 
     return nullptr;
@@ -43,7 +43,7 @@ Error* transaction_get_blockchain_type(
     {
         *out_blockchain_type = transaction->get_blockchain_type();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     return nullptr;
 }
@@ -57,7 +57,7 @@ Error* transaction_add_source(Transaction* transaction, Properties** source)
     {
         *source = &transaction->add_source();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     OUT_CHECK_OBJECT(*source);
 
@@ -74,7 +74,7 @@ Error* transaction_add_destination(
     {
         *destination = &transaction->add_destination();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     OUT_CHECK_OBJECT(*destination);
 
@@ -90,7 +90,7 @@ Error* transaction_get_fee(Transaction* transaction, Properties** fee)
     {
         *fee = &transaction->get_fee();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     OUT_CHECK_OBJECT(*fee);
 
@@ -106,7 +106,7 @@ Error* transaction_set_message(Transaction* transaction, const BinaryData* messa
     {
         transaction->set_message(*message);
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     return nullptr;
 }
@@ -121,7 +121,7 @@ Error* transaction_get_properties(Transaction* transaction,
     {
         *transaction_properties = &transaction->get_transaction_properties();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     OUT_CHECK_OBJECT(*transaction_properties);
 
@@ -146,7 +146,7 @@ Error* transaction_estimate_total_fee(
         *result = transaction->estimate_total_fee(sources_count, destinations_count);
         *out_fee_estimate = result.release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
     OUT_CHECK_OBJECT(*out_fee_estimate);
 
     return nullptr;
@@ -163,7 +163,7 @@ Error* transaction_get_total_fee(const Transaction* transaction, BigInt** out_to
         *result = transaction->get_total_fee();
         *out_total_fee = result.release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
     OUT_CHECK_OBJECT(*out_total_fee);
 
     return nullptr;
@@ -182,7 +182,7 @@ Error* transaction_get_total_spent(
         *result = transaction->get_total_spent();
         *out_total_spent = result.release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
     OUT_CHECK_OBJECT(*out_total_spent);
 
     return nullptr;
@@ -196,7 +196,7 @@ Error* transaction_update(Transaction* transaction)
     {
         transaction->update();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     return nullptr;
 }
@@ -212,7 +212,7 @@ Error* transaction_serialize(
     {
         *out_serialized_transaction = transaction->serialize().release();
     }
-    CATCH_EXCEPTION_RETURN_ERROR();
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 
     OUT_CHECK(*out_serialized_transaction);
 
