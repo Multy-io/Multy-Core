@@ -1,27 +1,34 @@
+/* Copyright 2018 by Multy.io
+ * Licensed under Multy.io license.
+ *
+ * See LICENSE for details
+ */
+
 #ifndef MULTY_TRANSACTION_ETHEREUM_TRANSACTION_H
 #define MULTY_TRANSACTION_ETHEREUM_TRANSACTION_H
 
 #include "multy_core/ethereum.h"
 
-#include "multy_core/src/transaction_base.h"
 #include "multy_core/src/api/properties_impl.h"
+#include "multy_core/src/transaction_base.h"
+
 
 namespace multy_core
 {
 namespace internal
 {
+struct EthereumTransactionSignature;
+struct EthereumDataStream;
 struct EthereumTransactionFee;
 struct EthereumTransactionSource;
 struct EthereumTransactionDestination;
-struct EthereumTransactionSignature;
-struct EthereumDataStream;
-struct EthereumTokenTransferData;
+class EthereumSmartContractPayload;
 
+typedef std::unique_ptr<EthereumSmartContractPayload> EthereumSmartContractPayloadPtr;
 typedef std::unique_ptr<EthereumTransactionFee> EthereumTransactionFeePtr;
 typedef std::unique_ptr<EthereumTransactionSource> EthereumTransactionSourcePtr;
 typedef std::unique_ptr<EthereumTransactionDestination> EthereumTransactionDestinationPtr;
 typedef std::unique_ptr<EthereumTransactionSignature> EthereumTransactionSignaturePtr;
-typedef std::unique_ptr<EthereumTokenTransferData> EthereumTokenTransferDataPtr;
 
 class EthereumTransaction : public TransactionBase
 {
@@ -62,12 +69,15 @@ private:
 
     EthereumTransactionFeePtr m_fee;
     EthereumTransactionSourcePtr m_source;
+    // User-visible destination, where all values are explicitly set by user,
+    // including token receiver address and token transfer amount.
     EthereumTransactionDestinationPtr m_destination;
-    EthereumTokenTransferDataPtr m_token_transfer_data;
+    // A destination used only to simplify transaction serialization, can be generated
+    // from token transfer info or just a receiver info (in case of plain Ether transfer).
+    EthereumTransactionDestinationPtr m_internal_destination;
+    EthereumSmartContractPayloadPtr m_token_transfer_data;
     EthereumTransactionSignaturePtr m_signature;
     BinaryDataPtr m_payload;
-
-    BigInt m_gas;
 };
 
 } // namespace internal

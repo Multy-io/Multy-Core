@@ -37,10 +37,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     ETHEREUM_TEST_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
 
     TransactionPtr transaction;
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
@@ -105,10 +105,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     ETHEREUM_TEST_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
 
     TransactionPtr transaction;
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
@@ -140,7 +140,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
         fee.set_property_value("gas_price", gas_price);
         fee.set_property_value("gas_limit", gas_limit);
     }
-    BinaryDataPtr serialied = transaction->serialize();  
+    BinaryDataPtr serialied = transaction->serialize();
     ASSERT_EQ(as_binary_data(from_hex(
             "f85f800182520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea1901802ba033de58162abbfdf1e744f5fee2b7a3c92691d9c59fc3f9ad2fa3fb946c8ea90aa0787abc84d20457c12fdcf62b612247fb34e397f6bdec64fc6a3bc9444df3e946")),
             *serialied);
@@ -151,10 +151,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     ETHEREUM_TEST_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     TransactionPtr transaction;
@@ -204,10 +204,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     ETHEREUM_TEST_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     TransactionPtr transaction;
@@ -261,10 +261,10 @@ GTEST_TEST(EthereumTransactionTest, transaction_update_empty_tx)
     // Verify that transaction_update() fails when called on empty TX.
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     ETHEREUM_TEST_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
 
     TransactionPtr transaction;
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
@@ -301,10 +301,15 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
     TransactionPtr transaction;
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
 
-    const BigInt available(1000000_WEI);
+    const BigInt available(10000.0_GWEI);
     const BigInt sent(10000_WEI);
     const BigInt gas_limit(121000);
-    const BigInt gas_price(3000.0_GWEI);
+    const BigInt gas_price(3000_WEI);
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(0));
+    }
 
     {
         Properties& source = transaction->add_source();
@@ -324,6 +329,8 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
         fee.set_property_value("gas_limit", gas_limit);
     }
 
+    HANDLE_ERROR(transaction_update(transaction.get()));
+
     BigIntPtr total_fee;
     HANDLE_ERROR(transaction_get_total_fee(transaction.get(), reset_sp(total_fee)));
     EXPECT_NE(nullptr, total_fee);
@@ -332,6 +339,8 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
     HANDLE_ERROR(transaction_get_total_spent(transaction.get(), reset_sp(total_spent)));
     EXPECT_NE(nullptr, total_spent);
 
+    EXPECT_NE(0, *total_spent);
+    EXPECT_NE(0, *total_fee);
     ASSERT_EQ(*total_spent, *total_fee + sent);
 }
 
@@ -340,10 +349,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
     AccountPtr account;
 
     HANDLE_ERROR(make_account(
-                     ETHEREUM_MAIN_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
-                     reset_sp(account)));
+            ETHEREUM_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     TransactionPtr transaction;
@@ -390,10 +399,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     ETHEREUM_MAIN_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
-                     reset_sp(account)));
+            ETHEREUM_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     TransactionPtr transaction;
@@ -440,14 +449,14 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
             "f0b0db2532b40782640aad46cbd2bc7e3911af0547fcd7272ae801cc98cc4d")), *serialied);
 }
 
-GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer)
+GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_ERC20_transfer)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     ETHEREUM_MAIN_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "c8aea1b4d991e2bb7c17b1cb8b8dbda9fb59717df552e98ec3aca80410565a9f",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "c8aea1b4d991e2bb7c17b1cb8b8dbda9fb59717df552e98ec3aca80410565a9f",
+                 reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     TransactionPtr transaction;
@@ -492,16 +501,16 @@ GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer)
             "ddcfdf2b6990b5f7f5a01efc5f0c3c6fc3863adef7f2bd2c4affaf4f138f77fbbd3e348fc674e8d070a9")), *serialied);
 }
 
-
-GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer_2)
+GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_ERC20_transfer_2)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     ETHEREUM_MAIN_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "0xb81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
-                     reset_sp(account)));
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x2b74679d2a190fd679a85ce7767c05605237f030", account->get_address());
 
     TransactionPtr transaction;
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
@@ -549,10 +558,10 @@ GTEST_TEST(EthereumTransactionTest, token_transfer_API)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
-                     ETHEREUM_MAIN_NET,
-                     ACCOUNT_TYPE_DEFAULT,
-                     "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
-                     reset_sp(account)));
+            ETHEREUM_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     TransactionPtr transaction;
@@ -599,4 +608,121 @@ GTEST_TEST(EthereumTransactionTest, token_transfer_API)
             &transaction_properties,
             "token_transfer",
             "invalid_standard:0x6b4be1fc5fa05c5d959d27155694643b8af72fd8:invalid_method"));
+}
+
+// This test is disabled, because not implimented transaction message with token transfer
+GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_mainnet_ERC20_transfer_with_data)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x2b74679d2a190fd679a85ce7767c05605237f030", account->get_address());
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance(9909144192.0_GWEI);
+    const BigInt value("1000000000000000");
+    const BigInt gas_limit(83668);
+    const BigInt gas_price(6.0_GWEI);
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(3));
+        properties.set_property_value("token_transfer", "ERC20:0x86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0:transfer");
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8");
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    BinaryDataPtr data;
+    HANDLE_ERROR(make_binary_data_from_hex("a9059cbb", reset_sp(data)));
+    HANDLE_ERROR(transaction_set_message(transaction.get(), data.get()));
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+
+    // TXid: 0xbbee00c42a7a686bedd091fd2f9a01bb9b2cb9e37e9535f6fec678506f4730db
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f8ae03850165a0bc00830146d49486fa049857e0209aa7d9e616f7eb3b3b78ecfdb080b848a9059cbb000000000000000000000000"
+            "6b4be1fc5fa05c5d959d27155694643b8af72fd8000000000000000000000000000000000000000000000000016345785d8a0000a9"
+            "059cbb25a05f8a05c7ac915ab479c175b6049ae662e0eaaf69cec95194bdfa44cb69e8b776a016c1ade55ca91c0b57e0fb133629b0"
+            "9d3bb1fde622b0f4413748d4a385fe1c9c")), *serialied);
+}
+
+GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_ERC20_transfer)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x2b74679d2a190fd679a85ce7767c05605237f030", account->get_address());
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance(9909144192.0_GWEI);
+    const BigInt value("100000000000000000");
+    const BigInt gas_limit(83668);
+    const BigInt gas_price(6.0_GWEI);
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(4));
+        properties.set_property_value("token_transfer", "ERC20:0x86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0:transfer");
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8");
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
+    BinaryDataPtr data;
+    HANDLE_ERROR(make_binary_data_from_hex("a9059cbb", reset_sp(data)));
+    HANDLE_ERROR(transaction_set_message(transaction.get(), data.get()));
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+
+    // TXid: 0xbce2467f9bfc1cfe3e6f98f6429970bec200cc48bf4de18d5540e02be14e19fe
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f8aa04850165a0bc00830146d49486fa049857e0209aa7d9e616f7eb3b3b78ecfdb080b844a9059cbb000000000000000000000000"
+            "6b4be1fc5fa05c5d959d27155694643b8af72fd8000000000000000000000000000000000000000000000000016345785d8a000026"
+            "a0d8b4a62dfaba55e669afbf3204429a7d62ac548992bb63c1f77c2917bb44832ea01a153de112f0c89fc78667823bcca59dbb0cbc"
+            "5327d5d6682ff7904e56126739")), *serialied);
 }
