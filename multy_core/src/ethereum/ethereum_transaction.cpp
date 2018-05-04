@@ -15,11 +15,35 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
 
-#include <sstream>
-#include <limits>
-
 #include <algorithm>
 #include <cassert>
+#include <limits>
+#include <regex>
+#include <sstream>
+#include <unordered_map>
+
+namespace multy_core
+{
+namespace internal
+{
+
+const size_t ETH_METHOD_HASH_SIZE = 4;
+typedef std::array<uint8_t, ETH_METHOD_HASH_SIZE> EthereumContractMethodHash;
+
+enum EthereumTokenStandard
+{
+    ETHEREUM_TOKEN_STANDARD_ERC20
+};
+
+struct EthereumTokenTransferData
+{
+    EthereumTokenStandard standard;
+    BinaryDataPtr address;
+    EthereumContractMethodHash method;
+};
+
+} // internal
+} // namespace multy_core
 
 namespace
 {
@@ -61,6 +85,108 @@ template <typename T>
 IntWrapper<T> as_int(const T& value, size_t size)
 {
     return IntWrapper<T>(value, size);
+}
+
+EthereumTokenStandard get_smart_contract_by_name(const std::string& name)
+{
+    static const std::unordered_map<std::string, EthereumTokenStandard> STANDARDS =
+    {
+        {
+            "ERC20", ETHEREUM_TOKEN_STANDARD_ERC20
+        }
+    };
+
+    const auto s = STANDARDS.find(name);
+    if (s == STANDARDS.end())
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_INVALID_STANDARD,
+                "Unknown Ethereum token standard.")
+                << " Got: " << name << ".";
+    }
+
+    return s->second;
+}
+
+EthereumContractMethodHash get_smart_contract_method_hash(
+        EthereumTokenStandard standard,
+        const std::string& method)
+{
+    typedef std::unordered_map<std::string, EthereumContractMethodHash> MethodHashes;
+    typedef std::unordered_map<size_t, MethodHashes> TokenTransferMethods;
+
+    static const TokenTransferMethods SUPPORTED_STANDARDS =
+    {
+        {
+            ETHEREUM_TOKEN_STANDARD_ERC20,
+            {
+                {
+                    "transfer",
+                    {
+                        0x00, 0x00, 0x00, 0x00
+                    }
+                },
+                {
+                    "approve",
+                    {
+                        0x00, 0x00, 0x00, 0x00
+                    }
+                }
+            }
+        },
+    };
+
+    const auto s = SUPPORTED_STANDARDS.find(standard);
+    if (s == SUPPORTED_STANDARDS.end())
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_INVALID_STANDARD,
+                "Unsupported Ethereum token standard.");
+    }
+
+    const auto m = s->second.find(method);
+    if (m == s->second.end())
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_INVALID_METHOD,
+                "Unsupported Ethereum token transfer method.")
+                << " Got: \"" << method << "\".";
+    }
+
+    return m->second;
+}
+
+EthereumTokenTransferDataPtr parse_token_transfer_data(const std::string& value)
+{
+    static const std::regex SPLIT_TOKEN_RE(":");
+
+    std::smatch token_match;
+    std::sregex_token_iterator iterator(value.begin(), value.end(), SPLIT_TOKEN_RE, -1);
+
+    EthereumTokenTransferDataPtr result(new EthereumTokenTransferData);
+    if (iterator == std::sregex_token_iterator())
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_STANDARD,
+                "Missing Token Smart Contract standard.");
+    }
+    result->standard = get_smart_contract_by_name(*iterator);
+    ++iterator;
+
+    if (iterator == std::sregex_token_iterator())
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_ADDRESS,
+                "Missing Token Smart Contract address.");
+    }
+    result->address = ethereum_parse_address(iterator->str().c_str());
+    ++iterator;
+
+    if (iterator == std::sregex_token_iterator())
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_METHOD,
+                "Missing Token Smart Contract method.");
+    }
+
+    result->method = get_smart_contract_method_hash(result->standard,
+            iterator->str());
+
+    return result;
 }
 
 } // namespace
@@ -383,6 +509,14 @@ EthereumTransaction::EthereumTransaction(const Account& account)
                     }
               }),
       m_chain_id(static_cast<EthereumChainId>(account.get_blockchain_type().net_type)),
+      m_token_transfer(
+              get_transaction_properties(),
+              "token_transfer",
+              Property::OPTIONAL,
+              [this](const std::string& new_token_transfer)
+              {
+                    this->on_token_transfer_set(new_token_transfer);
+              }),
       m_fee(new EthereumTransactionFee),
       m_source(),
       m_destination(),
@@ -435,6 +569,12 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
         list << static_cast<uint32_t>(m_chain_id) << 0u << 0u;
     }
     stream << list;
+}
+
+void EthereumTransaction::on_token_transfer_set(const std::string& value)
+{
+    EthereumTokenTransferDataPtr new_data = parse_token_transfer_data(value);
+    m_token_transfer_data.swap(new_data);
 }
 
 BigInt EthereumTransaction::get_total_spent() const

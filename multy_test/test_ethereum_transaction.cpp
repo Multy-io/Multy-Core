@@ -535,3 +535,58 @@ GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer_2)
             "000000000000000000000006f05b59d3b200002ba0f85db5aacaea5a50d2761b9b6f52939c21848116b187"
             "c8c05da800011a963860a027e9189fdee28faac1092441903d59371c84a0cd5cacea0410bcc2ab000646d0")), *serialied);
 }
+
+GTEST_TEST(EthereumTransactionTest, token_transfer_API)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+                     ETHEREUM_MAIN_NET,
+                     "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
+                     reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    Properties& transaction_properties = transaction->get_transaction_properties();
+    HANDLE_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "ERC20:0x6b4be1fc5fa05c5d959d27155694643b8af72fd8:transfer"));
+
+    HANDLE_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "ERC20:0x6b4be1fc5fa05c5d959d27155694643b8af72fd8:approve"));
+
+    EXPECT_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "ERC20:0x6b4be1fc5fa05c5d959d27155694643b8af72fd8:"));
+
+    EXPECT_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "ERC20::"));
+
+    EXPECT_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "::"));
+
+    EXPECT_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "ERC20:0x6b4be1fc5fa05c5d959d27155694643b8af72fd8:invalid_method"));
+
+    EXPECT_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "ERC20:invalid_address:transfer"));
+
+    EXPECT_ERROR(properties_set_string_value(
+            &transaction_properties,
+            "token_transfer",
+            "invalid_standard:0x6b4be1fc5fa05c5d959d27155694643b8af72fd8:invalid_method"));
+}

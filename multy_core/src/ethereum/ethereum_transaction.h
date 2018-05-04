@@ -15,11 +15,13 @@ struct EthereumTransactionSource;
 struct EthereumTransactionDestination;
 struct EthereumTransactionSignature;
 struct EthereumDataStream;
+struct EthereumTokenTransferData;
 
 typedef std::unique_ptr<EthereumTransactionFee> EthereumTransactionFeePtr;
 typedef std::unique_ptr<EthereumTransactionSource> EthereumTransactionSourcePtr;
 typedef std::unique_ptr<EthereumTransactionDestination> EthereumTransactionDestinationPtr;
 typedef std::unique_ptr<EthereumTransactionSignature> EthereumTransactionSignaturePtr;
+typedef std::unique_ptr<EthereumTokenTransferData> EthereumTokenTransferDataPtr;
 
 class EthereumTransaction : public TransactionBase
 {
@@ -49,16 +51,19 @@ private:
         SERIALIZE_WITH_CHAIN_ID,
     };
     void serialize_to_stream(EthereumDataStream& stream, SerializationMode mode) const;
+    void on_token_transfer_set(const std::string& value);
 
 private:
     const Account& m_account;
 
     PropertyT<BigInt> m_nonce;
     const EthereumChainId m_chain_id;
+    PropertyT<std::string> m_token_transfer;
 
     EthereumTransactionFeePtr m_fee;
     EthereumTransactionSourcePtr m_source;
     EthereumTransactionDestinationPtr m_destination;
+    EthereumTokenTransferDataPtr m_token_transfer_data;
     EthereumTransactionSignaturePtr m_signature;
     BinaryDataPtr m_payload;
 
