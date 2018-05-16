@@ -26,6 +26,7 @@ using namespace multy_core::internal;
 Error* make_hd_account(
         const ExtendedKey* master_key,
         BlockchainType blockchain_type,
+        uint32_t account_type,
         uint32_t index,
         HDAccount** new_account)
 {
@@ -36,7 +37,8 @@ Error* make_hd_account(
     try
     {
         *new_account = get_blockchain(blockchain_type.blockchain)
-                .make_hd_account(blockchain_type, *master_key, index).release();
+                .make_hd_account(blockchain_type, account_type,
+                        *master_key, index).release();
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
@@ -71,6 +73,7 @@ Error* make_hd_leaf_account(
 
 Error* make_account(
         BlockchainType blockchain,
+        uint32_t account_type,
         const char* serialized_private_key,
         Account** new_account)
 {
@@ -83,7 +86,8 @@ Error* make_account(
     try
     {
         *new_account = get_blockchain(blockchain.blockchain)
-                .make_account(blockchain, serialized_private_key).release();
+                .make_account(blockchain, account_type, serialized_private_key)
+                .release();
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 

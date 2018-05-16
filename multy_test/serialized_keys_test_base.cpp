@@ -34,18 +34,20 @@ void PrintTo(const SerializedKeyTestCase& c, std::ostream* out)
 void SerializedKeyTestP::SetUp()
 {
     const BlockchainType blockchain_type = ::testing::get<0>(GetParam());
-    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+    const uint32_t account_type = ::testing::get<1>(GetParam());
+    const SerializedKeyTestCase& test_data = ::testing::get<2>(GetParam());
 
     HANDLE_ERROR(
             make_account(
                     blockchain_type,
+                    account_type,
                     test_data.private_key, reset_sp(account)));
     ASSERT_NE(nullptr, account);
 }
 
 TEST_P(SerializedKeyTestP, public_key)
 {
-    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+    const SerializedKeyTestCase& test_data = ::testing::get<2>(GetParam());
 
     ConstCharPtr public_key_string;
     KeyPtr public_key;
@@ -63,7 +65,7 @@ TEST_P(SerializedKeyTestP, public_key)
 
 TEST_P(SerializedKeyTestP, address)
 {
-    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+    const SerializedKeyTestCase& test_data = ::testing::get<2>(GetParam());
     if (!test_data.address || strlen(test_data.address) == 0)
     {
         ASSERT_FALSE(blockchain_can_derive_address_from_private_key(
@@ -79,7 +81,7 @@ TEST_P(SerializedKeyTestP, address)
 
 TEST_P(SerializedKeyTestP, private_key)
 {
-    const SerializedKeyTestCase& test_data = ::testing::get<1>(GetParam());
+    const SerializedKeyTestCase& test_data = ::testing::get<2>(GetParam());
 
     KeyPtr private_key;
     HANDLE_ERROR(

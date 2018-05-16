@@ -4,19 +4,16 @@
  * See LICENSE for details
  */
 #include "multy_core/src/bitcoin/bitcoin_account.h"
+
 #include "multy_core/bitcoin.h"
+#include "multy_core/src/bitcoin/bitcoin_key.h"
 
 #include "multy_core/common.h"
-
-#include "multy_core/src/api/key_impl.h"
-#include "multy_core/src/ec_key_utils.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
-#include "multy_core/src/hash.h"
 #include "multy_core/src/hd_path.h"
 #include "multy_core/src/utility.h"
 
-#include "secp256k1.h"
 #include "wally_core.h"
 #include "wally_crypto.h"
 
@@ -45,21 +42,6 @@ const uint8_t ADDRESS_PREFIXES[2][2] = {
     }
 };
 
-const uint8_t PRIVATE_KEY_EXPORT_PREFIXES[2] = {
-    // Main net:
-    0x80,
-    // Test net:
-    0xEF
-};
-
-const uint8_t WIF_COMPRESSED_PUBLIC_KEY_SUFFIX = 0x01;
-
-uint8_t get_private_key_prefix(BitcoinNetType net_type)
-{
-    assert(net_type < array_size(PRIVATE_KEY_EXPORT_PREFIXES));
-    return PRIVATE_KEY_EXPORT_PREFIXES[net_type];
-}
-
 uint8_t get_address_prefix(BitcoinNetType net_type, BitcoinAddressType address_type)
 {
     assert(net_type < array_size(ADDRESS_PREFIXES));
@@ -86,144 +68,86 @@ uint32_t get_chain_index(BlockchainType blockchain_type)
     return blockchain_type.blockchain;
 }
 
+class BitcoinP2PKHAccount : public BitcoinAccount
+{
+public:
+    using BitcoinAccount::BitcoinAccount;
+
+    std::string get_address() const override
+    {
+        // P2PKH address generated from public key.
+        // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+
+        unsigned char pub_hash[HASH160_LEN + 1] = {'\0'};
+
+        // 1 - Take the corresponding public key generated with it (33 or 65
+        // bytes)
+        PublicKeyPtr public_key(m_private_key->make_public_key());
+        BinaryData key_data = public_key->get_content();
+
+        // 2 - Perform SHA-256 hashing on the public key
+        // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
+        {
+            // Leave the first byte intact for prefix.
+            BinaryData hash_data = power_slice(as_binary_data(pub_hash), 1, -1);
+            bitcoin_hash_160(key_data, &hash_data);
+        }
+
+        // 4 - Add version byte in front of RIPEMD-160 hash
+        //      (0x00 for Main Network)
+        pub_hash[0] = get_address_prefix(
+                static_cast<BitcoinNetType>(m_blockchain_type.net_type),
+                BITCOIN_ADDRESS_P2PKH);
+
+        // 5 - Perform SHA-256 hash on the extended RIPEMD-160 result
+        // 6 - Perform SHA-256 hash on the result of the previous SHA-256 hash
+        // 8 - Add the 4 checksum bytes from stage 7 at the end of extended
+        //      RIPEMD-160 hash from stage 4.
+        // 9 - Convert the result from a byte string into a base58 string
+        //      using Base58Check encoding.
+        CharPtr base58_string_ptr;
+        THROW_IF_WALLY_ERROR(
+                wally_base58_from_bytes(
+                        pub_hash, sizeof(pub_hash), BASE58_FLAG_CHECKSUM,
+                        reset_sp(base58_string_ptr)),
+                "Converting to base58 failed.");
+        std::string result(base58_string_ptr.get());
+
+        return result;
+    }
+};
+
+AccountPtr make_bitcoin_account(
+        BlockchainType blockchain_type,
+        BitcoinAccountType account_type,
+        BitcoinPrivateKeyPtr key,
+        HDPath path)
+{
+    if (account_type == BITCOIN_ACCOUNT_P2PKH)
+    {
+        return AccountPtr(new BitcoinP2PKHAccount(
+                blockchain_type,
+                std::move(key),
+                std::move(path)));
+    }
+    if (account_type == BITCOIN_ACCOUNT_SEGWIT)
+    {
+        THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET,
+                "SegWit accounts are not supported yet.");
+    }
+
+    THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unknown BitcoinAccountType.")
+            << " Value: " << account_type << ".";
+
+    return nullptr;
+}
+
 } // namespace
 
 namespace multy_core
 {
 namespace internal
 {
-
-struct BitcoinPublicKey : public PublicKey
-{
-public:
-    typedef std::vector<uint8_t> KeyData;
-
-    explicit BitcoinPublicKey(KeyData key_data)
-        : m_data(std::move(key_data))
-    {
-    }
-
-    std::string to_string() const override
-    {
-        CharPtr out_str;
-        THROW_IF_WALLY_ERROR(
-                wally_base58_from_bytes(
-                        m_data.data(), m_data.size(), 0, reset_sp(out_str)),
-                "Failed to serialize Bitcoin public key.");
-        return std::string(out_str.get());
-    }
-
-    const BinaryData get_content() const override
-    {
-        return as_binary_data(m_data);
-    }
-
-    PublicKeyPtr clone() const override
-    {
-        return make_clone(*this);
-    }
-
-private:
-    const KeyData m_data;
-};
-
-struct BitcoinPrivateKey : public PrivateKey
-{
-    typedef std::vector<uint8_t> KeyData;
-
-    BitcoinPrivateKey(KeyData data,
-            BitcoinNetType net_type,
-            PublicKeyFormat public_key_format)
-        : m_data(std::move(data)),
-          m_net_type(net_type),
-          m_public_key_format(public_key_format)
-    {
-        ec_validate_private_key(as_binary_data(m_data));
-    }
-
-    BitcoinPrivateKey(const BinaryData& data,
-            BitcoinNetType net_type,
-            PublicKeyFormat public_key_format)
-        : m_data(data.data, data.data + data.len),
-          m_net_type(net_type),
-          m_public_key_format(public_key_format)
-    {
-        ec_validate_private_key(as_binary_data(m_data));
-    }
-
-    std::string to_string() const override
-    {
-        KeyData data(m_data);
-        data.insert(data.begin(), get_private_key_prefix(m_net_type));
-        if (m_public_key_format == EC_PUBLIC_KEY_COMPRESSED)
-        {
-            data.push_back(WIF_COMPRESSED_PUBLIC_KEY_SUFFIX);
-        }
-
-        CharPtr out_str;
-        THROW_IF_WALLY_ERROR(
-                wally_base58_from_bytes(
-                        data.data(), data.size(),
-                        BASE58_FLAG_CHECKSUM,
-                        reset_sp(out_str)),
-                "Failed to serialize Bitcoin private key.");
-        wally_bzero(data.data(), data.size());
-
-        return std::string(out_str.get());
-    }
-
-    PublicKeyPtr make_public_key() const override
-    {
-        const size_t public_key_size =
-                (m_public_key_format == EC_PUBLIC_KEY_COMPRESSED)
-                        ? EC_PUBLIC_KEY_LEN : EC_PUBLIC_KEY_UNCOMPRESSED_LEN;
-        BitcoinPublicKey::KeyData key_data(public_key_size, 0);
-        BinaryData public_key_data = as_binary_data(key_data);
-
-        ec_private_to_public_key(as_binary_data(m_data),
-                m_public_key_format,
-                &public_key_data);
-
-        return PublicKeyPtr(new BitcoinPublicKey(key_data));
-    }
-
-    PrivateKeyPtr clone() const override
-    {
-        return make_clone(*this);
-    }
-
-    BinaryDataPtr sign(const BinaryData& data) const override
-    {
-        auto data_hash = do_hash<SHA2_DOUBLE, 256>(data);
-
-        std::array<uint8_t, EC_SIGNATURE_LEN> signature;
-        THROW_IF_WALLY_ERROR(
-                wally_ec_sig_from_bytes(
-                        m_data.data(), m_data.size(),
-                        data_hash.data(), data_hash.size(),
-                        EC_FLAG_ECDSA, signature.data(), signature.size()),
-                "Failed to sign binary data with private key.");
-        wally_bzero(data_hash.data(), data_hash.size());
-
-        std::array<uint8_t, EC_SIGNATURE_DER_MAX_LEN> der_signature;
-        size_t written;
-        THROW_IF_WALLY_ERROR(
-                wally_ec_sig_to_der(
-                        signature.data(), signature.size(),
-                        der_signature.data(), der_signature.size(), &written),
-                "Failed to convert signature to DER format.");
-        wally_bzero(signature.data(), signature.size());
-
-        return make_clone(BinaryData{der_signature.data(), written});
-    }
-
-private:
-    // TODO: use a shared_pointer to KeyData here to keep a single copy of
-    // the private key data in memory.
-    const KeyData m_data;    // private key data with no prefix
-    const BitcoinNetType m_net_type;
-    const PublicKeyFormat m_public_key_format;
-};
 
 BitcoinAccount::BitcoinAccount(BlockchainType blockchain_type,
         BitcoinPrivateKeyPtr key,
@@ -248,53 +172,14 @@ void bitcoin_hash_160(const BinaryData& input, BinaryData* output)
             "hash160 failed.");
 }
 
-std::string BitcoinAccount::get_address() const
-{
-    // P2PKH address generated from public key.
-    // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-
-    unsigned char pub_hash[HASH160_LEN + 1] = {'\0'};
-
-    // 1 - Take the corresponding public key generated with it (33 or 65
-    // bytes)
-    PublicKeyPtr public_key(m_private_key->make_public_key());
-    BinaryData key_data = public_key->get_content();
-
-    // 2 - Perform SHA-256 hashing on the public key
-    // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
-    {
-        // Leave the first byte intact for prefix.
-        BinaryData hash_data = power_slice(as_binary_data(pub_hash), 1, -1);
-        bitcoin_hash_160(key_data, &hash_data);
-    }
-
-    // 4 - Add version byte in front of RIPEMD-160 hash
-    //      (0x00 for Main Network)
-    pub_hash[0] = get_address_prefix(
-            static_cast<BitcoinNetType>(m_blockchain_type.net_type), BITCOIN_ADDRESS_P2PKH);
-
-    // 5 - Perform SHA-256 hash on the extended RIPEMD-160 result
-    // 6 - Perform SHA-256 hash on the result of the previous SHA-256 hash
-    // 8 - Add the 4 checksum bytes from stage 7 at the end of extended
-    //      RIPEMD-160 hash from stage 4.
-    // 9 - Convert the result from a byte string into a base58 string
-    //      using Base58Check encoding.
-    CharPtr base58_string_ptr;
-    THROW_IF_WALLY_ERROR(
-            wally_base58_from_bytes(
-                    pub_hash, sizeof(pub_hash), BASE58_FLAG_CHECKSUM,
-                    reset_sp(base58_string_ptr)),
-            "Converting to base58 failed.");
-    std::string result(base58_string_ptr.get());
-
-    return result;
-}
-
 BitcoinHDAccount::BitcoinHDAccount(
         BlockchainType blockchain_type,
+        BitcoinAccountType account_type,
         const ExtendedKey& bip44_master_key,
         uint32_t index)
-    : HDAccountBase(blockchain_type, get_chain_index(blockchain_type), bip44_master_key, index)
+    : HDAccountBase(blockchain_type,
+            get_chain_index(blockchain_type), bip44_master_key, index),
+      m_account_type(account_type)
 {
 }
 
@@ -315,64 +200,22 @@ AccountPtr BitcoinHDAccount::make_account(
                     static_cast<BitcoinNetType>(get_blockchain_type().net_type),
                     EC_PUBLIC_KEY_COMPRESSED));
 
-    return AccountPtr(
-            new BitcoinAccount(
-                    get_blockchain_type(),
-                    std::move(private_key),
-                    make_child_path(make_child_path(get_path(), type), index)));
+    return ::make_bitcoin_account(
+            get_blockchain_type(),
+            m_account_type,
+            std::move(private_key),
+            make_child_path(make_child_path(get_path(), type), index));
 }
 
-AccountPtr make_bitcoin_account(const char* private_key)
+AccountPtr make_bitcoin_account(
+        const char* private_key,
+        BitcoinAccountType account_type)
 {
-    INVARIANT(private_key != nullptr);
+    BitcoinPrivateKeyPtr key = make_bitcoin_private_key_from_wif(private_key);
 
-    size_t resulting_size = 0;
-    THROW_IF_WALLY_ERROR(
-            wally_base58_get_length(private_key, &resulting_size),
-            "Faield to process base-58 encoded private key.");
-
-    std::vector<unsigned char> key_data(resulting_size, 0);
-
-    THROW_IF_WALLY_ERROR(
-            wally_base58_to_bytes(
-                    private_key, BASE58_FLAG_CHECKSUM, key_data.data(),
-                    key_data.size(), &resulting_size),
-            "Faield to deserialize base-58 encoded private key.");
-
-    if (resulting_size > key_data.size() || resulting_size < EC_PRIVATE_KEY_LEN)
-    {
-        THROW_EXCEPTION("Failed to deserialize private key.");
-    }
-    key_data.resize(resulting_size);
-
-    BitcoinNetType net_type = BITCOIN_NET_TYPE_MAINNET;
-    // WIF, drop first 0x80 byte
-    if (key_data[0] == 0x80 || key_data[0] == 0xef)
-    {
-        net_type = (key_data[0] == 0xef) ? BITCOIN_NET_TYPE_TESTNET : BITCOIN_NET_TYPE_MAINNET;
-        key_data.erase(key_data.begin());
-    }
-    bool use_compressed_public_key = false;
-    // WIF, drop last 0x01 byte
-    const char* compressed_pefixes = net_type == BITCOIN_NET_TYPE_MAINNET ? "LK" : "c";
-    if (strchr(compressed_pefixes, private_key[0])
-            && key_data.back() == WIF_COMPRESSED_PUBLIC_KEY_SUFFIX)
-    {
-        key_data.erase(key_data.end() - 1);
-        use_compressed_public_key = true;
-    }
-
-    THROW_IF_WALLY_ERROR(
-            wally_ec_private_key_verify(key_data.data(), key_data.size()),
-            "Failed to verify private key.");
-
-    BitcoinPrivateKeyPtr key(new BitcoinPrivateKey(std::move(key_data),
-            net_type,
-            (use_compressed_public_key ? EC_PUBLIC_KEY_COMPRESSED : EC_PUBLIC_KEY_UNCOMPRESSED)));
-
-    const BlockchainType blockchain_type{BLOCKCHAIN_BITCOIN, net_type};
-    return AccountPtr(
-            new BitcoinAccount(blockchain_type, std::move(key), HDPath()));
+    const BlockchainType blockchain_type{BLOCKCHAIN_BITCOIN, key->get_net_type()};
+    return ::make_bitcoin_account(
+            blockchain_type, account_type, std::move(key), HDPath());
 }
 
 BinaryDataPtr bitcoin_parse_address(const char* address,

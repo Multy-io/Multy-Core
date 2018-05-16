@@ -21,6 +21,14 @@ enum BitcoinAddressType
 {
     BITCOIN_ADDRESS_P2PKH = 0,
     BITCOIN_ADDRESS_P2SH = 1,
+    BITCOIN_ADDRESS_P2SH_P2WPKH = 2
+};
+
+enum BitcoinAccountType
+{
+    BITCOIN_ACCOUNT_DEFAULT = 0,
+    BITCOIN_ACCOUNT_P2PKH = BITCOIN_ACCOUNT_DEFAULT,
+    BITCOIN_ACCOUNT_SEGWIT = 1,
 };
 
 #ifdef __cplusplus

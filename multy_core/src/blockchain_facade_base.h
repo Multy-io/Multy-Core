@@ -31,10 +31,13 @@ public:
 
     virtual HDAccountPtr make_hd_account(
             BlockchainType blockchain_type,
+            uint32_t account_type,
             const ExtendedKey& master_key,
             uint32_t index) = 0;
 
-    virtual AccountPtr make_account(BlockchainType,
+    virtual AccountPtr make_account(
+            BlockchainType blockchain_type,
+            uint32_t account_type,
             const char* serialized_private_key) = 0;
 
     virtual TransactionPtr make_transaction(const Account&) = 0;

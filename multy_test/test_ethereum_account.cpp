@@ -127,6 +127,7 @@ INSTANTIATE_TEST_CASE_P(
                         BlockchainType{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_MAINNET},
                         BlockchainType{BLOCKCHAIN_ETHEREUM, ETHEREUM_CHAIN_ID_RINKEBY}
                 ),
+                ::testing::Values(ACCOUNT_TYPE_DEFAULT),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
@@ -154,7 +155,11 @@ GTEST_TEST(EtheremAccountTest, PrivateKeySig)
     const char MESSAGE[] = "msg";
 
     AccountPtr account;
-    HANDLE_ERROR(make_account(ETHEREUM_MAIN_NET, PRIVATE_KEY, reset_sp(account)));
+    HANDLE_ERROR(make_account(
+            ETHEREUM_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            PRIVATE_KEY,
+            reset_sp(account)));
 
     BinaryDataPtr message;
     HANDLE_ERROR(make_binary_data_from_bytes(

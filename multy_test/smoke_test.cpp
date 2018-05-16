@@ -62,7 +62,10 @@ TEST_P(AccountSmokeTestP, AccountFromEntropy)
     HDAccountPtr root_account;
     HANDLE_ERROR(
             make_hd_account(
-                    root_key.get(), expected_blockchain, 0,
+                    root_key.get(),
+                    expected_blockchain,
+                    BITCOIN_ACCOUNT_DEFAULT,
+                    0,
                     reset_sp(root_account)));
     ASSERT_NE(nullptr, root_account);
 

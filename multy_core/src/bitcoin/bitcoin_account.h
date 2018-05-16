@@ -18,14 +18,18 @@ namespace multy_core
 namespace internal
 {
 
+class BitcoinAccount;
 struct BitcoinPublicKey;
 struct BitcoinPrivateKey;
+typedef UPtr<BitcoinAccount> BitcoinAccountPtr;
 typedef UPtr<BitcoinPrivateKey> BitcoinPrivateKeyPtr;
 typedef UPtr<BitcoinPublicKey> BitcoinPublicKeyPtr;
 
 void bitcoin_hash_160(const BinaryData& input, BinaryData* output);
 
-AccountPtr make_bitcoin_account(const char* private_key);
+AccountPtr make_bitcoin_account(
+        const char* private_key,
+        BitcoinAccountType account_type);
 
 /** Parse given base58 encoded address and verify it's checksumm.
  *
@@ -46,6 +50,7 @@ class MULTY_CORE_API BitcoinHDAccount : public HDAccountBase
 public:
     BitcoinHDAccount(
             BlockchainType blockchain_type,
+            BitcoinAccountType account_type,
             const ExtendedKey& bip44_master_key,
             uint32_t index);
 
@@ -55,19 +60,27 @@ public:
             const ExtendedKey& parent_key,
             AddressType type,
             uint32_t index) const override;
+
+private:
+    const BitcoinAccountType m_account_type;
 };
 
 class MULTY_CORE_API BitcoinAccount : public AccountBase
 {
 public:
-    BitcoinAccount(BlockchainType blockchain_type, BitcoinPrivateKeyPtr key, HDPath path);
+    BitcoinAccount(
+            BlockchainType blockchain_type,
+            BitcoinPrivateKeyPtr key,
+            HDPath path);
+
     ~BitcoinAccount();
 
-    std::string get_address() const override;
+    virtual std::string get_address() const = 0;
 
     static std::string get_address_from_private_key(const PrivateKey& key);
+    BitcoinAccountType get_account_type() const;
 
-private:
+protected:
     const BitcoinPrivateKeyPtr m_private_key;
 };
 

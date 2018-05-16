@@ -38,6 +38,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
 
     HANDLE_ERROR(make_account(
                      ETHEREUM_TEST_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -105,6 +106,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
 
     HANDLE_ERROR(make_account(
                      ETHEREUM_TEST_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -150,6 +152,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
 
     HANDLE_ERROR(make_account(
                      ETHEREUM_TEST_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -202,6 +205,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                      ETHEREUM_TEST_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -258,6 +262,7 @@ GTEST_TEST(EthereumTransactionTest, transaction_update_empty_tx)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                      ETHEREUM_TEST_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
                      reset_sp(account)));
 
@@ -289,6 +294,7 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
     AccountPtr account;
     HANDLE_ERROR(make_account(
             ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
             "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
             reset_sp(account)));
 
@@ -336,6 +342,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
 
     HANDLE_ERROR(make_account(
                      ETHEREUM_MAIN_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -385,6 +392,7 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                      ETHEREUM_MAIN_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -438,6 +446,7 @@ GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                      ETHEREUM_MAIN_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "c8aea1b4d991e2bb7c17b1cb8b8dbda9fb59717df552e98ec3aca80410565a9f",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -490,6 +499,7 @@ GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer_2)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                      ETHEREUM_MAIN_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "0xb81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -541,6 +551,7 @@ GTEST_TEST(EthereumTransactionTest, token_transfer_API)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                      ETHEREUM_MAIN_NET,
+                     ACCOUNT_TYPE_DEFAULT,
                      "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00",
                      reset_sp(account)));
     ASSERT_NE(nullptr, account);

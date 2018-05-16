@@ -82,6 +82,7 @@ add_library(multy_core
     bitcoin.h
     src/bitcoin/bitcoin_facade.cpp
     src/bitcoin/bitcoin_account.cpp
+    src/bitcoin/bitcoin_key.cpp
     src/bitcoin/bitcoin_transaction.cpp
 
     # Ethereum

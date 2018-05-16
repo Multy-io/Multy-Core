@@ -718,7 +718,11 @@ void BitcoinTransaction::verify() const
 
         if (*sig_script != **s->prev_transaction_out_script_pubkey)
         {
-            AccountPtr error_account = make_bitcoin_account(s->private_key->to_string().c_str());
+            AccountPtr error_account = make_bitcoin_account(
+                    s->private_key->to_string().c_str(),
+                    // TODO: get account type from initial account, and put it here.
+                    BITCOIN_ACCOUNT_DEFAULT);
+
             THROW_EXCEPTION2(ERROR_TRANSACTION_INVALID_PRIVATE_KEY,
                     "Source can't be spent using given private key.")
                     << " Source index: " << source_index

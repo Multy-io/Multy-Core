@@ -45,8 +45,12 @@ AccountPtr make_account(
         const char* serialized_private_key)
 {
     AccountPtr account;
-    throw_if_error(
-            make_account(blockchain, serialized_private_key, reset_sp(account)));
+    throw_if_error(make_account(
+            blockchain,
+            BITCOIN_ACCOUNT_DEFAULT,
+            serialized_private_key,
+            reset_sp(account)));
+
     return account;
 }
 
@@ -272,6 +276,7 @@ GTEST_TEST(BitcoinTransactionTest, create_raw_transaction_public_api)
     AccountPtr account;
     HANDLE_ERROR(make_account(
             BITCOIN_TEST_NET,
+            BITCOIN_ACCOUNT_P2PKH,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
             reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -346,6 +351,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -401,6 +407,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -481,6 +488,7 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -563,6 +571,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -620,6 +629,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -685,6 +695,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
 
     HANDLE_ERROR(make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -753,6 +764,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
     AccountPtr account;
     HANDLE_ERROR(make_account(
                     BITCOIN_TEST_NET,
+                     BITCOIN_ACCOUNT_P2PKH,
                     "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -827,6 +839,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cScuLx5taDyuAfCnin5WWZz65yGCHMuuaFv6mgearmqAHC4p53sz",
                     reset_sp(account)));
     ASSERT_NE(nullptr, account);
@@ -835,6 +848,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     HANDLE_ERROR(
             make_account(
                     BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "cVbMJKcfEGi4wgsN39rMPkYVAaLeRaPPbrPpJfcH9B9dZCPbS7kT",
                     reset_sp(account1)));
     ASSERT_NE(nullptr, account1);
@@ -1090,6 +1104,7 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_with_op_return)
     AccountPtr account;
     HANDLE_ERROR(make_account(
                     BITCOIN_MAIN_NET,
+                    BITCOIN_ACCOUNT_P2PKH,
                     "5KWNESNNyn68focSAoUm3zrgnGZ4fABoWf9DccbEUHwWFhx5ouj",
                     reset_sp(account)));
     const PrivateKeyPtr private_key = account->get_private_key();

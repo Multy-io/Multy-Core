@@ -31,9 +31,12 @@ class DeletionTestP : public ::testing::TestWithParam<BlockchainType>
 public:
     void SetUp()
     {
-        HANDLE_ERROR(
-                make_hd_account(
-                        &master_key, GetParam(), 0, reset_sp(hd_account)));
+        HANDLE_ERROR(make_hd_account(
+                &master_key,
+                GetParam(),
+                ACCOUNT_TYPE_DEFAULT,
+                0,
+                reset_sp(hd_account)));
 
         HANDLE_ERROR(
                 make_hd_leaf_account(
