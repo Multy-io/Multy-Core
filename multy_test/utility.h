@@ -34,6 +34,13 @@
         EXPECT_NE(nullptr, error);                                             \
     } while (0)
 
+#define ASSERT_ERROR(statement)                                                \
+    do                                                                         \
+    {                                                                          \
+        multy_core::internal::ErrorPtr error(statement);                                             \
+        ASSERT_NE(nullptr, error);                                             \
+    } while (false)
+
 #define EXPECT_ERROR_WITH_CODE(statement, error_code)                          \
     do                                                                         \
     {                                                                          \
@@ -78,6 +85,11 @@ bool blockchain_can_derive_address_from_private_key(Blockchain blockchain);
 
 std::string minify_json(const std::string &input_json);
 
+BigInt operator"" _BTC(const long double btc);
+BigInt operator"" _SATOSHI(const unsigned long long int btc);
+BigInt operator "" _ETH(const long double eth);
+BigInt operator "" _GWEI(const long double gwei);
+BigInt operator "" _WEI(const unsigned long long int wei);
 } // test_utility
 
 bool operator==(const PrivateKey& lhs, const PrivateKey& rhs);

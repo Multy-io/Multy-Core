@@ -45,16 +45,13 @@ TEST_P(KeysTestValidCasesP, Test)
     const bytes seed_data = from_hex(param.seed);
     const BinaryData seed{seed_data.data(), seed_data.size()};
 
-    ErrorPtr error;
     ExtendedKeyPtr key;
     ConstCharPtr key_string;
 
-    error.reset(make_master_key(&seed, reset_sp(key)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(make_master_key(&seed, reset_sp(key)));
     ASSERT_NE(nullptr, key);
 
-    error.reset(extended_key_to_string(key.get(), reset_sp(key_string)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(extended_key_to_string(key.get(), reset_sp(key_string)));
     EXPECT_STREQ(param.root_key, key_string.get());
 }
 
@@ -63,19 +60,15 @@ GTEST_TEST(KeysTestInvalidArgs, make_master_key)
     const unsigned char data_vals[] = {1U, 2U, 3U, 4U};
     const BinaryData data{data_vals, 3};
 
-    ErrorPtr error;
     ExtendedKeyPtr key;
 
-    error.reset(make_master_key(nullptr, reset_sp(key)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_master_key(nullptr, reset_sp(key)));
     EXPECT_EQ(nullptr, key);
 
-    error.reset(make_master_key(&data, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_master_key(&data, nullptr));
 
     // Even though all arguments are present, data is still invalid
-    error.reset(make_master_key(&data, reset_sp(key)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_master_key(&data, reset_sp(key)));
     EXPECT_EQ(nullptr, key);
 }
 
@@ -83,14 +76,11 @@ GTEST_TEST(KeysTestInvalidArgs, make_child_key)
 {
     const ExtendedKey parent_key = make_dummy_extended_key();
 
-    ErrorPtr error;
     ExtendedKeyPtr child_key;
-    error.reset(make_child_key(nullptr, 0, reset_sp(child_key)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_child_key(nullptr, 0, reset_sp(child_key)));
     EXPECT_EQ(nullptr, child_key);
 
-    error.reset(make_child_key(&parent_key, 0, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_child_key(&parent_key, 0, nullptr));
 }
 
 GTEST_TEST(KeysTestInvalidArgs, make_user_id_from_master_key)

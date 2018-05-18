@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <string>
 
 namespace
 {
@@ -111,11 +112,11 @@ const TransactionTemplate DEFAULT_TX_TEMPLATE
     nullptr,
     TransactionFee
     { // fee:
-        BigInt{100}
+        100_SATOSHI
     },
     { // Sources
         {
-            BigInt{2000500},
+            2000500_SATOSHI,
             from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
             0,
             from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
@@ -126,7 +127,7 @@ const TransactionTemplate DEFAULT_TX_TEMPLATE
         TransactionDestination
         {
             "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
-            BigInt{1000000}
+            0.01_BTC
         },
         TransactionChangeDestination
         {
@@ -187,11 +188,11 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
         nullptr,
         TransactionFee
         { // fee:
-            BigInt{1}
+            1_SATOSHI
         },
         { // Sources
             {
-                BigInt{10 * 1000 * 1000},
+                0.1_BTC,
                 from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
                 0,
                 from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac"),
@@ -202,7 +203,7 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
             TransactionDestination
             {
                 "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
-                BigInt{9999227}
+                9999227_SATOSHI
             },
             TransactionChangeDestination
             {
@@ -216,11 +217,11 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
         nullptr,
         TransactionFee
         { // fee:
-            BigInt{100}
+            100_SATOSHI
         },
         { // Sources
             {
-                BigInt{100 * 1000 * 1000},
+                1.0_BTC,
                 from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
                 0,
                 from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac"),
@@ -231,7 +232,7 @@ const TransactionTemplate TEST_TRANSACTIONS[] =
             TransactionDestination
             {
                 "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
-                BigInt{99976950}
+                99976950_SATOSHI
             },
             TransactionChangeDestination
             {
@@ -357,43 +358,39 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet)
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available(BigInt(1000) * 1000 * 1000 * 1000 * 1000);
-    const BigInt out_1(BigInt(500) * 1000 * 1000 * 1000 * 1000);
+    const BigInt available(10000000.0_BTC);
+    const BigInt dest_amount(5000000.0_BTC);
+    const TransactionTemplate TEST_TX
     {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391")));
-        source.set_property_value("prev_tx_out_index", 0u);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property_value("private_key",
-                *account->get_private_key());
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        destination.set_property_value("amount", out_1);
-    }
-
-    {
-        Properties& change = transaction->add_destination();
-        change.set_property_value(
-                "address", "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM");
-        change.set_property_value("is_change", 1);
-    }
-
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", BigInt(1000));
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            1000_SATOSHI
+        },
+        { // Sources
+            {
+                available,
+                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            },
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                dest_amount
+            },
+            TransactionChangeDestination
+            {
+                "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM"
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
     BinaryDataPtr serialized = transaction->serialize();
     ASSERT_NE(nullptr, serialized);
@@ -413,42 +410,42 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available(BigInt(1000) * 1000 * 1000 * 1000 * 1000);
-    const BigInt out_1(BigInt(500) * 1000 * 1000 * 1000 * 1000);
-    const BigInt fee_per_byte(BigInt(1000));
-    {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391")));
-        source.set_property_value("prev_tx_out_index", 0u);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property_value("private_key",
-                *account->get_private_key());
-    }
+    const BigInt available(10000000.0_BTC);
+    const BigInt dest_amount(5000000.0_BTC);
+    const BigInt fee_per_byte(1000_SATOSHI);
 
+    const TransactionTemplate TEST_TX
     {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        destination.set_property_value("amount", out_1);
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            1000_SATOSHI
+        },
+        { // Sources
+            {
+                available,
+                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            },
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                dest_amount
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
     Properties& change = transaction->add_destination();
     change.set_property_value("address", "mpJDSHJcytfxp9asgo2pqihabHmmJkqJuM");
     change.set_property_value("is_change", 1);
     EXPECT_THROW(change.set_property_value("amount", BigInt(1)), Exception);
-
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_per_byte);
-    }
 
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
@@ -475,11 +472,11 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_explicit_change)
 
     ASSERT_LT(0, change_amount);
     EXPECT_PRED3(is_between,
-            available - out_1 - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 + delta_factor)),
+            available - dest_amount - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 + delta_factor)),
             change_amount,
-            available - out_1 - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 - delta_factor)));
+            available - dest_amount - static_cast<uint64_t>(expected_total_fee.get<uint64_t>() * (1 - delta_factor)));
 
-    ASSERT_GE(available - out_1 - expected_total_fee, change_amount);
+    ASSERT_GE(available - dest_amount - expected_total_fee, change_amount);
 }
 
 GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
@@ -498,11 +495,12 @@ GTEST_TEST(BitcoinTransactionTest, Unprofitable_change)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt available("10000");
-    const BigInt out_without_change("9709");
-    const BigInt out_with_change("9000");
-    const BigInt fee_per_byte_zero("0");
-    const BigInt fee_per_byte_one("1");
+    const BigInt available(10000_SATOSHI);
+    const BigInt out_without_change(9709_SATOSHI);
+    const BigInt out_with_change(9000_SATOSHI);
+    const BigInt fee_per_byte_zero(0_SATOSHI);
+    const BigInt fee_per_byte_one(1_SATOSHI);
+
     {
         Properties& source = transaction->add_source();
         source.set_property_value("amount", available);
@@ -577,38 +575,36 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2)
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available(BigInt(1000) * 1000 * 1000 * 1000 * 1000);
-    const BigInt dest_amount(BigInt(129) * 1000 * 1000);
-    const BigInt fee_per_byte(BigInt(1) * 1000 * 1000);
+    const BigInt available(10000000.0_BTC);
+    const BigInt dest_amount(1.29_BTC);
 
+    const TransactionTemplate TEST_TX
     {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(
-                        from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391")));
-        source.set_property_value("prev_tx_out_index", 0u);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property_value("private_key", *account->get_private_key());
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        destination.set_property_value("amount", dest_amount);
-    }
-
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_per_byte);
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            0.01_BTC
+        },
+        { // Sources
+            {
+                available,
+                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            },
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                dest_amount
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
@@ -635,38 +631,36 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available(BigInt(130) * 1000 * 1000);
-    const BigInt dest_amount(BigInt(129) * 1000 * 1000);
-    const BigInt fee_per_byte(1);
-
+    const BigInt available(1.3_BTC);
+    const BigInt dest_amount(1.29_BTC);
+    const BigInt fee_per_byte(1_SATOSHI);
+    const TransactionTemplate TEST_TX
     {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(
-                        from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391")));
-        source.set_property_value("prev_tx_out_index", 0u);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property_value("private_key", *account->get_private_key());
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        destination.set_property_value("amount", dest_amount);
-    }
-
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_per_byte);
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            fee_per_byte
+        },
+        { // Sources
+            {
+                available,
+                from_hex("48979223adb5f7f340c4f27d6cc45a38adb37876b2d7e34d2457cbf57342a391"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            },
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                dest_amount
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
@@ -701,54 +695,47 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available(BigInt(12) * 1000 * 1000 * 100);
-    const BigInt dest_amount(BigInt(100000000));
-    const BigInt change_value(BigInt(999000000));
-    const BigInt fee_per_byte(1);
+    const BigInt available(12.0_BTC);
+    const BigInt dest_amount(1.0_BTC);
+    const BigInt change_value(9.99_BTC);
 
+    const TransactionTemplate TEST_TX
     {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(
-                        from_hex("13ae654ae5609bd74ee1840fb5e4694580659e4cfe477b303e68162f20a81cda")));
-        source.set_property_value("prev_tx_out_index", 1u);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-
-        source.set_property_value("private_key",
-                *account->get_private_key());
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A");
-        destination.set_property_value("amount", dest_amount);
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mk6a6qeXNXuQDpA4DPxuouTJJTeFYJAkep");
-        destination.set_property_value("amount", dest_amount);
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        destination.set_property_value("amount", change_value);
-    }
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_per_byte);
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            1_SATOSHI
+        },
+        { // Sources
+            {
+                available,
+                from_hex("13ae654ae5609bd74ee1840fb5e4694580659e4cfe477b303e68162f20a81cda"),
+                1,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            },
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
+                dest_amount
+            },
+            TransactionDestination
+            {
+                "mk6a6qeXNXuQDpA4DPxuouTJJTeFYJAkep",
+                dest_amount
+            },
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                change_value
+            },
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
@@ -770,58 +757,52 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_t
     ASSERT_NE(nullptr, account);
     EXPECT_EQ("mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU", account->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available1("229999999");
-    const BigInt available2("459999999");
-    const BigInt dest_amount("100000000");
-    const BigInt change_value("588999998");
-    const BigInt fee_per_byte("100");
+    const BigInt available1(2.29999999_BTC);
+    const BigInt available2(4.59999999_BTC);
+    const BigInt dest_amount(1.0_BTC);
+    const BigInt change_value(5.88999998_BTC);
 
+    const TransactionTemplate TEST_TX
     {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available1);
-        source.set_property_value("prev_tx_hash",
-                as_binary_data(
-                        from_hex("4c0a9df13d1d85d20bfc5bb5d38937290d273b7655ff3d50d43db81900546f8a")));
-        source.set_property_value("prev_tx_out_index", 0);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property_value("private_key", *account->get_private_key());
-    }
-
-    {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available2);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(
-                        from_hex("c51b8890ad84fab4577785908d12b6f8195c69efe5a348fc7d6d88fc1ce97d17")));
-        source.set_property_value("prev_tx_out_index", 0);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac")));
-        source.set_property_value("private_key", *account->get_private_key());
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A");
-        destination.set_property_value("amount", dest_amount);
-    }
-
-    {
-        Properties& change = transaction->add_destination();
-        change.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        change.set_property_value("amount", change_value);
-    }
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_per_byte);
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            100_SATOSHI
+        },
+        { // Sources
+            TransactionSource
+            {
+                available1,
+                from_hex("4c0a9df13d1d85d20bfc5bb5d38937290d273b7655ff3d50d43db81900546f8a"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            },
+            TransactionSource
+            {
+                available2,
+                from_hex("c51b8890ad84fab4577785908d12b6f8195c69efe5a348fc7d6d88fc1ce97d17"),
+                0,
+                from_hex("76a914d3f68b887224cabcc90a9581c7bbdace878666db88ac"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
+                dest_amount
+            },
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                change_value
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
@@ -854,61 +835,54 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
     ASSERT_NE(nullptr, account1);
     EXPECT_EQ("mk6a6qeXNXuQDpA4DPxuouTJJTeFYJAkep", account1->get_address());
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    const PrivateKeyPtr private_key = account->get_private_key();
+    const PrivateKeyPtr private_key1 = account1->get_private_key();
 
-    const BigInt available1(BigInt(1) * 1000 * 1000 * 100);
-    const BigInt available2(BigInt(1) * 1000 * 1000 * 100);
-    const BigInt dest_amount(BigInt("190000")*1000);
-    const BigInt change_value(BigInt("9000")*1000);
-    const BigInt fee_per_byte(100);
+    const BigInt available1(1.0_BTC);
+    const BigInt available2(1.0_BTC);
+    const BigInt dest_amount(1.9_BTC);
+    const BigInt change_value(0.09_BTC);
 
+    const TransactionTemplate TEST_TX
     {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available1);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(
-                        from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948")));
-        source.set_property_value("prev_tx_out_index", 1);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a914323c1ea8756feaaaa85d0d0e51b0cc07b4c7ac5e88ac")));
-        source.set_property_value("private_key",
-                *account1->get_private_key());
-    }
+        nullptr,
+        TransactionFee
+        { // fee:
+            100_SATOSHI
+        },
+        { // Sources
+            TransactionSource
+            {
+                available1,
+                from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
+                1,
+                from_hex("76a914323c1ea8756feaaaa85d0d0e51b0cc07b4c7ac5e88ac"),
+                private_key1.get()
+            },
+            TransactionSource
+            {
+                available2,
+                from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948"),
+                0,
+                from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU",
+                dest_amount
+            },
+            TransactionDestination
+            {
+                "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A",
+                change_value
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
 
-    {
-        Properties& source = transaction->add_source();
-        source.set_property_value("amount", available2);
-        source.set_property_value(
-                "prev_tx_hash",
-                as_binary_data(
-                        from_hex("a1fdb0d8776cfd43b66cfc0ee49cad2763fdbeca67af8ef40479624716ea8948")));
-        source.set_property_value("prev_tx_out_index", 0);
-        source.set_property_value("prev_tx_out_script_pubkey",
-                as_binary_data(from_hex("76a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac")));
-        source.set_property_value("private_key",
-                *account->get_private_key());
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU");
-        destination.set_property_value("amount", dest_amount);
-    }
-
-    {
-        Properties& destination = transaction->add_destination();
-        destination.set_property_value(
-                "address", "mfgq7S1Va1GREFgN66MVoxX35X6juKov6A");
-        destination.set_property_value("amount", change_value);
-    }
-    {
-        Properties& fee = transaction->get_fee();
-        fee.set_property_value("amount_per_byte", fee_per_byte);
-    }
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
 
@@ -957,63 +931,13 @@ GTEST_TEST(BitcoinTransactionTest, transaction_update)
     );
 }
 
-GTEST_TEST(BitcoinTransactionTest, destination_address_verification)
-{
-    const AccountPtr account = make_account(BITCOIN_TEST_NET,
-            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
-
-    TransactionPtr transaction;
-    make_transaction(account.get(), reset_sp(transaction));
-    {
-        Properties* destination = nullptr;
-        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
-
-        EXPECT_ERROR(properties_set_string_value(destination, "address", ""));
-        EXPECT_ERROR(properties_set_string_value(destination, "address", " "));
-        EXPECT_ERROR(properties_set_string_value(destination, "address", "123"));
-        // valid address mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU
-        EXPECT_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5D"));
-
-        HANDLE_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
-    }
-}
-
-GTEST_TEST(BitcoinTransactionTest, transaction_update_empty_tx)
-{
-    // Verify that transaction_update() fails when called on empty TX.
-    const AccountPtr account = make_account(BITCOIN_TEST_NET,
-            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
-
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    EXPECT_ERROR(transaction_update(transaction.get()));
-
-    {
-        Properties* fee = nullptr;
-        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
-        EXPECT_ERROR(transaction_update(transaction.get()));
-    }
-
-    {
-        Properties* source = nullptr;
-        HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
-        EXPECT_ERROR(transaction_update(transaction.get()));
-    }
-
-    {
-        Properties* destination = nullptr;
-        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
-        EXPECT_ERROR(transaction_update(transaction.get()));
-    }
-}
-
 GTEST_TEST(BitcoinTransactionTest, transaction_get_total_spent)
 {
     const AccountPtr account = make_account(BITCOIN_TEST_NET,
             "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
 
-    const BigInt available(1000000);
-    const BigInt sent(10000);
+    const BigInt available(0.01_BTC);
+    const BigInt sent(10000_SATOSHI);
 
     TransactionTemplate TEST_TX = DEFAULT_TX_TEMPLATE;
     TEST_TX.sources[0].available = available;
@@ -1109,15 +1033,15 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_with_op_return)
                     reset_sp(account)));
     const PrivateKeyPtr private_key = account->get_private_key();
 
-    const BigInt available(107527);
-    const BigInt sent(106777);
+    const BigInt available(107527_SATOSHI);
+    const BigInt sent(106777_SATOSHI);
 
     const TransactionTemplate TEST_TX
     {
         account.get(),
         TransactionFee
         { // fee:
-            BigInt{3}
+            3_SATOSHI
         },
         { // Sources
             {
@@ -1169,15 +1093,15 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet_to_P2SH_addres)
 {
     AccountPtr account = make_account(BITCOIN_TEST_NET, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
 
-    const BigInt available(9809);
-    const BigInt sent(9209);
+    const BigInt available(9809_SATOSHI);
+    const BigInt sent(9209_SATOSHI);
 
     const TransactionTemplate TEST_TX
     {
         nullptr,
         TransactionFee
         { // fee:
-            BigInt{3}
+            3_SATOSHI
         },
         { // Sources
             {
@@ -1217,15 +1141,15 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_to_P2SH_addres)
 {
     AccountPtr account = make_account(BITCOIN_MAIN_NET, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
 
-    const BigInt available(115197);
-    const BigInt sent(114500);
+    const BigInt available(115197_SATOSHI);
+    const BigInt sent(114500_SATOSHI);
 
     const TransactionTemplate TEST_TX
     {
         nullptr,
         TransactionFee
         { // fee:
-            BigInt{3}
+            3_SATOSHI
         },
         { // Sources
             {
@@ -1260,24 +1184,6 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_to_P2SH_addres)
             *serialied);
 }
 
-GTEST_TEST(BitcoinTransactionTest, is_replaceable_default_value)
-{
-    //
-    // Verify that all TXs are REPLACEABLE by-default.
-    //
-
-    const AccountPtr account = make_account(BITCOIN_MAIN_NET, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
-
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-
-    int32_t is_replaceable = std::numeric_limits<int32_t>::max();
-    transaction->get_transaction_properties()
-            .get_property_value("is_replaceable", &is_replaceable);
-
-    ASSERT_EQ(1, is_replaceable);
-}
-
 GTEST_TEST(BitcoinTransactionTest, replaceable)
 {
     // Verify that TX can be explicitly made FINAL or REPLACEABLE (BIP125).
@@ -1290,11 +1196,11 @@ GTEST_TEST(BitcoinTransactionTest, replaceable)
         nullptr,
         TransactionFee
         { // fee:
-            BigInt{3}
+            3_SATOSHI
         },
         { // Sources
             {
-                BigInt{115197},
+                115197_SATOSHI,
                 from_hex("82f2704eafa63d69a94c479153e4c1427f12110281a848fdaca951167319cb7c"),
                 2,
                 from_hex("76a9146b6e514825a406e84456950cafb6911095aa61f688ac"),
@@ -1305,7 +1211,7 @@ GTEST_TEST(BitcoinTransactionTest, replaceable)
             TransactionDestination
             {
                 "3HGwSrGh7ARwDbzr3SwmRcavk6UWJtyUd2",
-                BigInt{114500}
+                114500_SATOSHI
             }
         }
     };
@@ -1352,6 +1258,121 @@ GTEST_TEST(BitcoinTransactionTest, replaceable)
     EXPECT_EQ(*final_tx, *final_tx2);
 }
 
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_dust_outputs)
+{
+    AccountPtr account = make_account(BITCOIN_MAIN_NET, "5KDejYL1XnGkhwhH1ubSqiFCqXGxYzuJYHXhU7UqeVLEDeqBJ22");
+
+    const BigInt available(9809_SATOSHI);
+    const BigInt dust_sent_amount(500_SATOSHI);
+    const BigInt for_dust_change(8500_SATOSHI);
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            3_SATOSHI
+        },
+        { // Sources
+            {
+                available,
+                from_hex("63ebc8dd4de286a1ab32029f1986876ac981b8b9ccd597be3f2d6ac1961e02ee"),
+                0,
+                from_hex("76a914dda3945cee6bb677de3b090db38ef3053fc45acb88ac"),
+                nullptr
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+
+    Properties& send_destination = transaction->add_destination();
+    send_destination.set_property_value("address", "1MCvJ6pqJrGJEjo55RhLhr1de2wFLoDBXF");
+    send_destination.set_property_value("amount", dust_sent_amount);
+
+    Properties& change_destination = transaction->add_destination();
+    change_destination.set_property_value("address", "1Q46s1EJXDMvVTCVQGKfrjEudvgu39uXu5");
+    change_destination.set_property_value("is_change", 1);
+
+    // Destination amount considered dust, hence TX verification fails.
+    EXPECT_ERROR(transaction_update(transaction.get()));
+
+    send_destination.set_property_value("amount", for_dust_change);
+    // Now change amount is dust, hence change amount should be implicitly set to 0 by TX itself.
+    HANDLE_ERROR(transaction_update(transaction.get()));
+    BigInt change_amount;
+    change_destination.get_property_value("amount" , &change_amount);
+    EXPECT_EQ(BigInt(0), change_amount);
+}
+
+
+GTEST_TEST(BitcoinTransactionTest, transaction_update_empty_tx)
+{
+    // Verify that transaction_update() fails when called on empty TX.
+    const AccountPtr account = make_account(BITCOIN_TEST_NET,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    EXPECT_ERROR(transaction_update(transaction.get()));
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+
+    {
+        Properties* source = nullptr;
+        HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+
+    {
+        Properties* destination = nullptr;
+        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+        EXPECT_ERROR(transaction_update(transaction.get()));
+    }
+}
+
+GTEST_TEST(BitcoinTransactionTest, is_replaceable_default_value)
+{
+    //
+    // Verify that all TXs are REPLACEABLE by-default.
+    //
+
+    const AccountPtr account = make_account(BITCOIN_MAIN_NET, "5KHD87PD4WetNsrUfo7Z55xwWDEY2VrAh1VpfwHEV8wgbprCSxL");
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+
+    int32_t is_replaceable = std::numeric_limits<int32_t>::max();
+    transaction->get_transaction_properties()
+            .get_property_value("is_replaceable", &is_replaceable);
+
+    ASSERT_EQ(1, is_replaceable);
+}
+
+GTEST_TEST(BitcoinTransactionTest, destination_address_verification)
+{
+    const AccountPtr account = make_account(BITCOIN_TEST_NET,
+            "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
+
+    TransactionPtr transaction;
+    make_transaction(account.get(), reset_sp(transaction));
+    {
+        Properties* destination = nullptr;
+        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+
+        EXPECT_ERROR(properties_set_string_value(destination, "address", ""));
+        EXPECT_ERROR(properties_set_string_value(destination, "address", " "));
+        EXPECT_ERROR(properties_set_string_value(destination, "address", "123"));
+        // valid address mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU
+        EXPECT_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5D"));
+
+        HANDLE_ERROR(properties_set_string_value(destination, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
+    }
+}
+
 GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_testnet)
 {
     const AccountPtr account_testnet = make_account(BITCOIN_TEST_NET, "cQeGKosJjWPn9GkB7QmvmotmBbVg1hm8UjdN6yLXEWZ5HAcRwam7");
@@ -1384,50 +1405,4 @@ GTEST_TEST(BitcoinTransactionTest, transaction_set_destination_address_mainnet)
     // invalid mainnet addresses
     EXPECT_ERROR(properties_set_string_value(&destination_mainnet, "address", "mzqiDnETWkunRDZxjUQ34JzN1LDevh5DpU"));
     EXPECT_ERROR(properties_set_string_value(&destination_mainnet, "address", "TEST"));
-}
-
-GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_dust_outputs)
-{
-    AccountPtr account = make_account(BITCOIN_MAIN_NET, "5KDejYL1XnGkhwhH1ubSqiFCqXGxYzuJYHXhU7UqeVLEDeqBJ22");
-
-    const BigInt available(9809);
-    const BigInt dust_sent_amount(500);
-    const BigInt for_dust_change(8500);
-
-    const TransactionTemplate TEST_TX
-    {
-        nullptr,
-        TransactionFee
-        { // fee:
-            BigInt{3}
-        },
-        { // Sources
-            {
-                available,
-                from_hex("63ebc8dd4de286a1ab32029f1986876ac981b8b9ccd597be3f2d6ac1961e02ee"),
-                0,
-                from_hex("76a914dda3945cee6bb677de3b090db38ef3053fc45acb88ac"),
-                nullptr
-            }
-        }
-    };
-    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
-
-    Properties& send_destination = transaction->add_destination();
-    send_destination.set_property_value("address", "1MCvJ6pqJrGJEjo55RhLhr1de2wFLoDBXF");
-    send_destination.set_property_value("amount", dust_sent_amount);
-
-    Properties& change_destination = transaction->add_destination();
-    change_destination.set_property_value("address", "1Q46s1EJXDMvVTCVQGKfrjEudvgu39uXu5");
-    change_destination.set_property_value("is_change", 1);
-
-    // Destination amount considered dust, hence TX verification fails.
-    EXPECT_ERROR(transaction_update(transaction.get()));
-
-    send_destination.set_property_value("amount", for_dust_change);
-    // Now change amount is dust, hence change amount should be implicitly set to 0 by TX itself.
-    HANDLE_ERROR(transaction_update(transaction.get()));
-    BigInt change_amount;
-    change_destination.get_property_value("amount" , &change_amount);
-    EXPECT_EQ(BigInt(0), change_amount);
 }

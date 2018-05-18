@@ -114,10 +114,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("7500000000000000000");
-    const BigInt value("1");
-    const BigInt gas_limit("21001");
-    const BigInt gas_price("1");
+    const BigInt balance(7.5_ETH);
+    const BigInt value(1_WEI);
+    const BigInt gas_limit(21001);
+    const BigInt gas_price(1_WEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();
@@ -161,10 +161,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("7500000000000000000");
-    const BigInt value("2305843009213693952");
-    const BigInt gas_limit("21001");
-    const BigInt gas_price("64424509440");
+    const BigInt balance(7.5_ETH);
+    const BigInt value(2305843009213693952_WEI);
+    const BigInt gas_limit(21001);
+    const BigInt gas_price(64424509440_WEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();
@@ -214,10 +214,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("7500000000000000000");
-    const BigInt value("1000");
-    const BigInt gas_limit("121000");
-    const BigInt gas_price("3000000000000");
+    const BigInt balance(7.5_ETH);
+    const BigInt value(1000_WEI);
+    const BigInt gas_limit(121000);
+    const BigInt gas_price(3000.0_GWEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();
@@ -301,11 +301,10 @@ GTEST_TEST(EthereumTransactionTest, transaction_get_total_spent)
     TransactionPtr transaction;
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
 
-    const BigInt available(1000000);
-    const BigInt sent(10000);
-
-    const BigInt gas_limit("121000");
-    const BigInt gas_price("3000000000000");
+    const BigInt available(1000000_WEI);
+    const BigInt sent(10000_WEI);
+    const BigInt gas_limit(121000);
+    const BigInt gas_price(3000.0_GWEI);
 
     {
         Properties& source = transaction->add_source();
@@ -351,10 +350,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("10000000000000000");
-    const BigInt value("2000000000000000");
+    const BigInt balance(0.01_ETH);
+    const BigInt value(0.002_ETH);
     const BigInt gas_limit(21001);
-    const BigInt gas_price("4000000000");
+    const BigInt gas_price(4.0_GWEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();
@@ -401,10 +400,10 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_withdata)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("7916000000000000");
-    const BigInt value("2000000000000000");
+    const BigInt balance(0.007916_ETH);
+    const BigInt value(0.002_ETH);
     const BigInt gas_limit(121000);
-    const BigInt gas_price("4000000000");
+    const BigInt gas_price(4.0_GWEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();
@@ -455,10 +454,10 @@ GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("100000000000000000");
-    const BigInt value("1000000000000000000");
+    const BigInt balance(0.1_ETH);
+    const BigInt value("1000000000000000000"); //token
     const BigInt gas_limit(153327);
-    const BigInt gas_price("1000000000");
+    const BigInt gas_price(1.0_GWEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();
@@ -508,10 +507,10 @@ GTEST_TEST(EthereumTransactionTest, DISABLED_SmokeTest_testnet_ERC20_transfer_2)
     HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
     ASSERT_NE(nullptr, transaction);
 
-    const BigInt balance("100000000000000000");
+    const BigInt balance(0.1_ETH);
     const BigInt value("500000000000000000");
     const BigInt gas_limit(153327);
-    const BigInt gas_price("1000000000");
+    const BigInt gas_price(1.0_GWEI);
 
     {
         Properties& properties = transaction->get_transaction_properties();

@@ -51,7 +51,6 @@ GTEST_TEST(AccountTest, fake_account)
     const char* EXPECTED_PATH_STRING = TEST_PATH_STRING;
     const BlockchainType EXPECTED_BLOCKCHAIN_TYPE = BITCOIN_MAIN_NET;
 
-    ErrorPtr error;
     TestHDAccount root_account(
             EXPECTED_BLOCKCHAIN_TYPE,
             EXPECTED_ADDRESS,
@@ -62,28 +61,25 @@ GTEST_TEST(AccountTest, fake_account)
     AccountPtr account;
     {
         ExtendedKeyPtr key;
-        error.reset(
+        HANDLE_ERROR(
                 make_hd_leaf_account(
                         &root_account, ADDRESS_EXTERNAL, 0, reset_sp(account)));
-        EXPECT_EQ(nullptr, error);
         ASSERT_NE(nullptr, account);
     }
 
     {
         ConstCharPtr address_str;
-        error.reset(
+        HANDLE_ERROR(
                 account_get_address_string(
                         account.get(), reset_sp(address_str)));
-        EXPECT_EQ(nullptr, error);
         ASSERT_NE(nullptr, address_str);
         ASSERT_STREQ(EXPECTED_ADDRESS, address_str.get());
     }
 
     {
         ConstCharPtr path_str;
-        error.reset(
+        HANDLE_ERROR(
                 account_get_address_path(account.get(), reset_sp(path_str)));
-        EXPECT_EQ(nullptr, error);
         ASSERT_NE(nullptr, path_str);
         ASSERT_STREQ(EXPECTED_PATH_STRING, path_str.get());
     }
@@ -91,8 +87,7 @@ GTEST_TEST(AccountTest, fake_account)
     {
         BlockchainType blockchain_type;
 
-        error.reset(account_get_blockchain_type(account.get(), &blockchain_type));
-        EXPECT_EQ(nullptr, error);
+        HANDLE_ERROR(account_get_blockchain_type(account.get(), &blockchain_type));
         ASSERT_EQ(EXPECTED_BLOCKCHAIN_TYPE, blockchain_type);
     }
 }
@@ -135,24 +130,19 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_key)
             make_test_private_key(),
             make_test_public_key());
 
-    ErrorPtr error;
     KeyPtr key;
 
-    error.reset(account_get_key(nullptr, KEY_TYPE_PRIVATE, reset_sp(key)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_key(nullptr, KEY_TYPE_PRIVATE, reset_sp(key)));
     EXPECT_EQ(nullptr, key);
 
-    error.reset(account_get_key(&account, INVALID_KEY_TYPE, reset_sp(key)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_key(&account, INVALID_KEY_TYPE, reset_sp(key)));
     EXPECT_EQ(nullptr, key);
 
-    error.reset(account_get_key(&account, KEY_TYPE_PRIVATE, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_key(&account, KEY_TYPE_PRIVATE, nullptr));
 }
 
 GTEST_TEST(AccountTestInvalidArgs, account_get_address_string)
 {
-    ErrorPtr error;
     ConstCharPtr address_str;
 
     const TestAccount account(
@@ -160,17 +150,14 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_string)
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(account_get_address_string(nullptr, reset_sp(address_str)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_address_string(nullptr, reset_sp(address_str)));
     EXPECT_EQ(nullptr, address_str);
 
-    error.reset(account_get_address_string(&account, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_address_string(&account, nullptr));
 }
 
 GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
 {
-    ErrorPtr error;
     ConstCharPtr path_str;
 
     const TestAccount account(
@@ -178,17 +165,14 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_address_path)
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(account_get_address_path(nullptr, reset_sp(path_str)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_address_path(nullptr, reset_sp(path_str)));
     EXPECT_EQ(nullptr, path_str);
 
-    error.reset(account_get_address_path(&account, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_address_path(&account, nullptr));
 }
 
 GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
 {
-    ErrorPtr error;
     BlockchainType blockchain_type = INVALID_BLOCKCHAIN_TYPE;
 
     const TestAccount account(
@@ -196,12 +180,10 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_blockchain)
             TEST_ADDRESS, TEST_PATH, make_test_private_key(),
             make_test_public_key());
 
-    error.reset(account_get_blockchain_type(nullptr, &blockchain_type));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_blockchain_type(nullptr, &blockchain_type));
     EXPECT_EQ(INVALID_BLOCKCHAIN_TYPE, blockchain_type);
 
-    error.reset(account_get_blockchain_type(&account, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(account_get_blockchain_type(&account, nullptr));
 }
 
 GTEST_TEST(AccountTestInvalidArgs, validate_address)
@@ -237,7 +219,6 @@ TEST_P(AccountTestBlockchainSupportP, create_and_check_account_from_hd_account)
 {
     const ExtendedKey master_key = make_dummy_extended_key();
 
-    ErrorPtr error;
     HDAccountPtr root_account;
 
     HANDLE_ERROR(make_hd_account(
@@ -249,7 +230,7 @@ TEST_P(AccountTestBlockchainSupportP, create_and_check_account_from_hd_account)
     EXPECT_NE(nullptr, root_account);
 
     AccountPtr account;
-    error.reset(
+    HANDLE_ERROR(
             make_hd_leaf_account(
                     root_account.get(), ADDRESS_EXTERNAL, 0,
                     reset_sp(account)));
@@ -257,15 +238,14 @@ TEST_P(AccountTestBlockchainSupportP, create_and_check_account_from_hd_account)
     {
         BlockchainType actual_blockchain;
 
-        error.reset(account_get_blockchain_type(account.get(), &actual_blockchain));
-        EXPECT_EQ(nullptr, error);
+        HANDLE_ERROR(account_get_blockchain_type(account.get(), &actual_blockchain));
         EXPECT_EQ(GetParam(), actual_blockchain);
     }
 
     {
         ConstCharPtr address_str;
 
-        error.reset(
+        ErrorPtr error(
                 account_get_address_string(
                         account.get(), reset_sp(address_str)));
         if (blockchain_can_derive_address_from_private_key(GetParam().blockchain))
@@ -284,22 +264,19 @@ TEST_P(AccountTestBlockchainSupportP, create_and_check_account_from_hd_account)
     {
         ConstCharPtr path_str;
 
-        error.reset(
+        HANDLE_ERROR(
                 account_get_address_path(account.get(), reset_sp(path_str)));
-        EXPECT_EQ(nullptr, error);
         EXPECT_NE(nullptr, path_str);
         EXPECT_STRNE("", path_str.get());
     }
 
     {
         KeyPtr private_key;
-        error.reset(account_get_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
-        EXPECT_EQ(nullptr, error);
+        HANDLE_ERROR(account_get_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
         EXPECT_NE(nullptr, private_key);
 
         KeyPtr public_key;
-        error.reset(account_get_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
-        EXPECT_EQ(nullptr, error);
+        HANDLE_ERROR(account_get_key(account.get(), KEY_TYPE_PUBLIC, reset_sp(public_key)));
         EXPECT_NE(nullptr, public_key);
 
         EXPECT_NE(public_key, private_key);

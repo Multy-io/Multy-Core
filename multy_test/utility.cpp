@@ -8,6 +8,7 @@
 
 #include "multy_core/account.h"
 #include "multy_core/common.h"
+#include "multy_core/src/api/big_int_impl.h"
 #include "multy_core/src/api/key_impl.h"
 
 #include "multy_test/value_printers.h"
@@ -41,6 +42,67 @@ size_t dummy_fill_entropy(void*, size_t size, void* dest)
 
 namespace test_utility
 {
+
+const uint64_t SATOSHIS_IN_BTC = 100L*1000*1000;
+const uint64_t WEIS_IN_ETH = 1000L*1000*1000*1000*1000*1000;
+const uint64_t WEIS_IN_GWEI = 1000L*1000*1000;
+
+
+// Returns Satoshi corresponding to fractional amount of BTC.
+BigInt operator"" _BTC(const long double btc)
+{
+    const double satoshi = btc * SATOSHIS_IN_BTC;
+    if (satoshi < 0)
+    {
+        THROW_EXCEPTION("Value is too low.");
+    }
+    if(satoshi > std::numeric_limits<uint64_t>::max())
+    {
+        THROW_EXCEPTION("Value is too high.");
+    }
+
+    return BigInt(static_cast<uint64_t>(satoshi));
+}
+
+BigInt operator"" _SATOSHI(const unsigned long long int satoshi)
+{
+    return BigInt(static_cast<uint64_t>(satoshi));
+}
+
+BigInt operator "" _ETH(const long double eth)
+{
+    const double wei = eth * WEIS_IN_ETH;
+    if (wei < 0)
+    {
+        THROW_EXCEPTION("Value is too low.");
+    }
+    if(wei > std::numeric_limits<uint64_t>::max())
+    {
+        THROW_EXCEPTION("Value is too high.");
+    }
+
+    return BigInt(static_cast<uint64_t>(wei));
+}
+
+BigInt operator "" _GWEI(const long double gwei)
+{
+    const double wei = gwei * WEIS_IN_GWEI;
+    if (wei < 0)
+    {
+        THROW_EXCEPTION("Value is too low.");
+    }
+    if(wei > std::numeric_limits<uint64_t>::max())
+    {
+        THROW_EXCEPTION("Value is too high.");
+    }
+
+    return BigInt(static_cast<uint64_t>(wei));
+}
+
+BigInt operator "" _WEI(const unsigned long long int wei)
+{
+    return BigInt(static_cast<uint64_t>(wei));
+}
 
 bytes from_hex(const char* hex_str)
 {

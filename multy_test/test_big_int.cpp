@@ -599,15 +599,12 @@ GTEST_TEST(BigIntTest_Math, cmp_api)
 
 GTEST_TEST(BigIntTest_API_InvalidArgs, make_big_int)
 {
-    ErrorPtr error;
     BigIntPtr amount;
 
-    error.reset(make_big_int(nullptr, reset_sp(amount)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_big_int(nullptr, reset_sp(amount)));
     EXPECT_EQ(nullptr, amount);
 
-    error.reset(make_big_int("1", nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_big_int("1", nullptr));
 }
 
 GTEST_TEST(BigIntTest_API_InvalidArgs, make_big_int_clone)
@@ -623,74 +620,58 @@ GTEST_TEST(BigIntTest_API_InvalidArgs, make_big_int_clone)
 
 GTEST_TEST(BigIntTest_API_InvalidArgs, big_int_get_value)
 {
-    ErrorPtr error;
     BigInt amount(1);
     ConstCharPtr str;
 
-    error.reset(big_int_get_value(nullptr, reset_sp(str)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_get_value(nullptr, reset_sp(str)));
     EXPECT_EQ(nullptr, str);
 
-    error.reset(big_int_get_value(&amount, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_get_value(&amount, nullptr));
     EXPECT_EQ("1", amount);
 }
 
 GTEST_TEST(BigIntTest_API_InvalidArgs, big_int_set_value)
 {
-    ErrorPtr error;
     BigInt amount(1);
 
-    error.reset(big_int_set_value(nullptr, "1"));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_set_value(nullptr, "1"));
 
-    error.reset(big_int_set_value(&amount, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_set_value(&amount, nullptr));
     EXPECT_EQ("1", amount);
 }
 
 
 GTEST_TEST(BigIntTest_API_InvalidValue, make_big_int)
 {
-    ErrorPtr error;
     BigIntPtr amount(new BigInt(1));
 
-    error.reset(make_big_int("foo",  reset_sp(amount)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_big_int("foo",  reset_sp(amount)));
     EXPECT_EQ("1", *amount);
 
-    error.reset(make_big_int("",  reset_sp(amount)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_big_int("",  reset_sp(amount)));
     EXPECT_EQ("1", *amount);
 
-    error.reset(make_big_int("1.1",  reset_sp(amount)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_big_int("1.1",  reset_sp(amount)));
     EXPECT_EQ("1", *amount);
 
-    error.reset(make_big_int(" ",  reset_sp(amount)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_big_int(" ",  reset_sp(amount)));
     EXPECT_EQ("1", *amount);
 }
 
 GTEST_TEST(BigIntTest_API_InvalidValue, big_int_set_value)
 {
-    ErrorPtr error;
     BigInt amount("1");
 
-    error.reset(big_int_set_value(&amount, "foo"));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_set_value(&amount, "foo"));
     EXPECT_EQ("1", amount);
 
-    error.reset(big_int_set_value(&amount, "1.1"));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_set_value(&amount, "1.1"));
     EXPECT_EQ("1", amount);
 
-    error.reset(big_int_set_value(&amount, " "));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_set_value(&amount, " "));
     EXPECT_EQ("1", amount);
 
-    error.reset(big_int_set_value(&amount, ""));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(big_int_set_value(&amount, ""));
     EXPECT_EQ("1", amount);
 }
 
@@ -717,11 +698,9 @@ GTEST_TEST(BigIntTest_API, big_int_set_int64_value)
 
 GTEST_TEST(BigIntTest_API, make_big_int)
 {
-    ErrorPtr error;
     BigIntPtr amount;
 
-    error.reset(make_big_int("1",  reset_sp(amount)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(make_big_int("1",  reset_sp(amount)));
     EXPECT_EQ("1", *amount);
 }
 
@@ -736,23 +715,19 @@ GTEST_TEST(BigIntTest_API, make_big_int_clone)
 
 GTEST_TEST(BigIntTest_API, big_int_get_value)
 {
-    ErrorPtr error;
     BigInt amount(1);
     ConstCharPtr test_str;
 
-    error.reset(big_int_get_value(&amount, reset_sp(test_str)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(big_int_get_value(&amount, reset_sp(test_str)));
     EXPECT_NE(nullptr, test_str);
     EXPECT_EQ("1", amount);
 }
 
 GTEST_TEST(BigIntTest_API, big_int_set_value)
 {
-    ErrorPtr error;
     BigInt amount(5);
 
-    error.reset(big_int_set_value(&amount, "1"));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(big_int_set_value(&amount, "1"));
     EXPECT_EQ("1", amount);
 }
 
