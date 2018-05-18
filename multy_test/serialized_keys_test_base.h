@@ -24,7 +24,7 @@ struct SerializedKeyTestCase
 void PrintTo(const SerializedKeyTestCase& c, std::ostream* out);
 
 class SerializedKeyTestP : public ::testing::TestWithParam<
-        ::testing::tuple<BlockchainType, SerializedKeyTestCase>>
+        ::testing::tuple<BlockchainType, uint32_t, SerializedKeyTestCase>>
 {
     void SetUp() override;
 

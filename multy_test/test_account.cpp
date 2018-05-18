@@ -35,6 +35,7 @@ const HDPath TEST_PATH = {1, 2, 3};
 const char* TEST_PATH_STRING = "m/1/2/3";
 const Blockchain INVALID_BLOCKCHAIN = static_cast<Blockchain>(-1);
 const BlockchainType INVALID_BLOCKCHAIN_TYPE{INVALID_BLOCKCHAIN, BITCOIN_NET_TYPE_MAINNET};
+const uint32_t INVALID_ACCOUNT_TYPE = static_cast<uint32_t>(-1);
 
 GTEST_TEST(AccountTest, free_account)
 {
@@ -101,19 +102,27 @@ GTEST_TEST(AccountTestInvalidArgs, make_account)
     const ExtendedKey master_key = make_dummy_extended_key();
 
     const char* INVALID_PRIVATE_KEY = "foo-bar-yadda-yadda";
-    ErrorPtr error;
     AccountPtr account;
 
-    error.reset(make_account(INVALID_BLOCKCHAIN_TYPE, "", reset_sp(account)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_account(
+            INVALID_BLOCKCHAIN_TYPE,
+            ACCOUNT_TYPE_DEFAULT,
+            "",
+            reset_sp(account)));
     EXPECT_EQ(nullptr, account);
 
-    error.reset(
-            make_account(
-                    BITCOIN_MAIN_NET,
-                    INVALID_PRIVATE_KEY,
-                    reset_sp(account)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_account(
+            BITCOIN_MAIN_NET,
+            INVALID_ACCOUNT_TYPE,
+            "",
+            reset_sp(account)));
+    EXPECT_EQ(nullptr, account);
+
+    EXPECT_ERROR(make_account(
+            BITCOIN_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            INVALID_PRIVATE_KEY,
+            reset_sp(account)));
     EXPECT_EQ(nullptr, account);
 }
 
@@ -122,7 +131,8 @@ GTEST_TEST(AccountTestInvalidArgs, account_get_key)
     const KeyType INVALID_KEY_TYPE = static_cast<KeyType>(-1);
     const TestAccount account(
             BITCOIN_MAIN_NET,
-            TEST_ADDRESS, TEST_PATH, make_test_private_key(),
+            TEST_ADDRESS, TEST_PATH,
+            make_test_private_key(),
             make_test_public_key());
 
     ErrorPtr error;
@@ -230,10 +240,12 @@ TEST_P(AccountTestBlockchainSupportP, create_and_check_account_from_hd_account)
     ErrorPtr error;
     HDAccountPtr root_account;
 
-    error.reset(
-            make_hd_account(
-                    &master_key, GetParam(), 0, reset_sp(root_account)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(make_hd_account(
+            &master_key,
+            GetParam(),
+            ACCOUNT_TYPE_DEFAULT,
+            0,
+            reset_sp(root_account)));
     EXPECT_NE(nullptr, root_account);
 
     AccountPtr account;
@@ -320,9 +332,12 @@ GTEST_TEST(AccountTest, unique_private_keys)
                 ? test_net_keys_data : main_net_keys_data;
 
         HDAccountPtr root_account;
-        HANDLE_ERROR(
-                make_hd_account(
-                        &master_key, blockchain_type, 0, reset_sp(root_account)));
+        HANDLE_ERROR(make_hd_account(
+                &master_key,
+                blockchain_type,
+                ACCOUNT_TYPE_DEFAULT,
+                0,
+                reset_sp(root_account)));
         EXPECT_NE(nullptr, root_account);
 
         std::string key_string = root_account->get_account_key()->to_string();

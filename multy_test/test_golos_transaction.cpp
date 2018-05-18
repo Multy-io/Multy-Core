@@ -35,7 +35,9 @@ using namespace test_utility;
 GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
 {
     AccountPtr account;
-    HANDLE_ERROR(make_account(GOLOS_MAIN_NET,
+    HANDLE_ERROR(make_account(
+            GOLOS_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
             "5JpDgood17pE47zB6pDJixg9Sw47QiHcQ9qCc3MeKYoYzRiMcnF",
             reset_sp(account)));
 
@@ -108,7 +110,9 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api)
 GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
 {
     AccountPtr account;
-    HANDLE_ERROR(make_account(GOLOS_MAIN_NET,
+    HANDLE_ERROR(make_account(
+            GOLOS_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
             "5JpDgood17pE47zB6pDJixg9Sw47QiHcQ9qCc3MeKYoYzRiMcnF",
             reset_sp(account)));
 
@@ -182,7 +186,9 @@ GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_apis)
 GTEST_TEST(GolosTransactionTest, DISABLED_SmokeTest_public_api_with_message)
 {
     AccountPtr account;
-    HANDLE_ERROR(make_account(GOLOS_MAIN_NET,
+    HANDLE_ERROR(make_account(
+            GOLOS_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
             "5JpDgood17pE47zB6pDJixg9Sw47QiHcQ9qCc3MeKYoYzRiMcnF",
             reset_sp(account)));
 

@@ -18,6 +18,24 @@
 namespace
 {
 using namespace multy_core::internal;
+
+BitcoinAccountType to_bitcoin_account_type(uint32_t account_type)
+{
+    switch (account_type)
+    {
+        case BITCOIN_ACCOUNT_DEFAULT:
+            return BITCOIN_ACCOUNT_DEFAULT;
+        case BITCOIN_ACCOUNT_SEGWIT:
+            return BITCOIN_ACCOUNT_SEGWIT;
+        default:
+            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                    "Unknown Bitcoin Account type.")
+                    << " Got: " << account_type << ".";
+    }
+
+    return BITCOIN_ACCOUNT_DEFAULT;
+}
+
 } // namespace
 
 namespace multy_core
@@ -33,15 +51,26 @@ BitcoinFacade::~BitcoinFacade()
 {
 }
 
-HDAccountPtr BitcoinFacade::make_hd_account(BlockchainType blockchain_type,
-        const ExtendedKey& master_key, uint32_t index)
+HDAccountPtr BitcoinFacade::make_hd_account(
+        BlockchainType blockchain_type,
+        uint32_t account_type,
+        const ExtendedKey& master_key,
+        uint32_t index)
 {
-    return HDAccountPtr(new BitcoinHDAccount(blockchain_type, master_key, index));
+    return HDAccountPtr(new BitcoinHDAccount(
+            blockchain_type,
+            to_bitcoin_account_type(account_type),
+            master_key,
+        index));
 }
 
-AccountPtr BitcoinFacade::make_account(BlockchainType blockchain_type, const char* serialized_private_key)
+AccountPtr BitcoinFacade::make_account(
+        BlockchainType blockchain_type,
+        uint32_t account_type,
+        const char* serialized_private_key)
 {
-    AccountPtr account = make_bitcoin_account(serialized_private_key);
+    AccountPtr account = make_bitcoin_account(serialized_private_key,
+            to_bitcoin_account_type(account_type));
     if (account->get_blockchain_type() != blockchain_type)
     {
         THROW_EXCEPTION("Private key doesn't match requested blockchain type.")

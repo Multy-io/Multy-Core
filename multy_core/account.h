@@ -35,16 +35,23 @@ enum KeyType
     KEY_TYPE_PUBLIC,
 };
 
+enum AccountType
+{
+    ACCOUNT_TYPE_DEFAULT = 0
+};
+
 /** Make an account of given BlockchainType with given id.
  *
  * @param master_key - master key, generated from seed.
  * @param BlockchainType - Blockchain to use account for.
+ * @param account_type - ACCOUNT_TYPE_DEFAULT or blockchain-specific account type.
  * @param index - acccount index
  * @param account - (out) new account
  */
 MULTY_CORE_API struct Error* make_hd_account(
         const struct ExtendedKey* master_key,
         struct BlockchainType blockchain_type,
+        uint32_t account_type,
         uint32_t index,
         struct HDAccount** new_account);
 
@@ -63,12 +70,14 @@ MULTY_CORE_API struct Error* make_hd_leaf_account(
 
 /** Make regular account from private key and Blockchain.
  * @param Blockchain - Blockchain to use account for.
+ * @param account_type - ACCOUNT_TYPE_DEFAULT or blockchain-specific account type.
  * @param serialized_private_key - private key for account.
  * @param new_account - newly created account, must be freed by caller with
  * free_account().
  */
 MULTY_CORE_API struct Error* make_account(
         struct BlockchainType blockchain,
+        uint32_t account_type,
         const char* serialized_private_key,
         struct Account** new_account);
 

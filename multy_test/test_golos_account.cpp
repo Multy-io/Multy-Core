@@ -115,12 +115,18 @@ INSTANTIATE_TEST_CASE_P(
         SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(GOLOS_MAIN_NET),
+                ::testing::Values(ACCOUNT_TYPE_DEFAULT),
                 ::testing::ValuesIn(GOLOS_KEYS)));
 
 GTEST_TEST(GolosTest, private_key_sign)
 {
     AccountPtr account;
-    make_account(GOLOS_MAIN_NET, "5Hq2ZdSGZokcgLoNxNGL5kHKi4e3kUUCqorgFK6T6ka7KtSvYLj", reset_sp(account));
+    HANDLE_ERROR(make_account(
+            GOLOS_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5Hq2ZdSGZokcgLoNxNGL5kHKi4e3kUUCqorgFK6T6ka7KtSvYLj",
+            reset_sp(account)));
+
     PrivateKeyPtr prv_key =  account->get_private_key();
     // binary serialize TX to sign golos private key
     BinaryDataPtr signature = prv_key->sign(as_binary_data(from_hex("782a3039b478c839e4cb0c941ff4eaeb7df40bdd68bd441afd444b9da763de1269466c1944189"

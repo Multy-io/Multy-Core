@@ -31,9 +31,10 @@ GTEST_TEST(TransactionTestInvalidArgs, make_transaction)
     TransactionPtr transaction;
 
     HANDLE_ERROR(make_account(
-                    BITCOIN_MAIN_NET,
-                    "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
-                    reset_sp(account)));
+            BITCOIN_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
+            reset_sp(account)));
 
     EXPECT_ERROR(make_transaction(account.get(), nullptr));
 
@@ -147,11 +148,11 @@ GTEST_TEST(TransactionTest, make_transaction)
     AccountPtr account_transaction;
     TransactionPtr transaction;
 
-    HANDLE_ERROR(
-            make_account(
-                BITCOIN_MAIN_NET,
-                "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
-                reset_sp(account_transaction)));
+    HANDLE_ERROR(make_account(
+            BITCOIN_MAIN_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj",
+            reset_sp(account_transaction)));
 
     HANDLE_ERROR(make_transaction(account_transaction.get(), reset_sp(transaction)));
     EXPECT_NE(nullptr, transaction.get());

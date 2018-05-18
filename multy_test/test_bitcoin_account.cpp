@@ -150,6 +150,7 @@ INSTANTIATE_TEST_CASE_P(
         SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(BITCOIN_MAIN_NET),
+                ::testing::Values(BITCOIN_ACCOUNT_P2PKH),
                 ::testing::ValuesIn(TEST_CASES)));
 
 INSTANTIATE_TEST_CASE_P(
@@ -225,11 +226,11 @@ TEST_P(BitcoinTestSign, SignWithPrivateKey)
     const char* message_data = GetParam().message;
 
     AccountPtr account;
-    ErrorPtr error;
-    error.reset(
-            make_account(
-                    BITCOIN_MAIN_NET, private_key_data, reset_sp(account)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(make_account(
+            BITCOIN_MAIN_NET,
+            BITCOIN_ACCOUNT_P2PKH,
+            private_key_data,
+            reset_sp(account)));
     ASSERT_NE(nullptr, account);
 
     PrivateKeyPtr private_key = account->get_private_key();
