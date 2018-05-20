@@ -73,8 +73,7 @@ const char* BITCOIN_ADDRESSES_TESTNET_P2SH[] =
     "2NB9MQSvXUq2pA7AHSyvqxetv811mRZMNUd",
 };
 
-
-SerializedKeyTestCase TEST_CASES[] = {
+SerializedKeyTestCase BITCOIN_MAINNET_P2PKH_KEY_DATA[] = {
         {
             "L5GRrPvFZswYD74UdHWsg1yVbZqvMDe9jj6frutVx8Y6Y2mgWtEk",
             "",
@@ -145,13 +144,112 @@ SerializedKeyTestCase TEST_CASES[] = {
         }
 };
 
+SerializedKeyTestCase BITCOIN_MAINNET_P2SH_P2WPKH_KEY_DATA[] = {
+        {
+            "L1Ffwzw2HAKoiLWzYawsaVL5XByeYYPdHyGwYyEMWjwGMwsaxdsv",
+            "",
+            "3MXpZGSNv8zWjUhNQF4q9EcJgJAz6Ap4gu"
+        },
+        {
+            "KwHeGE1qDjmBe4ecJoZww6WMj7BqnxsjXx4HWPneSRQDY7NBph4z",
+            "fA7fqi3yibH7cUwfMH7BBaghhDYmZSLt5BmRUqe4koGH",
+            "36CZDHmSMqtEyKky2xBuCmae2Jan6FynRe"
+        },
+        {
+            "KwTECtLxekB95Pam68KNUa4XK6GhmJ2vah4xpDvk7qUmZMQR6d9A",
+            "mUyLSFTU6XUuNYJjHEoMJiUEsZdva77TYxV8tY4PD2VN",
+            "3PfWZkKQ2QkfZmSd8AdsA9tSFtQTc2qRuT"
+        },
+        {
+            "L2ZG56cGSPDyvbAJoxUKmhUVRmKpG5bmRoY775ZYNPvvCnx58b9n",
+            "oUfskkKeD4ttBMtdMkvZNHdCHjzquRqnFVuXTjkMKfYx",
+            "38AdBTBZZ3TFYZNtR5UyWLukfphCaKEbVf"
+        },
+        {
+            "L3fQB13UBadjNAGAZpL2us4xw6YWRV1ykgK8akvtQks3wQcgVAjG",
+            "2Ahw45DdDSLcsSRbwiajV1QDzDaMfw2XH6Kt91ZRebDFv",
+            "3NNhrGrNQsQZrsCARLnHBbtCSbF9sWW5PN"
+        },
+        {
+            "L3cN7tZ3gmnRQtFcqD6R44s6kzUfebUJ8GrmGCtWj65M6C9LX1J4",
+            "2BQab9VLwL8HnDwJYvZqP4wntAx2MEVLHfFieTVs384Wu",
+            "34kRTALka9DYayFAWDxQnbMNAMJBZwzUE7"
+        },
+        {
+            "KxgcSQsS3LZBHm1T6K8ijsNyobWEbN3v5QZKDPY4XSYoLCqdeHpr",
+            "bjgoXKUmQnTYKxGU7VDC5RZ2WjGebudF7UoFJoY2Hqc8",
+            "3CpjAaWyVRvNbPyWzw2WWfvJiYaPZAr96p"
+        },
+        {
+            "L1gz2qcYqxn3rzMW5hdZZDAR8hB4mke6NnpYvjxGHSfYGJ9bFLJV",
+            "ymybJgusbqjGD2oGw224ESjRTK3mJJKR6au6kPhagrkG",
+            "3Eg9JiExocGGn84wYefzLzzoiAmHN2QAFi"
+        },
+        {
+            "L5ABUi5Dup2KUXduFpRTa2jZyaK8Jv8gxKS71XXvCe2KWxqSWP6s",
+            "jxJGdL3YiAQz3kzXDU1YniQUcSKoBtLd1qZefTRmhUYc",
+            "33wqBwHG6rhcTPrsJvyQ1bNsqX8SZ47MRu"
+        },
+        {
+            "KzpFvx31hSeesrRzEUYdZkcebNV5HfehYCdjtHB5kNEFBudXEBao",
+            "",
+            "3QDpHFJZFkP65W1rGepMiiYWMkcJgtaGM9"
+        }
+};
+
+// public key in base 32 format.
+SerializedKeyTestCase BITCOIN_TESTNET_P2SH_P2WPKH_KEY_DATA[] = {
+        {
+            "cQv3v5zwrES3Pfswwen5tRmhFFm9iXJuNHQ2pkHS5TRXnS9aVTq7",
+            "",
+            "2MxCc5BwTL9zJMQSQe1MnHLwscXtYzEssTG"
+        },
+        {
+            "cUr5VKeDDCm5KFpBgza2Xktrf8VxPmmh9hLJ26RpD3FCray5iqgf",
+            "02e4eb34ae5eac1447da4e5fa2a9de734014f988d3af336e1f4728b46dfe7e29c5",
+            "2N1JZBatXZVYC9vwB6truPaBExZYPdapDhB"
+        },
+        {
+            "cQx7dy9bnAXhDTS5z1zNxaiedgUmnvZuqFzpFvxHz1utjjToRPCQ",
+            "02326800b109413ac0558839c65a2f3e1f7f12a8bf782ae51e6e94f79b3da33f8e",
+            "2N5AEiyZEwzfvbZ5hVms7MvnmP6dNgHSH6p"
+        },
+        {
+            "cTmh5ruAnuU9ziwZmHWbjyreKxDRFPU2k2pdjzyDA93U8pPHh4kN",
+            "03cbd33b97193abe97fd872c3eda4be7b3c0d7ba3dce9fd5fd5d7f630e0283fd6b",
+            "2N5XGmweCMaTStJxNfe56hJzfKVBpLuxDu8"
+        },
+        {
+            "cSYBWN6JbLwm17tJJWZspaQemsFwb6zf5rFkzG4HXjaQpVXqxN5n",
+            "033f39deb7a4caa47707e710219c344d25fea5feae29d80f16bce4380507d5de8f",
+            "2NF5D225PV9ZUnwv1aU7madnaPePYeKW2C4"
+        }
+};
+
 INSTANTIATE_TEST_CASE_P(
-        Bitcoin,
+        DISABLED_Bitcoin,
+        SerializedKeyTestP,
+        ::testing::Combine(
+                ::testing::Values(BITCOIN_TEST_NET),
+                ::testing::Values(BITCOIN_ACCOUNT_SEGWIT),
+                ::testing::ValuesIn(BITCOIN_TESTNET_P2SH_P2WPKH_KEY_DATA)));
+
+INSTANTIATE_TEST_CASE_P(
+        DISABLED_Bitcoin_P2WPKH_,
+        SerializedKeyTestP,
+        ::testing::Combine(
+                ::testing::Values(BITCOIN_MAIN_NET),
+                ::testing::Values(BITCOIN_ACCOUNT_SEGWIT),
+                ::testing::ValuesIn(BITCOIN_MAINNET_P2SH_P2WPKH_KEY_DATA)));
+
+
+INSTANTIATE_TEST_CASE_P(
+        Bitcoin_P2PKH,
         SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(BITCOIN_MAIN_NET),
                 ::testing::Values(BITCOIN_ACCOUNT_P2PKH),
-                ::testing::ValuesIn(TEST_CASES)));
+                ::testing::ValuesIn(BITCOIN_MAINNET_P2PKH_KEY_DATA)));
 
 INSTANTIATE_TEST_CASE_P(
         Bitcoin_MAINNET_P2PKH,
