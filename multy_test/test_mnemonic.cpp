@@ -81,19 +81,18 @@ TEST_P(MnemonicTestValidCasesP, Test)
         return result_size;
     };
     auto entropy_source = EntropySource{(void*)&entropy, fill_entropy};
-    error.reset(make_mnemonic(entropy_source, reset_sp(mnemonic_str)));
-    EXPECT_EQ(nullptr, error);
+    HANDLE_ERROR(make_mnemonic(entropy_source, reset_sp(mnemonic_str)));
     EXPECT_NE(nullptr, mnemonic_str);
 
     EXPECT_STREQ(expected_mnemonic.c_str(), mnemonic_str.get());
 
     BinaryDataPtr seed;
-    error.reset(make_seed(expected_mnemonic.c_str(), "TREZOR", reset_sp(seed)));
+    HANDLE_ERROR(make_seed(expected_mnemonic.c_str(), "TREZOR", reset_sp(seed)));
     ASSERT_NE(nullptr, seed);
     EXPECT_EQ(as_binary_data(expected_seed), *seed);
 
     ConstCharPtr dictionary;
-    error.reset(mnemonic_get_dictionary(reset_sp(dictionary)));
+    HANDLE_ERROR(mnemonic_get_dictionary(reset_sp(dictionary)));
     ASSERT_NE(nullptr, dictionary);
     ASSERT_NE(0, strlen(dictionary.get()));
 }
@@ -101,18 +100,17 @@ TEST_P(MnemonicTestValidCasesP, Test)
 GTEST_TEST(MnemonicTest, empty_null_password)
 {
     ConstCharPtr mnemonic_str;
-    ErrorPtr error;
 
-    error.reset(
+    HANDLE_ERROR(
             make_mnemonic(make_dummy_entropy_source(), reset_sp(mnemonic_str)));
     ASSERT_NE(nullptr, mnemonic_str);
 
     BinaryDataPtr empty_pass_seed;
-    error.reset(make_seed(mnemonic_str.get(), "", reset_sp(empty_pass_seed)));
+    HANDLE_ERROR(make_seed(mnemonic_str.get(), "", reset_sp(empty_pass_seed)));
     ASSERT_NE(nullptr, empty_pass_seed);
 
     BinaryDataPtr null_pass_seed;
-    error.reset(
+    HANDLE_ERROR(
             make_seed(mnemonic_str.get(), nullptr, reset_sp(null_pass_seed)));
     ASSERT_NE(nullptr, null_pass_seed);
 
@@ -133,37 +131,29 @@ GTEST_TEST(MnemonicTest, mnemonic_get_dictionary)
 GTEST_TEST(MnemonicTestInvalidArgs, make_mnemonic)
 {
     ConstCharPtr mnemonic_str;
-    ErrorPtr error;
 
-    error.reset(
+    EXPECT_ERROR(
             make_mnemonic(
                     EntropySource{nullptr, nullptr}, reset_sp(mnemonic_str)));
-    EXPECT_NE(nullptr, error);
     EXPECT_EQ(nullptr, mnemonic_str);
 
-    error.reset(make_mnemonic(make_dummy_entropy_source(), nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_mnemonic(make_dummy_entropy_source(), nullptr));
 }
 
 GTEST_TEST(MnemonicTestInvalidArgs, make_seed)
 {
     BinaryDataPtr binary_data;
-    ErrorPtr error;
 
-    error.reset(make_seed(nullptr, "pass", reset_sp(binary_data)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_seed(nullptr, "pass", reset_sp(binary_data)));
     EXPECT_EQ(nullptr, binary_data);
 
-    error.reset(make_seed("mnemonic", nullptr, reset_sp(binary_data)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_seed("mnemonic", nullptr, reset_sp(binary_data)));
     EXPECT_EQ(nullptr, binary_data);
 
-    error.reset(make_seed("mnemonic", "pass", nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_seed("mnemonic", "pass", nullptr));
 
     // Invalid mnemonic value
-    error.reset(make_seed("mnemonic", "pass", reset_sp(binary_data)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(make_seed("mnemonic", "pass", reset_sp(binary_data)));
     EXPECT_EQ(nullptr, binary_data);
 }
 
@@ -175,21 +165,16 @@ GTEST_TEST(MnemonicTestInvalidArgs, seed_to_string)
     const BinaryData zero_len_data{nullptr, 0};
 
     ConstCharPtr seed_str;
-    ErrorPtr error;
 
-    error.reset(seed_to_string(nullptr, reset_sp(seed_str)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(seed_to_string(nullptr, reset_sp(seed_str)));
     EXPECT_EQ(nullptr, seed_str);
 
-    error.reset(seed_to_string(&data, nullptr));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(seed_to_string(&data, nullptr));
 
-    error.reset(seed_to_string(&null_data, reset_sp(seed_str)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(seed_to_string(&null_data, reset_sp(seed_str)));
     EXPECT_EQ(nullptr, seed_str);
 
-    error.reset(seed_to_string(&zero_len_data, reset_sp(seed_str)));
-    EXPECT_NE(nullptr, error);
+    EXPECT_ERROR(seed_to_string(&zero_len_data, reset_sp(seed_str)));
     EXPECT_EQ(nullptr, seed_str);
 }
 
