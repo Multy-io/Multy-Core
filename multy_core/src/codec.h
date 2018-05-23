@@ -21,6 +21,7 @@ namespace internal
 
 enum CodecType
 {
+    CODEC_BASE32, // bitcoin-compliant base32 [a-z2-7]
     CODEC_BASE58,
     CODEC_HEX
 };

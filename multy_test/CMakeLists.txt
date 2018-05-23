@@ -30,6 +30,7 @@ add_library(multy_test SHARED
     test_big_int.cpp
     test_bitcoin_account.cpp
     test_bitcoin_transaction.cpp
+    test_codec.cpp
     test_common.cpp
     test_deletion.cpp
     test_ethereum_account.cpp

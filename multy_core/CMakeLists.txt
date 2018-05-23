@@ -114,7 +114,6 @@ target_compile_definitions(multy_core PRIVATE BUILDING_MULTY_CORE=1)
 target_include_directories(multy_core PRIVATE
     ..
     ../third-party/libwally-core/include/
-    ../third-party/libwally-core/src/ccan
     ../third-party
     ${CMAKE_CURRENT_BINARY_DIR}/include
 )
@@ -124,6 +123,7 @@ target_link_libraries(multy_core
     libwally-core
     keccak-tiny
     mini-gmp
+    ccan
 )
 add_dependencies(multy_core multy_core_generate_version)
 
