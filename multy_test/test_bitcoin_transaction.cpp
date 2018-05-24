@@ -891,6 +891,274 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_different_addr
             *serialied);
 }
 
+GTEST_TEST(BitcoinTransactionTest, DISABLED_SmokeTest_SegWit_testnet1)
+{
+    AccountPtr account;
+
+    HANDLE_ERROR(
+            make_account(
+                    BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_SEGWIT,
+                    "cNDJeJQZgLDzWS5yz6Pf1a9LzC26nDn6SZpJHcRc4212aGJ6NSXJ",
+                    reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    EXPECT_EQ("2Mwd414ETKsgn4BvLdYNSkK6Qa5bboxDwes", account->get_address());
+
+    const PrivateKeyPtr private_key = account->get_private_key();
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            12_SATOSHI
+        },
+        { // Sources
+            TransactionSource
+            {
+                1.30049879_BTC,
+                from_hex("b84f0713dbfbc9091d426e2e2cef3691e305746b7dec3aceaee39ec431d564ab"),
+                0,
+                from_hex("a9143001515d9592fa730931df154306f24ba8ece52f87"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "2MzwcmDo5WBjrjHzfYuyzsdZHmo682krVnf",
+                0.30048219_BTC
+            },
+            TransactionDestination
+            {
+                "2N9YrGCkmGNzZfU3aMXqZkMw4iH2f2x9U37",
+                1.0_BTC
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
+    const BinaryDataPtr serialied = transaction->serialize();
+    // Txid: e2f1f958168543d25e7bc6a7897af57f21f6a016d3cf95a99ce78c112b545c07
+    ASSERT_EQ(as_binary_data(from_hex(
+            "02000000000101ab64d531c49ee3aece3aec7d6b7405e39136ef2c2e6e421d09c9fbdb13074fb80000000017160014b57593a5a0e96bcd52fc2f7a325fb913916db674fdffffff"
+            "02db7fca010000000017a914546c87c7a5187edac7ad3fcf22dc3597ce37b1998700e1f5050000000017a914b2d75d4297ba8de492351d4701cee065e9c852ce87024730440220"
+            "666aa02ce08113b43422b73b3d33cf3c40e86a77c8876d9c1e9a664982febc9802206f4c2d836a77e4c7f09851e1c534da3cedc6e70fb915db7a77180e07246b42eb012103295d"
+            "829f209b8b1e7c56029f20f8440382be6e43c7b03ae637ad4327f36fb2ab8cfd1300")), *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, DISABLED_SmokeTest_SegWit_testnet2)
+{
+    AccountPtr account;
+    AccountPtr account1;
+
+    HANDLE_ERROR(
+            make_account(
+                    BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_SEGWIT,
+                    "cRBMwm5iA2yV99cUBxSz39vKp5CmE7eZ9rjXPAPz8S2kbgf5nf3i",
+                    reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    EXPECT_EQ("2MzwcmDo5WBjrjHzfYuyzsdZHmo682krVnf", account->get_address());
+
+    HANDLE_ERROR(
+            make_account(
+                    BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_SEGWIT,
+                    "cSBjA9u8YhQfDX4Yj2DyrgzQ1xhu5w4h9HxkHttMv4D6aWL1zyMm",
+                    reset_sp(account1)));
+    ASSERT_NE(nullptr, account1);
+    EXPECT_EQ("2N9YrGCkmGNzZfU3aMXqZkMw4iH2f2x9U37", account1->get_address());
+
+    const PrivateKeyPtr private_key = account->get_private_key();
+    const PrivateKeyPtr private_key1 = account1->get_private_key();
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            263_SATOSHI
+        },
+        { // Sources
+            TransactionSource
+            {
+                0.30048219_BTC,
+                from_hex("e2f1f958168543d25e7bc6a7897af57f21f6a016d3cf95a99ce78c112b545c07"),
+                0,
+                from_hex("a9143001515d9592fa730931df154306f24ba8ece52f87"),
+                private_key.get()
+            },
+            TransactionSource
+            {
+                1.0_BTC,
+                from_hex("e2f1f958168543d25e7bc6a7897af57f21f6a016d3cf95a99ce78c112b545c07"),
+                1,
+                from_hex("a914546c87c7a5187edac7ad3fcf22dc3597ce37b19987"),
+                private_key1.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "n46Gz2w1q8qtrGHc6yQbHNYRccoVYtzGt4",
+                1.30002819_BTC
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
+    const BinaryDataPtr serialied = transaction->serialize();
+    // Txid: 94d365be6dfaf9d1743e29d59b689f3c158ba48cbc7a215fc0a6e5eef2681658
+    ASSERT_EQ(as_binary_data(from_hex(
+            "02000000000102075c542b118ce79ca995cfd316a0f6217ff57a89a7c67b5ed243851658f9f1e200000000171600143b8fce371ebdc9edd882f5b530b84b55bbf3462ffdffffff"
+            "075c542b118ce79ca995cfd316a0f6217ff57a89a7c67b5ed243851658f9f1e20100000017160014d48c68dfbe25632ef3a2880c617dbf6b9724d14bfdffffff0183afbf070000"
+            "00001976a914f7a0185427d6b08bc3c4296a434f0ee6c623bc8f88ac024830450221009684cb807eebe8d336af9bd88431764816aecd5d291563780fe69a45407fb0c202201bd9"
+            "c3d17de88aeb90c2eb2b16ed24e459a25c88b7e595296943ed9d3662ffde012103ae1151592a23cd42edf749cde0f654722087ed7199c78422c187fe2644d91e3a024830450221"
+            "008e52bf2d0d45ddcae79a39707635acaef5995725668f6a79150bdd19e89baa2702205a0758d92e00d1b2df5deb070e07a851bbc10e66f2f82205f71197a52faea6b30121026f"
+            "6932ebbdff50f3424ee1e86889710b773fd6cd38fe5d89b1b29646ac9e4cb4a8fd1300")), *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, DISABLED_SmokeTest_SegWit_mainnet1)
+{
+    AccountPtr account;
+
+    HANDLE_ERROR(
+            make_account(
+                    BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_SEGWIT,
+                    "L4or2WoyKWhCk8jJsUBm82AY4qvdnrmxSXKhEMB5NT6hdTD7ZPn1",
+                    reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    EXPECT_EQ("3PBYzxFsYExpSDAg4HnqN9iJJEQY8GuKqi", account->get_address());
+
+    const PrivateKeyPtr private_key = account->get_private_key();
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            6_SATOSHI
+        },
+        { // Sources
+            TransactionSource
+            {
+                60736_SATOSHI,
+                from_hex("dda79578adf5283ab22747e0c519248c1e0a1a102ce01833c5bfba2e07ae6c75"),
+                0,
+                from_hex("a914ebc03ab6e3c5cf72226b9f83d2d5bb42dfc6d9d087"),
+                private_key.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "3E8rBvkT3phgqA1DtnL9QDsKrUd4HFjvry",
+                29906_SATOSHI
+            },
+            TransactionDestination
+            {
+                "37yb1X1QyuGeXyHDXqwy5RgHjs7MYdSN18",
+                30000_SATOSHI
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
+    const BinaryDataPtr serialied = transaction->serialize();
+    // Txid: e8a561cad92f3f0682688612dca308595a34f472e7a749bc0e45bf0cabdd5dfa
+    ASSERT_EQ(as_binary_data(from_hex(
+            "02000000000101756cae072ebabfc53318e02c101a0a1e8c2419c5e04727b23a28f5ad7895a7dd0000000017160014b1746f8fd5e518a09567e471c0f14553a4bbca4afdffffff"
+            "02d27400000000000017a914888432bff12b8bb8952ae0f862e340671e3870a487307500000000000017a91444f30758be7440343c34ea01531fa5f3314ef71b87024830450221"
+            "0087d3ff620a64b4ebf4be70d7918b19b09ded519e44b99df034e15d844e6c27f002207685f8f3e280f638c4e72c356602284b8ef9eef07a3c7579b42427567425822d012102cf"
+            "38a3306c3a30e08575f6a4651c17e62a6206487dfda800dca9cd265b5eab35b3fe0700")), *serialied);
+}
+
+GTEST_TEST(BitcoinTransactionTest, DISABLED_SmokeTest_SegWit_mainnet2)
+{
+    AccountPtr account;
+    AccountPtr account1;
+
+    HANDLE_ERROR(
+            make_account(
+                    BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_SEGWIT,
+                    "L3aeJKV7YEfpSUC6KNfbKPtXYNmFrjqG5E1WwuvsZgWU7wyZwJ4B",
+                    reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    EXPECT_EQ("3E8rBvkT3phgqA1DtnL9QDsKrUd4HFjvry", account->get_address());
+
+    HANDLE_ERROR(
+            make_account(
+                    BITCOIN_TEST_NET,
+                    BITCOIN_ACCOUNT_SEGWIT,
+                    "L3jREKUzn4v1eJXbfowNYAm9HknYSEyjFKRbBmFGuTxmQA8cEC28",
+                    reset_sp(account1)));
+    ASSERT_NE(nullptr, account1);
+    EXPECT_EQ("37yb1X1QyuGeXyHDXqwy5RgHjs7MYdSN18", account1->get_address());
+
+    const PrivateKeyPtr private_key = account->get_private_key();
+    const PrivateKeyPtr private_key1 = account1->get_private_key();
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            5_SATOSHI
+        },
+        { // Sources
+            TransactionSource
+            {
+                29906_SATOSHI,
+                from_hex("e8a561cad92f3f0682688612dca308595a34f472e7a749bc0e45bf0cabdd5dfa"),
+                0,
+                from_hex("a914888432bff12b8bb8952ae0f862e340671e3870a487"),
+                private_key.get()
+            },
+            TransactionSource
+            {
+                30000_SATOSHI,
+                from_hex("e8a561cad92f3f0682688612dca308595a34f472e7a749bc0e45bf0cabdd5dfa"),
+                1,
+                from_hex("a91444f30758be7440343c34ea01531fa5f3314ef71b87"),
+                private_key1.get()
+            }
+        },
+        { // Destinations
+            TransactionDestination
+            {
+                "1DaBnJ28DocZBxPy7g6Lv8W6Yhcu98YSrE",
+                58998_SATOSHI
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account);
+
+    transaction->get_transaction_properties()
+            .set_property_value("is_replaceable", 0);
+
+    const BinaryDataPtr serialied = transaction->serialize();
+    // Txid: 40154d4a6b857a661c5163ed97d3c27d139a2a05edce6435e039f3e2244d0db8
+    ASSERT_EQ(as_binary_data(from_hex(
+            "02000000000102fa5dddab0cbf450ebc49a7e772f4345a5908a3dc12866882063f2fd9ca61a5e800000000171600147d17b05e8f91b94d68a4808ac5a90ae9adab8e04fdffffff"
+            "fa5dddab0cbf450ebc49a7e772f4345a5908a3dc12866882063f2fd9ca61a5e80100000017160014e2277180898c1b2a2c728a1ba2010d60025b18eefdffffff0176e600000000"
+            "00001976a91489e83c5090456162cc2f1afd408ee9aa815fd6cb88ac024830450221008fbd3fb24ae0879684b4d7e85584780e73473306c130df4d053e60a2eb9c6436022037e8"
+            "777c9782fd63593d956e4f52f1c777c5730a619a2546695ffdb5c32b768501210256a77decb929792841e6a686b825d8d516c4d60146de3c8e32329fdfbd81238f024730440220"
+            "256368911e9d95faabff6e1c93904753b4e50485597db6d59d8ffd9a3a8296f5022046629cdba5fbb76500c92c26e06cf8403cbdf710f3936c6419deba9f92abe6ec012103368d"
+            "e58420371eb97cc574f2870cc0c88abfb699c5a87f28bb6bbf50b55f158fb5fe0700")), *serialied);
+}
+
 GTEST_TEST(BitcoinTransactionTest, transaction_update)
 {
     // Verify that transaction_update() modifies TX internal state.
