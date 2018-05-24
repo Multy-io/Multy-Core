@@ -6,44 +6,12 @@
 
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 
-#include "multy_core/ethereum.h"
-#include "multy_core/src/ethereum/ethereum_account.h"
-
-#include "multy_core/src/api/account_impl.h"
-#include "multy_core/src/exception.h"
+#include "multy_core/src/ethereum/ethereum_token.h"
+#include "multy_core/src/ethereum/ethereum_extra_data.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
 
-#include <algorithm>
-#include <cassert>
-#include <limits>
-#include <regex>
-#include <sstream>
-#include <unordered_map>
-
-namespace multy_core
-{
-namespace internal
-{
-
-const size_t ETH_METHOD_HASH_SIZE = 4;
-typedef std::array<uint8_t, ETH_METHOD_HASH_SIZE> EthereumContractMethodHash;
-
-enum EthereumTokenStandard
-{
-    ETHEREUM_TOKEN_STANDARD_ERC20
-};
-
-struct EthereumTokenTransferData
-{
-    EthereumTokenStandard standard;
-    BinaryDataPtr address;
-    EthereumContractMethodHash method;
-};
-
-} // internal
-} // namespace multy_core
 
 namespace
 {
@@ -87,108 +55,6 @@ IntWrapper<T> as_int(const T& value, size_t size)
     return IntWrapper<T>(value, size);
 }
 
-EthereumTokenStandard get_smart_contract_by_name(const std::string& name)
-{
-    static const std::unordered_map<std::string, EthereumTokenStandard> STANDARDS =
-    {
-        {
-            "ERC20", ETHEREUM_TOKEN_STANDARD_ERC20
-        }
-    };
-
-    const auto s = STANDARDS.find(name);
-    if (s == STANDARDS.end())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_INVALID_STANDARD,
-                "Unknown Ethereum token standard.")
-                << " Got: " << name << ".";
-    }
-
-    return s->second;
-}
-
-EthereumContractMethodHash get_smart_contract_method_hash(
-        EthereumTokenStandard standard,
-        const std::string& method)
-{
-    typedef std::unordered_map<std::string, EthereumContractMethodHash> MethodHashes;
-    typedef std::unordered_map<size_t, MethodHashes> TokenTransferMethods;
-
-    static const TokenTransferMethods SUPPORTED_STANDARDS =
-    {
-        {
-            ETHEREUM_TOKEN_STANDARD_ERC20,
-            {
-                {
-                    "transfer",
-                    {
-                        0x00, 0x00, 0x00, 0x00
-                    }
-                },
-                {
-                    "approve",
-                    {
-                        0x00, 0x00, 0x00, 0x00
-                    }
-                }
-            }
-        },
-    };
-
-    const auto s = SUPPORTED_STANDARDS.find(standard);
-    if (s == SUPPORTED_STANDARDS.end())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_INVALID_STANDARD,
-                "Unsupported Ethereum token standard.");
-    }
-
-    const auto m = s->second.find(method);
-    if (m == s->second.end())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_INVALID_METHOD,
-                "Unsupported Ethereum token transfer method.")
-                << " Got: \"" << method << "\".";
-    }
-
-    return m->second;
-}
-
-EthereumTokenTransferDataPtr parse_token_transfer_data(const std::string& value)
-{
-    static const std::regex SPLIT_TOKEN_RE(":");
-
-    std::smatch token_match;
-    std::sregex_token_iterator iterator(value.begin(), value.end(), SPLIT_TOKEN_RE, -1);
-
-    EthereumTokenTransferDataPtr result(new EthereumTokenTransferData);
-    if (iterator == std::sregex_token_iterator())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_STANDARD,
-                "Missing Token Smart Contract standard.");
-    }
-    result->standard = get_smart_contract_by_name(*iterator);
-    ++iterator;
-
-    if (iterator == std::sregex_token_iterator())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_ADDRESS,
-                "Missing Token Smart Contract address.");
-    }
-    result->address = ethereum_parse_address(iterator->str().c_str());
-    ++iterator;
-
-    if (iterator == std::sregex_token_iterator())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_METHOD,
-                "Missing Token Smart Contract method.");
-    }
-
-    result->method = get_smart_contract_method_hash(result->standard,
-            iterator->str());
-
-    return result;
-}
-
 } // namespace
 
 namespace multy_core
@@ -203,12 +69,12 @@ size_t get_bytes_len(const BigInt& value)
 
 struct EthereumDataStream
 {
-public:
     EthereumDataStream()
         : m_data()
     {
         m_data.reserve(256);
     }
+
     void write_data(const void* data, size_t size)
     {
         const uint8_t* d = reinterpret_cast<const uint8_t*>(data);
@@ -384,9 +250,10 @@ EthereumDataStream& operator<<(EthereumDataStream& stream, const BinaryData& bin
             }
 
             stream << as_uint8(RLP_DATA_IND_LEN_ZERO + length_size);
-            for (; length_size != 0; length_size >>= 8)
+            size_t writen_len =len ;
+            for (; writen_len != 0; writen_len >>= 8)
             {
-                stream << as_uint8(length_size);
+                stream << as_uint8(writen_len);
             }
         }
         stream.write_data(data, len);
@@ -432,7 +299,7 @@ struct EthereumTransactionSignature
         {
             THROW_EXCEPTION2(ERROR_TRANSACTION_INVALID_SIGNATURE,
                     "Invalid signature size.")
-                    << " Expected: 65 bytes, got:" << signature_data->len;
+                    << " Expected: 65 bytes, got: " << signature_data->len;
         }
         m_signature_data.swap(signature_data);
         recovery_id = m_signature_data->data[64];
@@ -448,52 +315,6 @@ struct EthereumTransactionSignature
 private:
     uint8_t recovery_id;
     BinaryDataPtr m_signature_data;
-};
-
-
-struct EthereumTransactionFee : public TransactionFeeBase
-{
-    EthereumTransactionFee()
-        : gas_price(get_properties(), "gas_price"),
-          gas_limit(get_properties(), "gas_limit", Property::OPTIONAL),
-          total_fee()
-    {}
-
-    PropertyT<BigInt> gas_price;
-    PropertyT<BigInt> gas_limit;
-
-    BigInt total_fee;
-};
-
-struct EthereumTransactionSource : public TransactionSourceBase
-{
-    EthereumTransactionSource()
-        : amount(get_properties(), "amount")
-    {}
-
-    PropertyT<BigInt> amount;
-};
-
-struct EthereumTransactionDestination : public TransactionDestinationBase
-{
-    EthereumTransactionDestination()
-        : string_address(get_properties(), "address", Property::REQUIRED,
-            [this](const std::string& new_address)
-            {
-                this->address = ethereum_parse_address(new_address.c_str());
-            }),
-          amount(get_properties(), "amount"),
-          address()
-    {}
-
-    void serialize_to(EthereumDataStream* stream)
-    {
-        (*stream) << address << amount;
-    }
-public:
-    PropertyT<std::string> string_address;
-    PropertyT<BigInt> amount;
-    BinaryDataPtr address;
 };
 
 EthereumTransaction::EthereumTransaction(const Account& account)
@@ -520,8 +341,8 @@ EthereumTransaction::EthereumTransaction(const Account& account)
       m_fee(new EthereumTransactionFee),
       m_source(),
       m_destination(),
-      m_signature(),
-      m_gas()
+      m_internal_destination(),
+      m_signature()
 {
 }
 
@@ -545,10 +366,15 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
     EthereumDataStreamList list;
     list << m_nonce;
     list << m_fee->gas_price;
-    list << m_gas;
-    list << m_destination->address;
-    list << m_destination->amount;
-    if (m_payload && (m_payload->data != nullptr))
+    list << m_fee->gas_limit;
+    list << m_internal_destination->address;
+    list << m_internal_destination->amount;
+    if (m_token_transfer_data)
+    {
+        const BinaryDataPtr call_method = m_token_transfer_data->serialize(*m_destination);
+        list <<  *call_method;
+    }
+    else if(m_payload && (m_payload->data != nullptr))
     {
         list << m_payload;
     }
@@ -573,13 +399,13 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
 
 void EthereumTransaction::on_token_transfer_set(const std::string& value)
 {
-    EthereumTokenTransferDataPtr new_data = parse_token_transfer_data(value);
+    EthereumSmartContractPayloadPtr new_data = parse_token_transfer_data(value);
     m_token_transfer_data.swap(new_data);
 }
 
 BigInt EthereumTransaction::get_total_spent() const
 {
-    return (m_destination ? *m_destination->amount : BigInt(0))
+    return (m_internal_destination ? *m_internal_destination->amount : BigInt(0))
             + get_total_fee();
 }
 
@@ -615,16 +441,28 @@ void EthereumTransaction::update()
 {
     verify();
 
-    BigInt diff = m_source->amount.get_value() - m_destination->amount.get_value();
-    const BigInt gas = *m_fee->gas_limit;
+    if (!m_internal_destination)
+    {
+        m_internal_destination.reset(new EthereumTransactionDestination);
+    }
+    if (!m_token_transfer_data)
+    {
+        *m_internal_destination = *m_destination;
+    }
+    else
+    {
+        m_internal_destination = m_token_transfer_data->get_destination();
+    }
 
-    diff -= gas * *m_fee->gas_price;
+    BigInt diff = m_source->amount.get_value() - m_internal_destination->amount.get_value();
+    m_fee->total_fee = *m_fee->gas_limit * *m_fee->gas_price;
+
+    diff -= m_fee->total_fee;
     if (diff < 0)
     {
         THROW_EXCEPTION2(ERROR_TRANSACTION_INSUFFICIENT_FUNDS,
                 "Transaction is trying to spend more than available.");
     }
-    m_gas = gas;
 }
 
 void EthereumTransaction::sign()

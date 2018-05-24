@@ -90,6 +90,7 @@ add_library(multy_core
     src/ethereum/ethereum_facade.cpp
     src/ethereum/ethereum_account.cpp
     src/ethereum/ethereum_transaction.cpp
+    src/ethereum/ethereum_token.cpp
 
     # Golos
     golos.h
