@@ -21,3 +21,11 @@ if(DEFINED MULTY_WITH_TESTS)
         POSITION_INDEPENDENT_CODE ON
     )
 endif(DEFINED MULTY_WITH_TESTS)
+
+add_library(ccan
+    ./ccan/str/base32/base32.c
+)
+target_include_directories(ccan
+    PUBLIC
+    .
+)
