@@ -117,6 +117,62 @@ public:
     }
 };
 
+class BitcoinP2SHWPKHAccount : public BitcoinAccount
+{
+public:
+    using BitcoinAccount::BitcoinAccount;
+
+    std::string get_address() const override
+    {
+        unsigned char pub_hash[HASH160_LEN + 1] = {'\0'};
+
+        // 1 - Take the corresponding public key generated with it (33 or 65
+        // bytes)
+        {
+            unsigned char segwit_script[HASH160_LEN + 2] = {'\0'};
+           // Leave the first two bytes intact for script opcode
+            BinaryData hash_pub_key = power_slice(as_binary_data(segwit_script), 2, -2);
+
+            PublicKeyPtr public_key(m_private_key->make_public_key());
+            BinaryData key_data = public_key->get_content();
+            // 2 - Perform SHA-256 hashing on the public key
+            // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
+            bitcoin_hash_160(key_data, &hash_pub_key);
+            // 4 - Perform make script segWit for lock bitcoins
+            segwit_script[0] = 0x00; // Version byte witness
+            segwit_script[1] = HASH160_LEN; // Witness program is 20 bytes
+
+            // Leave the first byte intact for prefix.
+            BinaryData hash_data = power_slice(as_binary_data(pub_hash), 1, -1);
+            // 5 - Perform SHA-256 hashing on the segWit script
+            // 6 - Perform RIPEMD-160 hashing on the result of SHA-256
+            bitcoin_hash_160(as_binary_data(segwit_script), &hash_data);
+        }
+
+        // 7 - Add version byte in front of RIPEMD-160 hash
+        //      (0x05 for Main Network)
+        pub_hash[0] = get_address_prefix(
+                static_cast<BitcoinNetType>(m_blockchain_type.net_type),
+                BITCOIN_ADDRESS_P2SH);
+
+        // 8 - Perform SHA-256 hash on the extended RIPEMD-160 result
+        // 9 - Perform SHA-256 hash on the result of the previous SHA-256 hash
+        // 10 - Add the 4 checksum bytes from stage 7 at the end of extended
+        //      RIPEMD-160 hash from stage 4.
+        // 11 - Convert the result from a byte string into a base58 string
+        //      using Base58Check encoding.
+        CharPtr base58_string_ptr;
+        THROW_IF_WALLY_ERROR(
+                wally_base58_from_bytes(
+                        pub_hash, sizeof(pub_hash), BASE58_FLAG_CHECKSUM,
+                        reset_sp(base58_string_ptr)),
+                "Converting to base58 failed.");
+        std::string result(base58_string_ptr.get());
+
+        return result;
+    }
+};
+
 AccountPtr make_bitcoin_account(
         BlockchainType blockchain_type,
         BitcoinAccountType account_type,
@@ -132,8 +188,10 @@ AccountPtr make_bitcoin_account(
     }
     if (account_type == BITCOIN_ACCOUNT_SEGWIT)
     {
-        THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET,
-                "SegWit accounts are not supported yet.");
+        return AccountPtr(new BitcoinP2SHWPKHAccount(
+                blockchain_type,
+                std::move(key),
+                std::move(path)));
     }
 
     THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unknown BitcoinAccountType.")
@@ -198,6 +256,7 @@ AccountPtr BitcoinHDAccount::make_account(
             new BitcoinPrivateKey(
                     slice(priv_key_data, 1, priv_key_data.len - 1),
                     static_cast<BitcoinNetType>(get_blockchain_type().net_type),
+                    m_account_type,
                     EC_PUBLIC_KEY_COMPRESSED));
 
     return ::make_bitcoin_account(
@@ -211,7 +270,7 @@ AccountPtr make_bitcoin_account(
         const char* private_key,
         BitcoinAccountType account_type)
 {
-    BitcoinPrivateKeyPtr key = make_bitcoin_private_key_from_wif(private_key);
+    BitcoinPrivateKeyPtr key = make_bitcoin_private_key_from_wif(private_key, account_type);
 
     const BlockchainType blockchain_type{BLOCKCHAIN_BITCOIN, key->get_net_type()};
     return ::make_bitcoin_account(

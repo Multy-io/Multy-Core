@@ -157,7 +157,7 @@ SerializedKeyTestCase BITCOIN_MAINNET_P2SH_P2WPKH_KEY_DATA[] = {
         },
         {
             "KwTECtLxekB95Pam68KNUa4XK6GhmJ2vah4xpDvk7qUmZMQR6d9A",
-            "mUyLSFTU6XUuNYJjHEoMJiUEsZdva77TYxV8tY4PD2VN",
+            "sfb5rBdGrcmigkrogPod398fMeWavWiESNmmTnEKVzKQ",
             "3PfWZkKQ2QkfZmSd8AdsA9tSFtQTc2qRuT"
         },
         {
@@ -206,28 +206,28 @@ SerializedKeyTestCase BITCOIN_TESTNET_P2SH_P2WPKH_KEY_DATA[] = {
         },
         {
             "cUr5VKeDDCm5KFpBgza2Xktrf8VxPmmh9hLJ26RpD3FCray5iqgf",
-            "02e4eb34ae5eac1447da4e5fa2a9de734014f988d3af336e1f4728b46dfe7e29c5",
+            "rsEiPKkuUAJPigFsVcZy73JWKGDMFV7hNq5kE9kEBWTE",
             "2N1JZBatXZVYC9vwB6truPaBExZYPdapDhB"
         },
         {
             "cQx7dy9bnAXhDTS5z1zNxaiedgUmnvZuqFzpFvxHz1utjjToRPCQ",
-            "02326800b109413ac0558839c65a2f3e1f7f12a8bf782ae51e6e94f79b3da33f8e",
+            "erQ7BoHKD7kSbai1vNd25ZWcKB44qvoYrTR5LGMt1qNV",
             "2N5AEiyZEwzfvbZ5hVms7MvnmP6dNgHSH6p"
         },
         {
             "cTmh5ruAnuU9ziwZmHWbjyreKxDRFPU2k2pdjzyDA93U8pPHh4kN",
-            "03cbd33b97193abe97fd872c3eda4be7b3c0d7ba3dce9fd5fd5d7f630e0283fd6b",
+            "28Qbh1hUTjUkLXsWa5bmqxdStA4io9Zvbbj9ssqvSnGtA",
             "2N5XGmweCMaTStJxNfe56hJzfKVBpLuxDu8"
         },
         {
             "cSYBWN6JbLwm17tJJWZspaQemsFwb6zf5rFkzG4HXjaQpVXqxN5n",
-            "033f39deb7a4caa47707e710219c344d25fea5feae29d80f16bce4380507d5de8f",
+            "xwkygp59CrJEW3r4jdpsC8d2fCZ6Fz9zHgUydTaH5LEr",
             "2NF5D225PV9ZUnwv1aU7madnaPePYeKW2C4"
         }
 };
 
 INSTANTIATE_TEST_CASE_P(
-        DISABLED_Bitcoin,
+        Bitcoin,
         SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(BITCOIN_TEST_NET),
@@ -235,7 +235,7 @@ INSTANTIATE_TEST_CASE_P(
                 ::testing::ValuesIn(BITCOIN_TESTNET_P2SH_P2WPKH_KEY_DATA)));
 
 INSTANTIATE_TEST_CASE_P(
-        DISABLED_Bitcoin_P2WPKH_,
+        Bitcoin_P2WPKH,
         SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(BITCOIN_MAIN_NET),
