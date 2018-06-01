@@ -57,7 +57,7 @@ MULTY_CORE_API struct Error* transaction_get_properties(
  * @param out_fee_estimation - fee estimation in transaction currency (BTC, ETHC, etc.).
  *
  * Please note that final fee value might differ from this estimation.
- * @throw Exception if any of the required transaction (or fee) properties are not set.
+ * @return Error if any of the required transaction (or fee) properties are not set.
  */
 MULTY_CORE_API struct Error* transaction_estimate_total_fee(
         const struct Transaction* transaction,
@@ -93,9 +93,20 @@ MULTY_CORE_API struct Error* transaction_get_total_spent(
 MULTY_CORE_API struct Error* transaction_update(
         struct Transaction* transaction);
 
+
 MULTY_CORE_API struct Error* transaction_serialize(
         struct Transaction* transaction,
-        struct BinaryData** out_serialized_transaction);
+        BinaryData** out_serialized_transaction);
+
+/** Serialize transcation to a form accepted by node.
+ *
+ * @param transaction - input transaction object
+ * @param out_serialized_transaction - string that can be sent to node
+ * to actually make a transaction on a blockchain, MUST be freed by caller.
+ */
+MULTY_CORE_API struct Error* transaction_serialize_encoded(
+        struct Transaction* transaction,
+        const char** out_serialized_transaction);
 
 MULTY_CORE_API void free_transaction(struct Transaction* transaction);
 

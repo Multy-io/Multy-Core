@@ -49,7 +49,7 @@ HDAccountPtr GolosFacade::make_hd_account(
         BlockchainType blockchain_type,
         uint32_t account_type,
         const ExtendedKey& master_key,
-        uint32_t index)
+        uint32_t index) const
 {
     validate_golos_account_type(account_type);
 
@@ -59,20 +59,20 @@ HDAccountPtr GolosFacade::make_hd_account(
 AccountPtr GolosFacade::make_account(
         BlockchainType blockchain_type,
         uint32_t account_type,
-        const char* serialized_private_key)
+        const char* serialized_private_key) const
 {
     validate_golos_account_type(account_type);
 
     return make_golos_account(blockchain_type, serialized_private_key);
 }
 
-TransactionPtr GolosFacade::make_transaction(const Account& account)
+TransactionPtr GolosFacade::make_transaction(const Account& account) const
 {
     return TransactionPtr(new GolosTransaction(account.get_blockchain_type()));
 }
 
 void GolosFacade::validate_address(
-        BlockchainType, const char* address)
+        BlockchainType, const char* address) const
 {
     INVARIANT(address != nullptr);
 
@@ -93,6 +93,15 @@ void GolosFacade::validate_address(
         THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Invalid Golos account address.")
                 << "Should match pattern: \"" << GOLOS_ACCOUNT_NAME_RE << "\".";
     }
+}
+
+std::string GolosFacade::encode_serialized_transaction(
+        const BinaryData& serialized_transaction) const
+{
+    INVARIANT(serialized_transaction.data != nullptr);
+    INVARIANT(serialized_transaction.len != 0);
+
+    return std::string(reinterpret_cast<const char*>(serialized_transaction.data), serialized_transaction.len);
 }
 
 } // namespace internal

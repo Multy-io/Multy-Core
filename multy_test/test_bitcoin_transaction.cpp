@@ -678,9 +678,13 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet2_with_key_to_source)
         EXPECT_GE(max_total_fee, estimated_fee.get_value_as_uint64());
     }
 
-    ASSERT_EQ(as_binary_data(from_hex(
-            "010000000191a34273f5cb57244de3d7b27678b3ad385ac46c7df2c440f3f7b5ad23929748000000006a473044022064d09103c9d48c8b094db03227621ced41732a74963578d3495bac4f7f65b40e02201f2f7adf872c1de2af5027edefdf29379faf9fe8f5751015c974e064a9d9d6e0012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff014062b007000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000")),
-            *serialied);
+    const char* TX = "010000000191a34273f5cb57244de3d7b27678b3ad385ac46c7df2c440f3f7b5ad23929748000000006a473044022064d09103c9d48c8b094db03227621ced41732a74963578d3495bac4f7f65b40e02201f2f7adf872c1de2af5027edefdf29379faf9fe8f5751015c974e064a9d9d6e0012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff014062b007000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000";
+    ASSERT_EQ(as_binary_data(from_hex(TX)), *serialied);
+
+    ConstCharPtr serialized_encoded;
+    HANDLE_ERROR(transaction_serialize_encoded(transaction.get(),
+            reset_sp(serialized_encoded)));
+    ASSERT_STREQ(serialized_encoded.get(), TX);
 }
 
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
@@ -740,10 +744,14 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_testnet3)
     transaction->get_transaction_properties()
             .set_property_value("is_replaceable", 0);
 
+    const char* TX = "0100000001da1ca8202f16683e307b47fe4c9e65804569e4b50f84e14ed79b60e54a65ae13010000006b483045022100e217cfb5920878da55069a919029ab910ff106cfb20fd901e82de041b149d71902202756c5700377294837893cca854e60b6cca86423f4407b8faf92ff898aded00a012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff0300e1f505000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00e1f505000000001976a914323c1ea8756feaaaa85d0d0e51b0cc07b4c7ac5e88acc0878b3b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000";
     const BinaryDataPtr serialied = transaction->serialize();
-    ASSERT_EQ(as_binary_data(from_hex(
-            "0100000001da1ca8202f16683e307b47fe4c9e65804569e4b50f84e14ed79b60e54a65ae13010000006b483045022100e217cfb5920878da55069a919029ab910ff106cfb20fd901e82de041b149d71902202756c5700377294837893cca854e60b6cca86423f4407b8faf92ff898aded00a012102163387c2c86f897b8aef15ee24e1f135da70c52e7dde12c06e122891c704d694ffffffff0300e1f505000000001976a91401de29d6f0aaf3467da7881a981c5c5ef90258bd88ac00e1f505000000001976a914323c1ea8756feaaaa85d0d0e51b0cc07b4c7ac5e88acc0878b3b000000001976a914d3f68b887224cabcc90a9581c7bbdace878666db88ac00000000")),
-            *serialied);
+    ASSERT_EQ(as_binary_data(from_hex(TX)), *serialied);
+
+    ConstCharPtr serialized_encoded;
+    HANDLE_ERROR(transaction_serialize_encoded(transaction.get(),
+            reset_sp(serialized_encoded)));
+    ASSERT_STREQ(serialized_encoded.get(), TX);
 }
 
 GTEST_TEST(BitcoinTransactionTest, SmokeTest_with_many_input_from_one_addreses_testnet)

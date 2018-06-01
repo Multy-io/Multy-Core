@@ -9,6 +9,15 @@
 
 #include "multy_core/src/blockchain_facade_base.h"
 
+#include "multy_core/binary_data.h"
+#include "multy_core/blockchain.h"
+
+#include <string>
+#include <stdint.h>
+
+struct Account;
+struct BinaryData;
+
 namespace multy_core
 {
 namespace internal
@@ -24,15 +33,18 @@ public:
             BlockchainType blockchain_type,
             uint32_t account_type,
             const ExtendedKey& master_key,
-            uint32_t index) override;
+            uint32_t index) const override;
 
     AccountPtr make_account(
             BlockchainType blockchain_type,
             uint32_t account_type,
-            const char* serialized_private_key) override;
+            const char* serialized_private_key) const override;
 
-    TransactionPtr make_transaction(const Account&) override;
-    void validate_address(BlockchainType blockchain_type, const char*) override;
+    TransactionPtr make_transaction(const Account&) const override;
+    void validate_address(BlockchainType blockchain_type, const char*) const override;
+
+    std::string encode_serialized_transaction(
+            const BinaryData& serialized_transaction) const override;
 };
 
 } // internal

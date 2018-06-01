@@ -100,7 +100,7 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_fee)
     TestTransaction transaction;
     BigIntPtr amount;
 
-    EXPECT_ERROR(transaction_get_total_fee(&transaction, nullptr ));
+    EXPECT_ERROR(transaction_get_total_fee(&transaction, nullptr));
 
     EXPECT_ERROR(transaction_get_total_fee(nullptr, reset_sp(amount)));
     EXPECT_EQ(nullptr, amount);
@@ -111,7 +111,7 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_get_total_spent)
     TestTransaction transaction;
     BigIntPtr amount;
 
-    EXPECT_ERROR(transaction_get_total_spent(&transaction, nullptr ));
+    EXPECT_ERROR(transaction_get_total_spent(&transaction, nullptr));
 
     EXPECT_ERROR(transaction_get_total_spent(nullptr, reset_sp(amount)));
     EXPECT_EQ(nullptr, amount);
@@ -122,8 +122,17 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize)
     TestTransaction transaction;
     BinaryDataPtr binary_data;
 
-    EXPECT_ERROR(transaction_serialize(nullptr, reset_sp(binary_data) ));
+    EXPECT_ERROR(transaction_serialize(nullptr, reset_sp(binary_data)));
     EXPECT_ERROR(transaction_serialize(&transaction, nullptr));
+}
+
+GTEST_TEST(TransactionTestInvalidArgs, transaction_serialize_encoded)
+{
+    TestTransaction transaction;
+    ConstCharPtr serialized;
+
+    EXPECT_ERROR(transaction_serialize_encoded(nullptr, reset_sp(serialized)));
+    EXPECT_ERROR(transaction_serialize_encoded(&transaction, nullptr));
 }
 
 GTEST_TEST(TransactionTestInvalidArgs, transaction_set_message)
@@ -141,7 +150,6 @@ GTEST_TEST(TransactionTestInvalidArgs, transaction_update)
 {
     EXPECT_ERROR(transaction_update(nullptr));
 }
-
 
 GTEST_TEST(TransactionTest, make_transaction)
 {
@@ -224,6 +232,14 @@ GTEST_TEST(TransactionTest, transaction_serialize)
 
     HANDLE_ERROR(
             transaction_serialize(&transaction, reset_sp(serialize_binary_data)));
+}
+
+GTEST_TEST(TransactionTest, transaction_serialize_encoded)
+{
+    TestTransaction transaction;
+    ConstCharPtr serialized;
+
+    HANDLE_ERROR(transaction_serialize_encoded(&transaction, reset_sp(serialized)));
 }
 
 GTEST_TEST(TransactionTest, transaction_set_message)

@@ -33,19 +33,30 @@ public:
             BlockchainType blockchain_type,
             uint32_t account_type,
             const ExtendedKey& master_key,
-            uint32_t index) = 0;
+            uint32_t index) const = 0;
 
     virtual AccountPtr make_account(
             BlockchainType blockchain_type,
             uint32_t account_type,
-            const char* serialized_private_key) = 0;
+            const char* serialized_private_key) const = 0;
 
-    virtual TransactionPtr make_transaction(const Account&) = 0;
+    virtual TransactionPtr make_transaction(const Account&) const = 0;
 
-    virtual void validate_address(BlockchainType, const char* ) = 0;
+    virtual void validate_address(BlockchainType, const char*) const = 0;
+
+    virtual std::string encode_serialized_transaction(
+            const BinaryData& serialized_transaction) const = 0;
 };
 
+BlockchainFacadeBase& get_blockchain(BlockchainType blockchain_type);
 BlockchainFacadeBase& get_blockchain(Blockchain blockchain_type);
+
+// Convinience method for getting blockchain from Account and Transaction
+template <typename T>
+BlockchainFacadeBase& get_blockchain(const T& object)
+{
+    return get_blockchain(object.get_blockchain_type());
+}
 
 class BlockchainFacadeRegistry
 {
