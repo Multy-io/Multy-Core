@@ -24,10 +24,11 @@ Error* make_transaction(const Account* account, Transaction** new_transaction)
 
     try
     {
-        *new_transaction = get_blockchain(account->get_blockchain_type().blockchain)
-                .make_transaction(*account).release();
+        *new_transaction = get_blockchain(*account).make_transaction(*account)
+                .release();
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
+
     OUT_CHECK_OBJECT(*new_transaction);
 
     return nullptr;
@@ -147,6 +148,7 @@ Error* transaction_estimate_total_fee(
         *out_fee_estimate = result.release();
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
+
     OUT_CHECK_OBJECT(*out_fee_estimate);
 
     return nullptr;
@@ -164,6 +166,7 @@ Error* transaction_get_total_fee(const Transaction* transaction, BigInt** out_to
         *out_total_fee = result.release();
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
+
     OUT_CHECK_OBJECT(*out_total_fee);
 
     return nullptr;
@@ -183,6 +186,7 @@ Error* transaction_get_total_spent(
         *out_total_spent = result.release();
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
+
     OUT_CHECK_OBJECT(*out_total_spent);
 
     return nullptr;
@@ -211,6 +215,28 @@ Error* transaction_serialize(
     try
     {
         *out_serialized_transaction = transaction->serialize().release();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
+    OUT_CHECK(*out_serialized_transaction);
+
+    return nullptr;
+}
+
+Error* transaction_serialize_encoded(
+        Transaction* transaction,
+        const char** out_serialized_transaction)
+{
+    ARG_CHECK_OBJECT(transaction);
+    ARG_CHECK(out_serialized_transaction);
+
+    try
+    {
+        const auto serialized_transaction = transaction->serialize();
+        const auto& blockchain_facade = get_blockchain(*transaction);
+
+        *out_serialized_transaction = copy_string(
+                blockchain_facade.encode_serialized_transaction(
+                        *serialized_transaction));
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 

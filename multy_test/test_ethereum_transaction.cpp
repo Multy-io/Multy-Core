@@ -91,13 +91,18 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_public_api)
         HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
     }
 
+    const char* TX = "f85f800182520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea1901802ba033de58162abbfdf1e744f5fee2b7a3c92691d9c59fc3f9ad2fa3fb946c8ea90aa0787abc84d20457c12fdcf62b612247fb34e397f6bdec64fc6a3bc9444df3e946";
+
     {
         BinaryDataPtr serialied;
         HANDLE_ERROR(transaction_serialize(transaction.get(), reset_sp(serialied)));
-        ASSERT_EQ(as_binary_data(from_hex("f85f800182520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea1901802ba033de58162abbfdf1e744f5fee2b7a3c92691d9c59fc3f9ad2fa3fb946c8ea90aa0787abc84d20457c12fdcf62b612247fb34e397f6bdec64fc6a3bc9444df3e946")),
-                  *serialied);
+        ASSERT_EQ(as_binary_data(from_hex(TX)), *serialied);
     }
 
+    ConstCharPtr serialized_encoded;
+    HANDLE_ERROR(transaction_serialize_encoded(transaction.get(),
+            reset_sp(serialized_encoded)));
+    ASSERT_STREQ(serialized_encoded.get(), (std::string("0x") + TX).c_str());
 }
 
 GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet1)
@@ -194,11 +199,14 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet2)
     const BinaryDataPtr serialied = transaction->serialize();
     std::cerr << "signed transaction:" << to_hex(*serialied) << "\n";
 
-    ASSERT_EQ(as_binary_data(from_hex(
-            "f86c04850f0000000082520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19882000000000000000802ba0098ee502619d5ba29d66b6c510265142f46ee0399456be7afb63ceefac0bd17ea07c19cc4145471b31f90af07f554611ac535cd006f64fb2141f1ed7bea7150386")),
-            *serialied);
-}
+    const char* TX = "f86c04850f0000000082520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19882000000000000000802ba0098ee502619d5ba29d66b6c510265142f46ee0399456be7afb63ceefac0bd17ea07c19cc4145471b31f90af07f554611ac535cd006f64fb2141f1ed7bea7150386";
+    ASSERT_EQ(as_binary_data(from_hex(TX)), *serialied);
 
+    ConstCharPtr serialized_encoded;
+    HANDLE_ERROR(transaction_serialize_encoded(transaction.get(),
+            reset_sp(serialized_encoded)));
+    ASSERT_STREQ(serialized_encoded.get(), (std::string("0x") + TX).c_str());
+}
 
 GTEST_TEST(EthereumTransactionTest, SmokeTest_testnet_withdata)
 {
@@ -717,7 +725,6 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_ERC20_transfer)
     HANDLE_ERROR(transaction_set_message(transaction.get(), data.get()));
 
     const BinaryDataPtr serialied = transaction->serialize();
-
 
     // TXid: 0xbce2467f9bfc1cfe3e6f98f6429970bec200cc48bf4de18d5540e02be14e19fe
     ASSERT_EQ(as_binary_data(from_hex(

@@ -141,10 +141,11 @@ void TestTransaction::update()
 
 Transaction::BinaryDataPtr TestTransaction::serialize()
 {
-    return BinaryDataPtr(new BinaryData{nullptr, 0});
+    static const char TEST_TX[] = "TEST_TX";
+    return make_clone(as_binary_data(TEST_TX));
 }
 
-BigInt TestTransaction::estimate_total_fee(size_t sources_count, size_t destinations_count) const
+BigInt TestTransaction::estimate_total_fee(size_t /*sources_count*/, size_t /*destinations_count*/) const
 {
     return m_total;
 }

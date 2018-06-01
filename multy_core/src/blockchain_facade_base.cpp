@@ -20,6 +20,11 @@ namespace multy_core
 namespace internal
 {
 
+BlockchainFacadeBase& get_blockchain(BlockchainType blockchain_type)
+{
+    return get_blockchain(blockchain_type.blockchain);
+}
+
 BlockchainFacadeBase& get_blockchain(Blockchain blockchain_type)
 {
     return BlockchainFacadeRegistry::get_instance().get_blockchain(blockchain_type);

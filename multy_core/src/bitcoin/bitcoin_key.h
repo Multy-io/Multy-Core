@@ -55,6 +55,7 @@ struct BitcoinPrivateKey : public PrivateKey
             BitcoinNetType net_type,
             BitcoinAccountType account_type,
             PublicKeyFormat public_key_format);
+
     ~BitcoinPrivateKey();
 
     std::string to_string() const override;

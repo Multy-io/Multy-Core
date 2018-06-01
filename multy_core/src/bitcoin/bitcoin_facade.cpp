@@ -15,6 +15,8 @@
 #include "multy_core/src/bitcoin/bitcoin_transaction.h"
 #include "multy_core/src/utility.h"
 
+#include "multy_core/src/codec.h"
+
 namespace
 {
 using namespace multy_core::internal;
@@ -55,7 +57,7 @@ HDAccountPtr BitcoinFacade::make_hd_account(
         BlockchainType blockchain_type,
         uint32_t account_type,
         const ExtendedKey& master_key,
-        uint32_t index)
+        uint32_t index) const
 {
     return HDAccountPtr(new BitcoinHDAccount(
             blockchain_type,
@@ -67,7 +69,7 @@ HDAccountPtr BitcoinFacade::make_hd_account(
 AccountPtr BitcoinFacade::make_account(
         BlockchainType blockchain_type,
         uint32_t account_type,
-        const char* serialized_private_key)
+        const char* serialized_private_key) const
 {
     AccountPtr account = make_bitcoin_account(serialized_private_key,
             to_bitcoin_account_type(account_type));
@@ -81,12 +83,12 @@ AccountPtr BitcoinFacade::make_account(
     return account;
 }
 
-TransactionPtr BitcoinFacade::make_transaction(const Account& account)
+TransactionPtr BitcoinFacade::make_transaction(const Account& account) const
 {
     return TransactionPtr(new BitcoinTransaction(account.get_blockchain_type()));
 }
 
-void BitcoinFacade::validate_address(BlockchainType blockchain_type, const char* address)
+void BitcoinFacade::validate_address(BlockchainType blockchain_type, const char* address) const
 {
     INVARIANT(address);
 
@@ -105,6 +107,12 @@ void BitcoinFacade::validate_address(BlockchainType blockchain_type, const char*
                 << " Requested: " << blockchain_type.net_type
                 << ", address net type:" << net_type;
     }
+}
+
+std::string BitcoinFacade::encode_serialized_transaction(
+        const BinaryData& serialized_transaction) const
+{
+    return encode(serialized_transaction, CODEC_HEX);
 }
 
 } // internal
