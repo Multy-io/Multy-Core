@@ -1572,6 +1572,37 @@ GTEST_TEST(BitcoinTransactionTest, SmokeTest_mainnet_dust_outputs)
     EXPECT_EQ(BigInt(0), change_amount);
 }
 
+GTEST_TEST(BitcoinTransactionTest, SmokeTest_zero_destination)
+{
+    AccountPtr account = make_account(BITCOIN_MAIN_NET, "5KDejYL1XnGkhwhH1ubSqiFCqXGxYzuJYHXhU7UqeVLEDeqBJ22");
+
+    const TransactionTemplate TEST_TX
+    {
+        nullptr,
+        TransactionFee
+        { // fee:
+            3_SATOSHI
+        },
+        { // Sources
+            {
+                1000_SATOSHI,
+                from_hex("63ebc8dd4de286a1ab32029f1986876ac981b8b9ccd597be3f2d6ac1961e02ee"),
+                0,
+                from_hex("76a914dda3945cee6bb677de3b090db38ef3053fc45acb88ac"),
+                nullptr
+            }
+        },
+        { // Destinations
+            TransactionChangeDestination
+            {
+                "1Q46s1EJXDMvVTCVQGKfrjEudvgu39uXu5"
+            }
+        }
+    };
+    TransactionPtr transaction = make_transaction_from_template(TEST_TX, account, account->get_private_key());
+
+    EXPECT_ERROR(transaction_update(transaction.get()));
+}
 
 GTEST_TEST(BitcoinTransactionTest, transaction_update_empty_tx)
 {
