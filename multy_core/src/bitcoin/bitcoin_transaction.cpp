@@ -818,7 +818,13 @@ void BitcoinTransaction::update()
         }
     }
 
-    m_fee->validate_fee(calculate_diff(), get_transaction_serialized_size(WITH_POSITIVE_CHANGE_AMOUNT));
+    m_fee->validate_fee(calculate_diff(), get_transaction_serialized_size(WITH_POSITIVE_CHANGE_AMOUNT));   
+
+    if (get_non_zero_destinations(WITH_POSITIVE_CHANGE_AMOUNT).size() == 0)
+    {
+        THROW_EXCEPTION2(ERROR_TRANSACTION_CHANGE_IS_TOO_SMALL_AND_NO_OTHER_DESTINATIONS,
+                "Transaction change is to small because of high fee.");
+    }
 }
 
 uint64_t BitcoinTransaction::get_transaction_serialized_size(DestinationsToUse destinations_to_use)
