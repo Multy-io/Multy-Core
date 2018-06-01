@@ -18,6 +18,7 @@
 #include "multy_core/src/hash.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/bitcoin/bitcoin_opcode.h"
 
 #include "wally_crypto.h"
 
@@ -41,17 +42,6 @@ const uint32_t BITCOIN_INPUT_SEQ_FINAL = 0xFFFFFFFF;
 // BIP-125: Any value less than (BITCOIN_INPUT_SEQ_FINAL - 1) would do, see
 // https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
 const uint32_t BITCOIN_INPUT_SEQ_REPLACEABLE = BITCOIN_INPUT_SEQ_FINAL - 2;
-
-enum OP_CODE : uint8_t
-{
-    OP_FALSE = 0x00,
-    OP_RETURN = 0x6A,
-    OP_DUP = 0x76,
-    OP_HASH160 = 0xA9,
-    OP_EQUALVERIFY = 0x88,
-    OP_CHECKSIG = 0xAC,
-    OP_EQUAL = 0x87
-};
 
 template <typename T>
 std::string make_id(const std::string& base, const T& suffix)

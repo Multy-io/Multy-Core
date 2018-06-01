@@ -48,10 +48,12 @@ struct BitcoinPrivateKey : public PrivateKey
 
     BitcoinPrivateKey(KeyData data,
             BitcoinNetType net_type,
+            BitcoinAccountType account_type,
             PublicKeyFormat public_key_format);
 
     BitcoinPrivateKey(const BinaryData& data,
             BitcoinNetType net_type,
+            BitcoinAccountType account_type,
             PublicKeyFormat public_key_format);
     ~BitcoinPrivateKey();
 
@@ -68,9 +70,10 @@ private:
     const KeyData m_data;    // private key data with no prefix
     const BitcoinNetType m_net_type;
     const PublicKeyFormat m_public_key_format;
+    const BitcoinAccountType m_account_type;
 };
 
-BitcoinPrivateKeyPtr make_bitcoin_private_key_from_wif(const char* wif_string);
+BitcoinPrivateKeyPtr make_bitcoin_private_key_from_wif(const char* wif_string, BitcoinAccountType account_type);
 
 } // namespace internal
 } // namespace multy_core

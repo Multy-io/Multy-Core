@@ -56,6 +56,7 @@ std::string BitcoinPublicKey::to_string() const
             wally_base58_from_bytes(
                     m_data.data(), m_data.size(), 0, reset_sp(out_str)),
             "Failed to serialize Bitcoin public key.");
+
     return std::string(out_str.get());
 }
 
@@ -72,20 +73,24 @@ PublicKeyPtr BitcoinPublicKey::clone() const
 
 BitcoinPrivateKey::BitcoinPrivateKey(KeyData data,
         BitcoinNetType net_type,
+        BitcoinAccountType account_type,
         PublicKeyFormat public_key_format)
     : m_data(std::move(data)),
       m_net_type(net_type),
-      m_public_key_format(public_key_format)
+      m_public_key_format(public_key_format),
+      m_account_type(account_type)
 {
     ec_validate_private_key(as_binary_data(m_data));
 }
 
 BitcoinPrivateKey::BitcoinPrivateKey(const BinaryData& data,
         BitcoinNetType net_type,
+        BitcoinAccountType account_type,
         PublicKeyFormat public_key_format)
     : m_data(data.data, data.data + data.len),
       m_net_type(net_type),
-      m_public_key_format(public_key_format)
+      m_public_key_format(public_key_format),
+      m_account_type(account_type)
 {
     ec_validate_private_key(as_binary_data(m_data));
 }
@@ -164,7 +169,9 @@ BitcoinNetType BitcoinPrivateKey::get_net_type() const
     return m_net_type;
 }
 
-BitcoinPrivateKeyPtr make_bitcoin_private_key_from_wif(const char* wif_string)
+BitcoinPrivateKeyPtr make_bitcoin_private_key_from_wif(
+        const char* wif_string,
+        BitcoinAccountType account_type)
 {
     INVARIANT(wif_string != nullptr);
 
@@ -211,6 +218,7 @@ BitcoinPrivateKeyPtr make_bitcoin_private_key_from_wif(const char* wif_string)
     return BitcoinPrivateKeyPtr(new BitcoinPrivateKey(
             std::move(key_data),
             net_type,
+            account_type,
             (use_compressed_public_key ? EC_PUBLIC_KEY_COMPRESSED : EC_PUBLIC_KEY_UNCOMPRESSED)));
 }
 
