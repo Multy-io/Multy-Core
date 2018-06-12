@@ -1,5 +1,4 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbf217af3b54404b9af75e59240bb049)](https://app.codacy.com/app/Enmk/Multy-Core?utm_source=github.com&utm_medium=referral&utm_content=Appscrunch/Multy-Core&utm_campaign=badger)
-[![Build Status](https://travis-ci.org/Appscrunch/Multy-Core.svg?branch=master)](https://travis-ci.org/Appscrunch/Multy-Core)
+[![Build Status](https://travis-ci.org/Multy-io/Multy-Core.svg?branch=master)](https://travis-ci.org/Multy-io/Multy-Core)
 
 # Multy-Core
 Cross-platform mobile-first library for HD wallets and creating raw transactions of Bitcoin and Ethereum (and many more to come).
