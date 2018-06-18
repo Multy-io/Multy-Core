@@ -94,6 +94,25 @@ public:
     }
 };
 
+class BitcoinHasher : public Hasher
+{
+    void hash(const BinaryData& input, BinaryData* output) const override
+    {
+        assert(output);
+        if (output->len != 160 / 8)
+        {
+            THROW_EXCEPTION("Unsupported Bitcoin hash size.")
+                    << " Requested hash size: " << output->len;
+        }
+
+        THROW_IF_WALLY_ERROR(
+                wally_hash160(
+                        input.data, input.len,
+                        const_cast<unsigned char*>(output->data), output->len),
+                "hash160 failed.");
+    }
+};
+
 template <typename HasherT>
 class DoubleHasher : public Hasher
 {
@@ -144,6 +163,8 @@ HasherPtr make_hasher(HasherType hasher_type, size_t /*size*/)
             return ::make_hasher<::KeccakHasher>();
         case RIPEMD:
             return ::make_hasher<::RipemdHasher>();
+        case BITCOIN_HASH:
+            return ::make_hasher<::BitcoinHasher>();
         default:
             THROW_EXCEPTION("Unknown hasher type.")
                     << hasher_type;

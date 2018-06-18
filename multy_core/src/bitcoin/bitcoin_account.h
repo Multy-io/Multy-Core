@@ -75,6 +75,7 @@ public:
 
     ~BitcoinAccount();
 
+    virtual BitcoinAccountType get_account_type() const = 0;
 
 private:
     const PrivateKey& get_private_key_ref() const override;

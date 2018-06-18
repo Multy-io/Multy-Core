@@ -7,6 +7,7 @@
 
 #include "multy_core/bitcoin.h"
 #include "multy_core/src/bitcoin/bitcoin_key.h"
+#include "multy_core/src/bitcoin/bitcoin_opcode.h"
 
 #include "multy_core/common.h"
 #include "multy_core/src/exception.h"
@@ -115,6 +116,11 @@ public:
 
         return result;
     }
+    BitcoinAccountType get_account_type() const override
+    {
+        return BITCOIN_ACCOUNT_P2PKH;
+    }
+
 };
 
 class BitcoinP2SHWPKHAccount : public BitcoinAccount
@@ -139,7 +145,7 @@ public:
             // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
             bitcoin_hash_160(key_data, &hash_pub_key);
             // 4 - Perform make script segWit for lock bitcoins
-            segwit_script[0] = 0x00; // Version byte witness
+            segwit_script[0] = OP_0; // Version byte witness
             segwit_script[1] = HASH160_LEN; // Witness program is 20 bytes
 
             // Leave the first byte intact for prefix.
@@ -170,6 +176,10 @@ public:
         std::string result(base58_string_ptr.get());
 
         return result;
+    }
+    BitcoinAccountType get_account_type() const override
+    {
+        return BITCOIN_ACCOUNT_SEGWIT;
     }
 };
 

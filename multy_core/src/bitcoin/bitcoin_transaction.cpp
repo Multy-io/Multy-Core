@@ -20,6 +20,7 @@
 #include "multy_core/src/utility.h"
 #include "multy_core/src/bitcoin/bitcoin_opcode.h"
 #include "multy_core/src/bitcoin/bitcoin_stream.h"
+#include "multy_core/src/bitcoin/bitcoin_transaction_base.h"
 #include "multy_core/src/property_predicates.h"
 
 #include "wally_crypto.h"
@@ -37,29 +38,13 @@ namespace
 using namespace multy_core::internal;
 const size_t BITCOIN_MAX_MESSAGE_LENGTH = 75;
 const size_t BITCOIN_DUST_RELAY_FEE_PER_BYTE = 3;
-const size_t BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_NON_SEGWIT = 182;
-const size_t BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_SEGWIT = 98;
+const uint64_t BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_NON_SEGWIT = 182;
+const uint64_t BITCOIN_AVERAGE_OUTPUT_AND_INPUT_SIZE_SEGWIT = 98;
 const uint32_t BITCOIN_INPUT_SEQ_FINAL = 0xFFFFFFFF;
 
 // BIP-125: Any value less than (BITCOIN_INPUT_SEQ_FINAL - 1) would do, see
 // https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
 const uint32_t BITCOIN_INPUT_SEQ_REPLACEABLE = BITCOIN_INPUT_SEQ_FINAL - 2;
-
-template <typename T>
-std::string make_id(const std::string& base, const T& suffix)
-{
-    std::ostringstream ostr;
-    ostr << base << suffix;
-    return ostr.str();
-}
-
-void verify_non_negative_amount(const BigInt& amount)
-{
-    if (amount < BigInt(0))
-    {
-        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "BigInt value is negative.");
-    }
-}
 
 bool is_dust_amount(const BigInt& amount, bool is_segwit)
 {
@@ -94,160 +79,29 @@ namespace multy_core
 namespace internal
 {
 
-BinaryDataPtr make_script_pub_key(const BinaryData& public_key_hash, BitcoinAddressType address_type)
-{
-    BitcoinDataStream sig_stream;
-    if (address_type == BITCOIN_ADDRESS_P2PKH)
-    {
-        sig_stream << OP_DUP;
-        sig_stream << OP_HASH160;
-
-        sig_stream << as_compact_size(public_key_hash.len);
-        sig_stream << public_key_hash;
-
-        sig_stream << OP_EQUALVERIFY;
-        sig_stream << OP_CHECKSIG;
-    }
-    else if (address_type == BITCOIN_ADDRESS_P2SH)
-    {
-        sig_stream << OP_HASH160;
-
-        sig_stream << as_compact_size(public_key_hash.len);
-        sig_stream << public_key_hash;
-
-        sig_stream << OP_EQUAL;
-    }
-    return make_clone(sig_stream.get_content());
-}
-
-BinaryDataPtr make_script_pub_key_from_address(const BitcoinNetType expected_net_type, const std::string& address)
-{
-    BitcoinNetType net_type;
-    BitcoinAddressType address_type;
-    BinaryDataPtr binary_address = bitcoin_parse_address(address.c_str(),
-        &net_type, &address_type);
-    assert(binary_address);
-
-    if (address_type != BITCOIN_ADDRESS_P2PKH && address_type != BITCOIN_ADDRESS_P2SH)
-    {
-        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Unsupported address type.")
-                << " Address type: " << address_type;
-    }
-
-    if (expected_net_type != net_type)
-    {
-        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Wrong net type for address.")
-                << " Expected: " << expected_net_type
-                << " actual:" << net_type;
-    }
-
-    return make_script_pub_key(*binary_address, address_type);
-}
-
-
 BitcoinTransactionDestination::BitcoinTransactionDestination(BitcoinNetType net_type)
-    : amount(m_properties,
-             "amount",
-             Property::REQUIRED,
-             verify_non_negative_amount),
-      address(m_properties, "address", Property::REQUIRED,
-              [this](const std::string &new_address) {
-                    this->sig_script = make_script_pub_key_from_address(this->m_net_type, new_address);
-                    this->m_is_segwit_destination = false;
-              }),
-      is_change(false, m_properties, "is_change", Property::OPTIONAL,
-              [this](int32_t new_value) {
-                  if (new_value < 0)
-                  {
-                      THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
-                            "is_change can't be negative.");
-                  }
-                  this->on_change_set(new_value);
-              }),
-      sig_script(),
-      m_net_type(net_type),
-      m_is_segwit_destination(false)
+    : BitcoinTransactionDestinationBase(net_type)
 {
 }
-
-void BitcoinTransactionDestination::on_change_set(bool new_value)
-{
-    // amount is optional for change-address destination.
-    amount.set_trait(new_value ? Property::READONLY : Property::REQUIRED);
-}
-
-class BitcoinTransactionFee : public TransactionFeeBase
-{
-public:
-    BitcoinTransactionFee()
-        : amount_per_byte(
-                  m_properties,
-                  "amount_per_byte",
-                  Property::OPTIONAL,
-                  &verify_bigger_than<BigInt, 1, ERROR_TRANSACTION_FEE_TOO_LOW>)
-    {
-    }
-
-    const BigInt& get_amount_per_byte() const
-    {
-        return amount_per_byte.get_value();
-    }
-
-    void validate_fee(const BigInt& leftover, uint64_t transaction_size) const
-    {
-        const BigInt min_transaction_fee(amount_per_byte.get_value() * transaction_size);
-
-        if (leftover < min_transaction_fee)
-        {
-            THROW_EXCEPTION2(ERROR_TRANSACTION_FEE_TOO_LOW,
-                    "Transaction total fee is too low. ")
-                    << leftover.get_value() << " < " << min_transaction_fee.get_value();
-        }
-    }
-
-public:
-    PropertyT<BigInt> amount_per_byte;
-};
 
 BitcoinTransactionSource::BitcoinTransactionSource()
-    : prev_transaction_hash(
-              m_properties,
-              "prev_tx_hash",
-              Property::REQUIRED,
-              [](const BinaryData& new_tx_out_hash) {
-                  if (new_tx_out_hash.len != 32)
-                  {
-                      THROW_EXCEPTION2(
-                              ERROR_TRANSACTION_SOURCE_INVALID_PREV_TX_HASH,
-                              "Previous transaction hash should be"
-                              "exactly 32 bytes long.");
-                  }
-              }),
-      prev_transaction_out_index(m_properties, "prev_tx_out_index"),
-      prev_transaction_out_script_pubkey(
-              m_properties, "prev_tx_out_script_pubkey"),
-      private_key(m_properties, "private_key", Property::REQUIRED),
-      script_signature(),
-      script_witness(),
-      amount(m_properties, "amount", Property::REQUIRED),
-      seq(BITCOIN_INPUT_SEQ_FINAL)
+    : BitcoinTransactionSourceBase()
+{
+}
+
+BitcoinTransactionSource::~BitcoinTransactionSource()
 {
 }
 
 BitcoinTransaction::BitcoinTransaction(BlockchainType blockchain_type)
-    : TransactionBase(blockchain_type),
+    : BitcoinTransactionBase(blockchain_type),
       m_version(1),
       m_is_segwit_transaction(0),
       m_lock_time(0),
       m_is_replaceable(1, get_transaction_properties(),
                 "is_replaceable", Property::OPTIONAL),
-      m_fee(new BitcoinTransactionFee),
-      m_sources(),
-      m_destinations(),
       m_message()
 {
-    //    m_properties.bind_property("segwit_mode", &m_is_segwit_transaction);
-    //    m_properties.bind_property("lock_time", &m_lock_time);
     register_properties("", m_fee->get_properties());
 }
 
@@ -265,32 +119,28 @@ BinaryDataPtr BitcoinTransaction::serialize()
 template <typename T>
 void BitcoinTransaction::serialize_to_stream(T* stream, DestinationsToUse destinations_to_use) const
 {
+    // nVersion
     *stream << m_version;
+    // txins
     *stream << as_compact_size(m_sources.size());
     for (const auto& source : m_sources)
     {
-        *stream << *source;
+        *stream << *(static_cast<const BitcoinTransactionSource*>(source.get()));
     }
-
+    // txouts
     const auto destinations = get_non_zero_destinations(destinations_to_use);
     *stream << as_compact_size(destinations.size());
     for (const auto& destination : destinations)
     {
         *stream << *destination;
     }
-
+    // nLockTime
     *stream << m_lock_time;
 }
 
 bool BitcoinTransaction::is_segwit() const
 {
-    return m_is_segwit_transaction != 0
-            && std::any_of(
-                       m_sources.begin(), m_sources.end(),
-                       [](const BitcoinTransactionSourcePtr& source) -> bool {
-                           return source->script_witness
-                                   && source->script_witness->len > 0;
-                       });
+    return m_is_segwit_transaction != 0;
 }
 
 BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations(DestinationsToUse destinations_to_use) const
@@ -304,6 +154,7 @@ BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations(D
 
     for (const auto& dest : m_destinations)
     {
+        //const BitcoinTransactionDestinationPtr destin = static_cast<const BitcoinTransactionDestinationPtr>(dest);
         if ( *dest->amount > BigInt(0) ||
              (destinations_to_use == WITH_NONPOSITIVE_CHANGE_AMOUNT ? *dest->is_change : 0) )
         {
@@ -311,6 +162,7 @@ BitcoinTransaction::Destinations BitcoinTransaction::get_non_zero_destinations(D
         }
     }
     return result;
+
 }
 
 size_t BitcoinTransaction::estimate_transaction_size() const
@@ -323,16 +175,6 @@ size_t BitcoinTransaction::estimate_transaction_size() const
     // look function estimate_total_fee
     return static_cast<int64_t>(
             sources_count * (150 + 32) + destinations_count * 34 + 10);
-}
-
-BitcoinNetType BitcoinTransaction::get_net_type() const
-{
-    return static_cast<BitcoinNetType>(get_blockchain_type().net_type);
-}
-
-BigInt BitcoinTransaction::get_total_fee() const
-{
-    return calculate_diff();
 }
 
 BigInt BitcoinTransaction::get_total_spent() const
@@ -359,51 +201,9 @@ BigInt BitcoinTransaction::estimate_total_fee(
     return transaction_size * m_fee->get_amount_per_byte();
 }
 
-BigInt BitcoinTransaction::calculate_diff() const
-{
-    BigInt available(0);
-    for (auto& s : m_sources)
-    {
-        available += *s->amount;
-    }
-
-    BigInt total_spent(0);
-    for (const auto& d : m_destinations)
-    {
-        total_spent += *d->amount;
-    }
-    return available -= total_spent;
-}
-
 void BitcoinTransaction::verify() const
 {
-    if (m_sources.empty())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_SOURCES,
-                "Transaction should have at least one source.");
-    }
-
-    if (m_destinations.empty())
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_DESTINATIONS,
-                "Transaction should have at least one destination.");
-    }
-
-    std::string missing_properties;
-    if (!validate_all_properties(&missing_properties))
-    {
-        THROW_EXCEPTION2(ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
-                "Not all required properties set.")
-                << "\n" << missing_properties << ".";
-    }
-
-    const BigInt diff = calculate_diff();
-    if (diff < 0)
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_INSUFFICIENT_FUNDS,
-                "Transaction is trying to spend more than available in inputs")
-                << " : available - spent = "<< diff.get_value();
-    }
+    BitcoinTransactionBase::verify();
 
     size_t source_index = 0;
     for (const auto& s : m_sources)
@@ -411,7 +211,6 @@ void BitcoinTransaction::verify() const
         const auto& public_key = s->private_key->make_public_key();
         std::array<uint8_t, HASH160_LEN> public_key_hash;
         BinaryData public_key_hash_data = as_binary_data(public_key_hash);
-
         bitcoin_hash_160(public_key->get_content(), &public_key_hash_data);
         BinaryDataPtr sig_script = make_script_pub_key(public_key_hash_data, BITCOIN_ADDRESS_P2PKH);
 
@@ -436,7 +235,7 @@ void BitcoinTransaction::verify() const
     {
         for (const auto& d : m_destinations)
         {
-            if (!*d->is_change && is_dust_amount(d->amount.get_value(), d->m_is_segwit_destination))
+            if (!*d->is_change && is_dust_amount(d->amount.get_value(), false))
             {
                 THROW_EXCEPTION2(ERROR_TRANSACTION_TRANSFER_AMOUNT_TOO_SMALL,
                         // Destination # amount is considered dust and will be rejected by the node.
@@ -457,11 +256,11 @@ void BitcoinTransaction::update()
     {
         if (m_is_replaceable.get_value())
         {
-            source->seq = BITCOIN_INPUT_SEQ_REPLACEABLE;
+            *source->sequence = BITCOIN_INPUT_SEQ_REPLACEABLE;
         }
         else
         {
-            source->seq = BITCOIN_INPUT_SEQ_FINAL;
+            *source->sequence = BITCOIN_INPUT_SEQ_FINAL;
         }
     }
 
@@ -469,7 +268,7 @@ void BitcoinTransaction::update()
     {
         if (*d->is_change)
         {
-            change_destination = d.get();
+            change_destination = static_cast<BitcoinTransactionDestination*>(d.get());
             ++change_destinations_count;
         }
     }
@@ -500,7 +299,7 @@ void BitcoinTransaction::update()
         //
         // Not adding change for leftovers less than said limits increases fee for this TX.
 
-        if (!is_dust_amount(remainder, change_destination->m_is_segwit_destination))
+        if (!is_dust_amount(remainder, false))
         {
             // not setting value with set_value(), since that would fail for read-only property.
             change_destination->amount.get_value() += remainder;
@@ -520,7 +319,7 @@ void BitcoinTransaction::update()
                 current_fee = calculate_diff();
             }
 
-            if (is_dust_amount(change_destination->amount.get_value(), change_destination->m_is_segwit_destination))
+            if (is_dust_amount(change_destination->amount.get_value(), false))
             {
                 change_destination->amount.get_value() = BigInt{0};
             }
@@ -564,7 +363,7 @@ void BitcoinTransaction::sign()
     }
 
     // Sign all inputs one by one and save sig_scripts for later.
-    std::unordered_map<BitcoinTransactionSource*, BinaryDataPtr> sig_scripts;
+    std::unordered_map<BitcoinTransactionSourceBase*, BinaryDataPtr> sig_scripts;
     for (auto& source : m_sources)
     {
         source->script_signature.swap(
@@ -648,11 +447,6 @@ void BitcoinTransaction::set_message(const BinaryData& value)
     sig_stream << as_compact_size(value.len);
     sig_stream.write_data(value.data, value.len);
     m_message->sig_script = make_clone(sig_stream.get_content());
-}
-
-Properties& BitcoinTransaction::get_fee()
-{
-    return m_fee->get_properties();
 }
 
 } // namespace internal

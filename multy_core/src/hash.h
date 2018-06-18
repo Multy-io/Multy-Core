@@ -42,6 +42,7 @@ enum HasherType
     SHA3, // 224, 256, 384, 512
     KECCAK, // 256 only
     RIPEMD, // 160 only
+    BITCOIN_HASH, // 160 only
 };
 
 MULTY_CORE_API HasherPtr make_hasher(HasherType hasher_type, size_t size);
