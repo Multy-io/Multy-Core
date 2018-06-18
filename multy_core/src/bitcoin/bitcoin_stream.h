@@ -21,15 +21,12 @@ namespace multy_core
 {
 namespace internal
 {
-class BitcoinTransactionSource;
-class BitcoinTransactionDestination;
-
+class BitcoinTransactionSourceBase;
+class BitcoinTransactionDestinationBase;
 class BitcoinStream
 {
 public:
-    virtual ~BitcoinStream()
-    {
-    }
+    virtual ~BitcoinStream();
 
     virtual BitcoinStream& write_data(const uint8_t* data, uint32_t len) = 0;
 };
@@ -67,19 +64,30 @@ struct CompactSizeWrapper
 
 
 ReversedBinaryData reverse(const BinaryData& data);
+void write_compact_size(uint64_t size, BitcoinStream* stream);
 
 template <typename T>
-CompactSizeWrapper<T> as_compact_size(const T& value);
+CompactSizeWrapper<T> as_compact_size(const T& value)
+{
+    return CompactSizeWrapper<T>{value};
+}
 
 template <typename T>
-BitcoinStream& operator<<(BitcoinStream& stream, const PropertyT<T>& value);
+BitcoinStream& operator<<(BitcoinStream& stream, const PropertyT<T>& value)
+{
+    return stream << value.get_value();
+}
+
 
 template <typename T>
 BitcoinStream& operator<<(
-        BitcoinStream& stream, const CompactSizeWrapper<T>& value);
+        BitcoinStream& stream, const CompactSizeWrapper<T>& value)
+{
+    write_compact_size(value.value, &stream);
+    return stream;
+}
 BitcoinStream& operator<<(BitcoinStream& stream, const ReversedBinaryData& data);
 BitcoinStream& operator<<(BitcoinStream& stream, const PublicKey& key);
-BitcoinStream& operator<<(BitcoinStream& stream, const std::string& str);
 BitcoinStream& operator<<(BitcoinStream& stream, const BinaryData& data);
 BitcoinStream& operator<<(BitcoinStream& stream, const BigInt& data);
 BitcoinStream& operator<<(BitcoinStream& stream, OP_CODE data);
@@ -91,9 +99,8 @@ BitcoinStream& operator<<(BitcoinStream& stream, uint8_t data);
 BitcoinStream& operator<<(BitcoinStream& stream, uint16_t data);
 BitcoinStream& operator<<(BitcoinStream& stream, uint32_t data);
 BitcoinStream& operator<<(BitcoinStream& stream, uint64_t data);
-BitcoinStream& operator<<(
-        BitcoinStream& stream, const BitcoinTransactionSource& source);
-BitcoinStream& operator <<(BitcoinStream& stream, const BitcoinTransactionDestination& destination);
+BitcoinStream& operator<<(BitcoinStream& stream, const BitcoinTransactionSourceBase& source);
+BitcoinStream& operator<<(BitcoinStream& stream, const BitcoinTransactionDestinationBase& destination);
 
 } // internal
 } // multy_core

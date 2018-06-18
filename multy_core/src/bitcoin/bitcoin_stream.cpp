@@ -11,6 +11,7 @@
 #include "multy_core/src/hash.h"
 #include "multy_core/src/api/big_int_impl.h"
 #include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/bitcoin/bitcoin_transaction_base.h"
 #include "multy_core/src/bitcoin/bitcoin_transaction.h"
 
 #include "wally_crypto.h"
@@ -25,6 +26,9 @@ namespace multy_core
 {
 namespace internal
 {
+BitcoinStream::~BitcoinStream()
+{
+}
 
 BitcoinDataStream::BitcoinDataStream()
     : m_data()
@@ -43,26 +47,6 @@ BinaryData BitcoinDataStream::get_content() const
 {
     return BinaryData{m_data.data(), m_data.size()};
 }
-
-class BitcoinHashStream : public BitcoinStream
-{
-public:
-    BitcoinHashStream& write_data(const uint8_t* data, uint32_t len) override
-    {
-        m_stream.write_data(data, len);
-        return *this;
-    }
-
-    BinaryData get_hash() const
-    {
-        m_hash = do_hash<SHA2_DOUBLE, 256>(m_stream.get_content());
-        return as_binary_data(m_hash);
-    }
-
-private:
-    BitcoinDataStream m_stream;
-    mutable hash<256> m_hash;
-};
 
 BitcoinStream& BitcoinBytesCountStream::write_data(const uint8_t* /*data*/, uint32_t len)
 {
@@ -162,37 +146,10 @@ BitcoinStream& operator<<(BitcoinStream& stream, const BinaryData& data)
             reinterpret_cast<const uint8_t*>(data.data), data.len);
 }
 
-template <typename T>
-BitcoinStream& operator<<(
-        BitcoinStream& stream, const CompactSizeWrapper<T>& value)
-{
-    write_compact_size(value.value, &stream);
-    return stream;
-}
-
-template <typename T>
-CompactSizeWrapper<T> as_compact_size(const T& value)
-{
-    return CompactSizeWrapper<T>{value};
-}
-
-BitcoinStream& operator<<(BitcoinStream& stream, const std::string& str)
-{
-    stream << as_compact_size(str.size());
-    return stream.write_data(
-            reinterpret_cast<const uint8_t*>(str.data()), str.size());
-}
-
 BitcoinStream& operator<<(BitcoinStream& stream, const PublicKey& key)
 {
     const BinaryData& key_data = key.get_content();
     return stream << as_compact_size(key_data.len) << key_data;
-}
-
-template <typename T>
-BitcoinStream& operator<<(BitcoinStream& stream, const PropertyT<T>& value)
-{
-    return stream << value.get_value();
 }
 
 ReversedBinaryData reverse(const BinaryData& data)
@@ -209,41 +166,14 @@ BitcoinStream& operator<<(BitcoinStream& stream, const ReversedBinaryData& data)
     return stream;
 }
 
-BitcoinStream& operator<<(BitcoinStream& stream, const BitcoinTransactionSource& source)
+BitcoinStream& operator<<(BitcoinStream& stream, const BitcoinTransactionSourceBase& source)
 {
-
-
-    stream << reverse(**source.prev_transaction_hash);
-    stream << source.prev_transaction_out_index;
-
-    if (source.segwit == 0)
-    {
-        if (source.script_signature)
-        {
-            stream << as_compact_size(source.script_signature->len);
-            stream << *source.script_signature;
-        }
-        else
-        {
-            stream << as_compact_size(0);
-        }
-    }
-    else
-    {
-        const auto& public_key = source.private_key->make_public_key();
-        std::array<uint8_t, HASH160_LEN + 2> segwit_script_P2WPKH;
-        BinaryData public_key_hash_data = power_slice(as_binary_data(segwit_script_P2WPKH), 2, -2);
-        segwit_script_P2WPKH[0] = 0x00; // Version byte witness
-        segwit_script_P2WPKH[1] = HASH160_LEN; // Witness program is 20 bytes
-        bitcoin_hash_160(public_key->get_content(), &public_key_hash_data);
-
-    }
-    stream << source.seq;
+    source.serializeToStream(&stream);
 
     return stream;
 }
 
-BitcoinStream& operator <<(BitcoinStream& stream, const BitcoinTransactionDestination& destination)
+BitcoinStream& operator<<(BitcoinStream& stream, const BitcoinTransactionDestinationBase& destination)
 {
     INVARIANT(destination.sig_script != nullptr);
 
@@ -254,5 +184,5 @@ BitcoinStream& operator <<(BitcoinStream& stream, const BitcoinTransactionDestin
     return stream;
 }
 
-}
-}
+} // namespace internal
+} // namespace multy_core
