@@ -33,6 +33,7 @@ add_library(multy_test SHARED
     test_codec.cpp
     test_common.cpp
     test_deletion.cpp
+    test_eos_account.cpp
     test_ethereum_account.cpp
     test_ethereum_transaction.cpp
     test_golos_account.cpp

@@ -23,7 +23,8 @@ enum Blockchain
 {
     BLOCKCHAIN_BITCOIN = 0x00,
     BLOCKCHAIN_ETHEREUM = 0x3c,
-    BLOCKCHAIN_GOLOS = 0x060105
+    BLOCKCHAIN_GOLOS = 0x060105,
+    BLOCKCHAIN_EOS = 0xc2
 };
 
 // TODO: rename BlockchainType to BlockchainSpec
