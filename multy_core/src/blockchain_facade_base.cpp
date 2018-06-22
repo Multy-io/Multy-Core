@@ -9,6 +9,7 @@
 #include "multy_core/src/bitcoin/bitcoin_facade.h"
 #include "multy_core/src/ethereum/ethereum_facade.h"
 #include "multy_core/src/golos/golos_facade.h"
+#include "multy_core/src/EOS/EOS_facade.h"
 
 namespace
 {
@@ -45,6 +46,7 @@ BlockchainFacadeRegistry::BlockchainFacadeRegistry()
     register_blockchain<BitcoinFacade>(BLOCKCHAIN_BITCOIN);
     register_blockchain<EthereumFacade>(BLOCKCHAIN_ETHEREUM);
     register_blockchain<GolosFacade>(BLOCKCHAIN_GOLOS);
+    register_blockchain<EOSFacade>(BLOCKCHAIN_EOS);
 }
 
 BlockchainFacadeRegistry::~BlockchainFacadeRegistry()
