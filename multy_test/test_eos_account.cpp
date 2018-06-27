@@ -52,12 +52,22 @@ const SerializedKeyTestCase EOS_KEYS[] =
 
 
 INSTANTIATE_TEST_CASE_P(
-        DISABLED_eos_account,
+        eos_account,
         SerializedKeyTestP,
         ::testing::Combine(
                 ::testing::Values(EOS_MAIN_NET),
                 ::testing::Values(ACCOUNT_TYPE_DEFAULT),
                 ::testing::ValuesIn(EOS_KEYS)));
 
+GTEST_TEST(EOSAccountTest, TestPrivateKey)
+{
+    AccountPtr account;
+    EXPECT_ERROR(
+            make_account(
+                    EOS_MAIN_NET,
+                    ACCOUNT_TYPE_DEFAULT,
+                    "",
+                    reset_sp(account)));
+}
 
 } // namespace
