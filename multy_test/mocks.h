@@ -10,7 +10,9 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/transaction_impl.h"
+#include "multy_core/src/api/transaction_builder_impl.h"
 #include "multy_core/src/api/properties_impl.h"
+
 #include "multy_core/src/utility.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 
@@ -52,6 +54,11 @@ public:
             HDPath path,
             PrivateKeyPtr private_key,
             PublicKeyPtr public_key);
+
+    TestAccount(
+            BlockchainType blockchain_type,
+            std::string address,
+            HDPath path = HDPath());
 
     HDPath get_path() const;
     BlockchainType get_blockchain_type() const;
@@ -111,6 +118,17 @@ private:
     const BigInt m_total;
     Properties m_properties;
     const BinaryDataPtr m_binarydata;
+};
+
+struct TestTransactionBuilder : public TransactionBuilder
+{
+    TestTransactionBuilder();
+
+    TransactionPtr make_transaction() const override;
+    Properties& get_properties() override;
+
+private:
+    Properties m_properties;
 };
 
 #endif // MULTY_TEST_MOCKS_H

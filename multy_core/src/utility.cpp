@@ -13,6 +13,7 @@
 #include "multy_core/blockchain.h"
 #include "multy_core/error.h"
 
+#include "multy_core/src/enum_name_map.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 
@@ -21,27 +22,10 @@
 #include <cassert>
 #include <string>
 #include <string.h>
-#include <unordered_map>
 
 namespace
 {
 using namespace multy_core::internal;
-typedef std::unordered_map<size_t, const char*> NameMap;
-
-std::string get_enum_name(const NameMap& name_map, size_t value, const char* type_name)
-{
-    const auto& name = name_map.find(value);
-    if (name != name_map.end())
-    {
-        return name->second;
-    }
-
-    std::stringstream sstr;
-    sstr << type_name << "(" << value << ")";
-
-    return sstr.str();
-}
-
 } // namespace
 
 namespace multy_core
@@ -112,55 +96,67 @@ std::string to_string(const BlockchainType& blockchain_type)
 
 std::string to_string(Blockchain blockchain)
 {
-    static const NameMap BLOCKCHAIN_NAMES =
+    static const EnumNameMap<Blockchain> BLOCKCHAIN_NAMES =
     {
-        {BLOCKCHAIN_BITCOIN, "Bitcoin"},
-        {BLOCKCHAIN_ETHEREUM, "Ethereum"},
-        {BLOCKCHAIN_GOLOS, "Golos"}
+        "BlockchainNames",
+        {
+            {BLOCKCHAIN_BITCOIN, "Bitcoin"},
+            {BLOCKCHAIN_ETHEREUM, "Ethereum"},
+            {BLOCKCHAIN_GOLOS, "Golos"}
+        }
     };
 
-    return get_enum_name(BLOCKCHAIN_NAMES, blockchain, "Blockchain");
+    return BLOCKCHAIN_NAMES.get_name_or_dummy(blockchain);
 }
 
 std::string to_string(BitcoinNetType net_type)
 {
-    static const NameMap BITCOIN_NET_TYPE_NAMES =
+    static const EnumNameMap<BitcoinNetType> BITCOIN_NET_TYPE_NAMES =
     {
-        {BITCOIN_NET_TYPE_MAINNET, "MainNet"},
-        {BITCOIN_NET_TYPE_TESTNET, "TestNet"},
+        "BitcoinNetType",
+        {
+            {BITCOIN_NET_TYPE_MAINNET, "MainNet"},
+            {BITCOIN_NET_TYPE_TESTNET, "TestNet"},
+        }
     };
 
-    return get_enum_name(BITCOIN_NET_TYPE_NAMES, net_type, "BitcoinNetType");
+    return BITCOIN_NET_TYPE_NAMES.get_name_or_dummy(net_type);
 }
 
 std::string to_string(EthereumChainId net_type)
 {
-    static const NameMap ETHEREUM_NET_TYPE_NAMES =
+    static const EnumNameMap<EthereumChainId> ETHEREUM_NET_TYPE_NAMES =
     {
-        {ETHEREUM_CHAIN_ID_PRE_EIP155, "PRE-EIP115_DEFAULT"},
-        {ETHEREUM_CHAIN_ID_MAINNET, "MainNet"},
-        {ETHEREUM_CHAIN_ID_MORDEN, "Morden"},
-        {ETHEREUM_CHAIN_ID_ROPSTEN, "Ropsten"},
-        {ETHEREUM_CHAIN_ID_RINKEBY, "Rinkeby"},
-        {ETHEREUM_CHAIN_ID_ROOTSTOCK_MAINNET, "RootstockMainNet"},
-        {ETHEREUM_CHAIN_ID_ROOTSTOCK_TESTNET, "RootstockTestNet"},
-        {ETHEREUM_CHAIN_ID_KOVAN, "Kovan"},
-        {ETHEREUM_CHAIN_ID_ETC_MAINNET, "ETCMainNet"},
-        {ETHEREUM_CHAIN_ID_ETC_TESTNET, "ETCTestNet"},
+        "EthereumChainId",
+        {
+            {ETHEREUM_CHAIN_ID_PRE_EIP155, "PRE-EIP115_DEFAULT"},
+            {ETHEREUM_CHAIN_ID_MAINNET, "MainNet"},
+            {ETHEREUM_CHAIN_ID_MORDEN, "Morden"},
+            {ETHEREUM_CHAIN_ID_ROPSTEN, "Ropsten"},
+            {ETHEREUM_CHAIN_ID_RINKEBY, "Rinkeby"},
+            {ETHEREUM_CHAIN_ID_ROOTSTOCK_MAINNET, "RootstockMainNet"},
+            {ETHEREUM_CHAIN_ID_ROOTSTOCK_TESTNET, "RootstockTestNet"},
+            {ETHEREUM_CHAIN_ID_KOVAN, "Kovan"},
+            {ETHEREUM_CHAIN_ID_ETC_MAINNET, "ETCMainNet"},
+            {ETHEREUM_CHAIN_ID_ETC_TESTNET, "ETCTestNet"},
+        }
     };
 
-    return get_enum_name(ETHEREUM_NET_TYPE_NAMES, net_type, "EthereumChainId");
+    return ETHEREUM_NET_TYPE_NAMES.get_name_or_dummy(net_type);
 }
 
 std::string to_string(GolosNetType net_type)
 {
-    static const NameMap GOLOS_NET_TYPE_NAMES =
+    static const EnumNameMap<GolosNetType> GOLOS_NET_TYPE_NAMES =
     {
-        {GOLOS_NET_TYPE_MAINNET, "MainNet"},
-        {GOLOS_NET_TYPE_TESTNET, "TestNet"},
+        "GolosNetType",
+        {
+            {GOLOS_NET_TYPE_MAINNET, "MainNet"},
+            {GOLOS_NET_TYPE_TESTNET, "TestNet"},
+        }
     };
 
-    return get_enum_name(GOLOS_NET_TYPE_NAMES, net_type, "GolosNetType");
+    return GOLOS_NET_TYPE_NAMES.get_name_or_dummy(net_type);
 }
 
 void trim_excess_trailing_null(std::string* str)

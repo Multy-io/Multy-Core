@@ -9,7 +9,7 @@
 
 #include "multy_core/api.h"
 
-#include "multy_core/account.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -44,6 +44,7 @@ add_library(multy_test SHARED
     test_properties.cpp
     test_sha3.cpp
     test_transaction.cpp
+    test_transaction_builder.cpp
     test_utility.cpp
 )
 

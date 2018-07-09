@@ -7,6 +7,8 @@
 #ifndef MULTY_CORE_ETHEREUM_H
 #define MULTY_CORE_ETHEREUM_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +29,14 @@ enum EthereumChainId
     ETHEREUM_CHAIN_ID_ETC_MAINNET = 61, // 	Ethereum Classic mainnet
     ETHEREUM_CHAIN_ID_ETC_TESTNET = 62, //	Ethereum Classic testnet
 };
+
+enum EthereumTransactionBuilderType
+{
+//    ETHEREUM_TRANSACTION_BUILDER_ERC20,
+    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+};
+
+const size_t ETHEREUM_BINARY_ADDRESS_SIZE = 20;
 
 #ifdef __cplusplus
 } // extern "C"

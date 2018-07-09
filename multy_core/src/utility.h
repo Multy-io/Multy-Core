@@ -30,6 +30,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <sstream>
 
 extern "C" struct BlockchainType;
 
@@ -168,6 +169,33 @@ bool contains_sequence(const Container& container, const Sequence& s)
 {
     return std::search(std::begin(container), std::end(container),
             std::begin(s), std::end(s)) != std::end(container);
+}
+
+struct NoOpPredicate
+{
+    template <typename T>
+    inline const T& operator()(const T& value) const
+    {
+        return value;
+    }
+};
+
+template <typename T, typename Container, typename Predicate = NoOpPredicate>
+std::string join(const T& separator, const Container& container, Predicate predicate = Predicate())
+{
+    std::stringstream sstr;
+
+    const auto end = std::end(container);
+    for (auto i = std::begin(container); i != end; ++i)
+    {
+        sstr << predicate(*i);
+        if (i != end)
+        {
+            sstr << separator;
+        }
+    }
+
+    return sstr.str();
 }
 
 MULTY_CORE_API bool operator==(const BlockchainType& left, const BlockchainType& right);

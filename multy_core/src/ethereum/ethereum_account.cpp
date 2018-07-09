@@ -9,6 +9,8 @@
 #include "multy_core/ethereum.h"
 #include "multy_core/common.h"
 
+#include "multy_core/src/ethereum/ethereum_address.h"
+
 #include "multy_core/src/ec_key_utils.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
@@ -33,10 +35,6 @@ extern "C" {
 namespace
 {
 using namespace multy_core::internal;
-const size_t ETHEREUM_BINARY_ADDRESS_SIZE = 20;
-const char* ETHEREUM_ADDRESS_PREFIX = "0x";
-
-typedef std::array<unsigned char, ETHEREUM_BINARY_ADDRESS_SIZE> EthereumAddressValue;
 
 struct EthereumPublicKey : public PublicKey
 {
@@ -152,19 +150,13 @@ private:
     const KeyData m_data;
 };
 
-EthereumAddressValue make_address(const EthereumPublicKey& key)
+EthereumAddress make_address(const EthereumPublicKey& key)
 {
     const BinaryData key_data = key.get_content();
     const auto& address_hash = do_hash<KECCAK, 256>(key_data);
 
-    EthereumAddressValue result;
-    static_assert(
-            sizeof(address_hash) - result.size() == 12,
-            "Invalid EthereumAddressValue size.");
-
-    // Copy right 20 bytes
-    memcpy(result.data(), address_hash.data() + 12, result.size());
-    return result;
+    // Copy right 20 bytes (256/8 - 12 = 20)
+    return EthereumAddress(slice(address_hash, 12, address_hash.size() - 12));
 }
 
 typedef UPtr<EthereumPrivateKey> EthereumPrivateKeyPtr;
@@ -188,20 +180,7 @@ public:
                 reinterpret_cast<EthereumPublicKey*>(
                         m_private_key->make_public_key().release()));
 
-        EthereumAddressValue address(make_address(*public_key));
-
-        std::string result(hex_str_size(strlen(ETHEREUM_ADDRESS_PREFIX))
-                + hex_str_size(address.size()),
-                '\0');
-        if (!hex_encode(address.data(), address.size(),
-                const_cast<char*>(result.data()), result.size()))
-        {
-            INVARIANT2(false, "Faield to hex-encode Ethereum address.");
-        }
-        result.insert(0, ETHEREUM_ADDRESS_PREFIX);
-        trim_excess_trailing_null(&result);
-
-        return result;
+        return EthereumAddress::to_string(make_address(*public_key));
     }
 
 private:
@@ -295,30 +274,6 @@ AccountPtr make_ethereum_account(BlockchainType blockchain_type,
 
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
     return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
-}
-
-BinaryDataPtr ethereum_parse_address(const char* address)
-{
-    INVARIANT(address != nullptr);
-
-    if (strncmp(address, ETHEREUM_ADDRESS_PREFIX, strlen(ETHEREUM_ADDRESS_PREFIX)) == 0)
-    {
-        address += strlen(ETHEREUM_ADDRESS_PREFIX);
-    }
-
-    BinaryDataPtr binary_address;
-    throw_if_error(make_binary_data_from_hex(address,
-            reset_sp(binary_address)));
-
-    if (binary_address->len != ETHEREUM_BINARY_ADDRESS_SIZE)
-    {
-        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS,
-                "Invalid decoded address size.")
-                << " Expected size: " << ETHEREUM_BINARY_ADDRESS_SIZE
-                << " Actual size: " << binary_address->len;
-    }
-
-    return binary_address;
 }
 
 } // namespace internal

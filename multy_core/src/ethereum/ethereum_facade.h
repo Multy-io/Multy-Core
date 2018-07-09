@@ -41,6 +41,12 @@ public:
             const char* serialized_private_key) const override;
 
     TransactionPtr make_transaction(const Account&) const override;
+
+    TransactionBuilderPtr make_transaction_builder(
+            const Account& account,
+            uint32_t type,
+            const char* action) const override;
+
     void validate_address(BlockchainType blockchain_type,
             const char* address) const override;
 

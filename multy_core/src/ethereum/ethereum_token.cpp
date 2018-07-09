@@ -221,7 +221,9 @@ EthereumSmartContractPayloadPtr parse_token_transfer_data(const std::string& val
         THROW_EXCEPTION2(ERROR_TRANSACTION_TOKEN_TRANSFER_MISSING_ADDRESS,
                 "Missing Token Smart Contract address.");
     }
-    BinaryDataPtr contract_address = ethereum_parse_address(iterator->str().c_str());
+
+    // TODO: replace with: EthereumAddress contract_address;
+    BinaryDataPtr contract_address = make_clone(EthereumAddress::from_string(iterator->str()).address_data());
     ++iterator;
 
     if (iterator == std::sregex_token_iterator())

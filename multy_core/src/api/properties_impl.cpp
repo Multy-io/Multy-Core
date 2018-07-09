@@ -14,7 +14,6 @@
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 
-#include <cassert>
 #include <exception>
 #include <string>
 #include <vector>
@@ -221,6 +220,11 @@ struct BinderBase : public Binder
         return m_raw_value;
     }
 
+    void reset_value() override
+    {
+        reset();
+    }
+
     void handle_exception(const char* action, const CodeLocation& location) const
     {
         try
@@ -230,21 +234,19 @@ struct BinderBase : public Binder
         catch (const Exception& e)
         {
             throw_exception(e.get_error_code(),
-                    e.get_message(), e.get_location());
+                    build_exception_message(action, e.get_message()),
+                    e.get_location());
         }
         catch (const std::exception& e)
         {
             throw_exception(ERROR_GENERAL_ERROR,
-                    std::string(" Failed to ") + action
-                    + " of property \"" + m_name + "\" : "
-                    + e.what(), location);
+                    build_exception_message(action, e.what()), location);
         }
         catch (...)
         {
             throw_exception(ERROR_GENERAL_ERROR,
-                    std::string("Failed to ") + action
-                    + " of property \"" + m_name
-                    + "\" due to unknown exception", location);
+                    build_exception_message(action, "unknown exception"),
+                    location);
         }
     }
 
@@ -258,6 +260,12 @@ struct BinderBase : public Binder
     {
         m_is_set = false;
         m_properties.set_dirty();
+    }
+private:
+    std::string build_exception_message(const char* action, std::string extra_message) const
+    {
+        return std::string(" Failed to ") + action
+                + " of property \"" + m_name + "\" : " + extra_message + ".";
     }
 
 private:
@@ -309,11 +317,11 @@ const T& to_argument_type(const std::unique_ptr<T, D>& value)
 }
 
 template <typename T, typename ValuePredicate>
-struct BinderT : public BinderBase
+struct ValueBinderT : public BinderBase
 {
     typedef typename Property::PredicateArgTraits<T>::ArgumentType ArgumentType;
     static const ValueType VAL_TYPE = deduce_value_type<ArgumentType>();
-    BinderT(const Properties& properties,
+    ValueBinderT(const Properties& properties,
             const std::string& name,
             T* value,
             Property::Trait trait,
@@ -323,11 +331,6 @@ struct BinderT : public BinderBase
           m_predicate(std::move(predicate))
     {
     }
-
-    BinderT(const BinderT&) = delete;
-    BinderT& operator=(const BinderT&) = delete;
-    BinderT(BinderT&&) = delete;
-    BinderT& operator=(BinderT&&) = delete;
 
     void set_value(const ArgumentType& new_value) override
     {
@@ -370,18 +373,59 @@ struct BinderT : public BinderBase
         }
     }
 
-    void reset_value() override
-    {
-        // TODO: Since BinaryData has no default constructor, it is plain
-        // dangerous to reset value like that, need to have some template
-        // "reset" function to do that properly.
-        // copy_value(T(), value);
-
-        reset();
-    }
-
     T* m_value;
     ValuePredicate m_predicate;
+};
+
+template <typename ArgumentType>
+struct FunctionBinderT : public BinderBase
+{
+    static const ValueType VAL_TYPE = deduce_value_type<ArgumentType>();
+    FunctionBinderT(const Properties& properties,
+            const std::string& name,
+            void* value,
+            Properties::Writer<ArgumentType> writer,
+            Properties::Reader<ArgumentType> reader,
+            Property::Trait trait)
+        : BinderBase(properties, name, value, VAL_TYPE, trait),
+        m_writer(std::move(writer)),
+        m_reader(std::move(reader))
+    {
+    }
+
+    void set_value(const ArgumentType& new_value) override
+    {
+        try
+        {
+            m_writer(new_value);
+            set();
+        }
+        catch (...)
+        {
+            handle_exception("set value", MULTY_CODE_LOCATION);
+        }
+    }
+
+    void get_value(typename property_traits::WriterReturnTraits<ArgumentType>::ReturnType* out_value) const override
+    {
+        try
+        {
+            if (!out_value)
+            {
+                THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                        "out_value must not be nullptr.");
+            }
+            copy_value(to_argument_type(m_reader()), out_value);
+        }
+        catch(...)
+        {
+            handle_exception("get value", MULTY_CODE_LOCATION);
+        }
+    }
+
+private:
+    Properties::Writer<ArgumentType> m_writer;
+    Properties::Reader<ArgumentType> m_reader;
 };
 
 } // namespace
@@ -394,7 +438,6 @@ Property::Property(Properties& properties, const void* value_ptr)
 
 Property::~Property()
 {
-    assert(m_properties.is_valid());
     if (m_properties.is_valid())
     {
         m_properties.unbind_property_by_value(m_value_ptr);
@@ -505,6 +548,28 @@ bool Properties::validate(std::vector<std::string>* unset_properties_names) cons
     return all_required_properties_set;
 }
 
+void Properties::validate(const CodeLocation& location) const
+{
+    std::vector<std::string> unset_properties_names;
+    if (!validate(&unset_properties_names))
+    {
+        throw_exception(ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
+                "Missing properties:" + join("\n", unset_properties_names),
+                location);
+    }
+}
+
+std::string Properties::get_specification() const
+{
+    std::stringstream sstr;
+    for (const auto p : get_all_properties())
+    {
+        sstr << p->get_property_spec() << "\n";
+    }
+
+    return sstr.str();
+}
+
 bool Properties::is_dirty() const
 {
     return m_is_dirty;
@@ -560,21 +625,89 @@ void Properties::bind_property(
     do_bind_property(name, value, trait, std::move(predicate));
 }
 
+void Properties::bind_functional_property(
+        const std::string& name,
+        void* value,
+        Properties::Writer<int32_t> writer,
+        Properties::Reader<int32_t> reader,
+        Property::Trait trait)
+{
+    do_bind_functional_property(name, value,
+            std::move(writer), std::move(reader), trait);
+}
+
+void Properties::bind_functional_property(
+        const std::string& name,
+        void* value,
+        Properties::Writer<std::string> writer,
+        Properties::Reader<std::string> reader,
+        Property::Trait trait)
+{
+    do_bind_functional_property(name, value,
+            std::move(writer), std::move(reader), trait);
+}
+
+void Properties::bind_functional_property(
+        const std::string& name,
+        void* value,
+        Properties::Writer<BigInt> writer,
+        Properties::Reader<BigInt> reader,
+        Property::Trait trait)
+{
+    do_bind_functional_property(name, value,
+            std::move(writer), std::move(reader), trait);
+}
+
+void Properties::bind_functional_property(
+        const std::string& name,
+        void* value,
+        Properties::Writer<BinaryData> writer,
+        Properties::Reader<BinaryData> reader,
+        Property::Trait trait)
+{
+    do_bind_functional_property(name, value,
+            std::move(writer), std::move(reader), trait);
+}
+
+void Properties::bind_functional_property(
+        const std::string& name,
+        void* value,
+        Properties::Writer<PrivateKey> writer,
+        Properties::Reader<PrivateKey> reader,
+        Property::Trait trait)
+{
+    do_bind_functional_property(name, value,
+            std::move(writer), std::move(reader), trait);
+}
+
 template <typename T, typename P>
 void Properties::do_bind_property(
         const std::string& name, T* value, Property::Trait trait, P predicate)
 {
-    if (!value)
-    {
-        THROW_PROPERTY_EXCEPTION("Attempt to bind property to nullptr.");
-    }
+    INVARIANT(value != nullptr);
 
-    make_property(name, value).reset(new BinderT<T, P>(
+    make_property(name, value).reset(new ValueBinderT<T, P>(
             *this, name, value, trait, std::move(predicate)));
+}
+
+template <typename Arg>
+void Properties::do_bind_functional_property(
+        const std::string& name,
+        void* value,
+        Properties::Writer<Arg> writer,
+        Properties::Reader<Arg> reader,
+        Property::Trait trait)
+{
+    INVARIANT(value != nullptr);
+
+    make_property(name, value).reset(new FunctionBinderT<Arg>(
+            *this, name, value, std::move(writer), std::move(reader), trait));
 }
 
 bool Properties::unbind_property(const std::string& name)
 {
+    INVARIANT(!name.empty());
+
     const auto p = m_properties.find(name);
     if (p == m_properties.end())
     {
@@ -595,6 +728,8 @@ bool Properties::unbind_property(const std::string& name)
 
 bool Properties::unbind_property_by_value(const void* value)
 {
+    INVARIANT(value != nullptr);
+
     const auto p2 = m_property_name_by_value.find(value);
     if (p2 == m_property_name_by_value.end())
     {
@@ -647,6 +782,7 @@ const Binder& Properties::get_property_by_value(const void* value) const
     return get_property(p->second);
 }
 
+// TODO: update function to take BinderPtr as parameter.
 Properties::BinderPtr& Properties::make_property(
         const std::string& name, const void* value)
 {

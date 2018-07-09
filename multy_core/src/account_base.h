@@ -18,7 +18,6 @@
 #include <array>
 #include <memory>
 #include <stddef.h>
-#include <unordered_map>
 #include <vector>
 
 struct ExtendedKey;

@@ -19,6 +19,7 @@
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 #include "multy_core/src/bitcoin/bitcoin_opcode.h"
+#include "multy_core/src/property_predicates.h"
 
 #include "wally_crypto.h"
 
@@ -427,14 +428,7 @@ public:
                   m_properties,
                   "amount_per_byte",
                   Property::OPTIONAL,
-                  [](const BigInt& amount)
-                  {
-                      if (amount < BigInt(1))
-                      {
-                          THROW_EXCEPTION2(ERROR_TRANSACTION_FEE_TOO_LOW,
-                                "Value should be > 1.");
-                      }
-                  })
+                  &verify_bigger_than<BigInt, 1, ERROR_TRANSACTION_FEE_TOO_LOW>)
     {
     }
 
@@ -683,7 +677,7 @@ void BitcoinTransaction::verify() const
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_NOT_ALL_REQUIRED_PROPERTIES_SET,
+        THROW_EXCEPTION2(ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
                 "Not all required properties set.")
                 << "\n" << missing_properties << ".";
     }

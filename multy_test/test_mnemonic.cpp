@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include <string.h>
+
 namespace
 {
 using namespace multy_core::internal;

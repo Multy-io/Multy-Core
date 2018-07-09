@@ -69,6 +69,7 @@ enum ErrorScope
     ERROR_SCOPE_TRANSACTION_SOURCE          = 18,
     ERROR_SCOPE_TRANSACTION_FEE             = 19,
     ERROR_SCOPE_TRANSACTION_PAYLOAD         = 20,
+    ERROR_SCOPE_TRANSACTION_BUILDER         = 32,
 };
 
 #define MULTY_SCOPE_ERROR_BASE(scope) ((scope) << MULTY_ERROR_SCOPE_SHIFT)
@@ -76,7 +77,7 @@ enum ErrorScope
 
 enum ErrorCode
 {
-    // Generic error codes
+    // Generic error codes that could happen in multiple contextes
     ERROR_INVARIANT_FAILED = 0xFF,              // something gone really wrong
     ERROR_OUT_OF_MEMORY = 0xFE,                 //
     ERROR_FEATURE_NOT_SUPPORTED = 0xFD,         // that specific feature is not supported.
@@ -86,6 +87,8 @@ enum ErrorCode
 
     ERROR_INVALID_ARGUMENT,
     ERROR_INVALID_ADDRESS,                      // blockhain account address is invalid
+
+    ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
 
     // Scope-specific error codes
 
@@ -119,7 +122,6 @@ enum ErrorCode
 
     // Transaction-level errors, reported by transaction object.
     ERROR_TRANSACTION_SPECIFIC_ERROR_BASE = MULTY_SCOPE_SPECIFIC_ERROR_BASE(ERROR_SCOPE_TRANSACTION),
-    ERROR_TRANSACTION_NOT_ALL_REQUIRED_PROPERTIES_SET,
     ERROR_TRANSACTION_NO_SOURCES,
     ERROR_TRANSACTION_NO_DESTINATIONS,
     ERROR_TRANSACTION_CHANGE_IS_TOO_SMALL_AND_NO_OTHER_DESTINATIONS,
@@ -145,6 +147,8 @@ enum ErrorCode
 
     ERROR_TRANSACTION_PAYLOAD_SPECIFIC_ERROR_BASE = MULTY_SCOPE_ERROR_BASE(ERROR_SCOPE_TRANSACTION_PAYLOAD),
     ERROR_TRANSACTION_PAYLOAD_TO_BIG,
+
+    ERROR_TRANSACTION_BUILDER_SPECIFIC_ERROR_BASE = MULTY_SCOPE_SPECIFIC_ERROR_BASE(ERROR_SCOPE_TRANSACTION_BUILDER),
 };
 
 struct CodeLocation

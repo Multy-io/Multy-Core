@@ -16,6 +16,8 @@
 #include "multy_test/utility.h"
 #include "multy_test/value_printers.h"
 
+#include <string.h>
+
 namespace
 {
 using namespace multy_core::internal;

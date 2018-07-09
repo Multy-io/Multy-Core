@@ -29,7 +29,7 @@ namespace
 {
 using namespace multy_core::internal;
 using namespace test_utility;
-}
+} // namespace
 
 
 GTEST_TEST(PropertiesTestInvalidArgs, properties_set_int32_value)
@@ -518,7 +518,7 @@ T get_test_data();
 template <>
 int32_t get_test_data<int32_t>()
 {
-    return 100;
+    return 42;
 }
 
 template <>
@@ -530,7 +530,7 @@ std::string get_test_data<std::string>()
 template <>
 BigInt get_test_data<BigInt>()
 {
-    return BigInt(100);
+    return BigInt(42*1000*1000)*(1000*1000*1000);
 }
 
 template <>
@@ -549,6 +549,18 @@ PrivateKeyPtr get_test_data<PrivateKeyPtr>()
     return PrivateKeyPtr(new TestPrivateKey);
 }
 
+enum FunctionalPropertyValue
+{
+    PROPERTY_UNSET,
+    PROPERTY_SET,
+};
+
+template <>
+FunctionalPropertyValue get_test_data<FunctionalPropertyValue>()
+{
+    return PROPERTY_SET;
+}
+
 template<typename>
 struct is_unique_ptr_helper : public std::false_type
 {};
@@ -560,6 +572,25 @@ struct is_unique_ptr_helper<std::unique_ptr<T, D>> : public std::true_type
 template<typename T>
 struct is_unique_ptr : public ::is_unique_ptr_helper<typename std::remove_cv<T>::type>::type
 {};
+
+template <typename T>
+struct remove_unique_ptr_helper
+{
+    typedef T type;
+};
+
+template <typename T, typename D>
+struct remove_unique_ptr_helper<std::unique_ptr<T,D>>
+{
+    typedef T type;
+};
+
+template <typename T>
+struct remove_unique_ptr
+{
+    typedef typename ::remove_unique_ptr_helper<typename std::remove_cv<T>::type>::type type;
+};
+
 
 template <typename T>
 const T& strip_unique_ptr(const T& value)
@@ -578,31 +609,50 @@ const T& strip_unique_ptr(const std::unique_ptr<T, D>& value)
     return *value;
 }
 
+template <typename R, typename T>
+R DefaultWriterFunc(const T&)
+{
+    return get_test_data<R>();
+}
+
 template <typename T>
 struct PropertyT_TestP : public ::testing::Test
 {
-    /** It would be a good idea to put all common stuff here, like:
-     *      static T INIT_VALUE = T();
-     *      static const T DATA = get_test_data<T>();
-     *      Properties properties
-     *      const char* property_name = "p";
-     * but for some reason that makes it impossible to refer to above variables in test body without 'this':
-     *      this->NEW_VALUE
-     * which feels clumsy and too verbose.
-     */
+    const T INIT_VALUE = T();
+    const T DATA = get_test_data<T>();
+    const typename remove_unique_ptr<T>::type& NEW_VALUE = strip_unique_ptr(DATA);
+    const std::string property_name = "p";
+
+    PropertyT_TestP()
+        : properties(),
+          property()
+    {}
+
+    void SetUp() override
+    {
+        properties.reset(new Properties(ERROR_SCOPE_GENERIC, "Test"));
+        property.reset(new PropertyT<T>(*properties, property_name, Property::REQUIRED));
+    }
+
+    void TearDown() override
+    {
+        property.reset();
+        properties.reset();
+    }
+
+public:
+    std::unique_ptr<Properties> properties;
+    std::unique_ptr<PropertyT<T>> property;
 };
 
 TYPED_TEST_CASE_P(PropertyT_TestP);
 
 TYPED_TEST_P(PropertyT_TestP, Properties_SmokeTest)
 {
-    const TypeParam INIT_VALUE = TypeParam();
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const auto& NEW_VALUE = strip_unique_ptr(DATA);
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
-
-    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+    const auto& INIT_VALUE = this->INIT_VALUE;
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    const auto& property_name = this->property_name;
+    auto& properties = *this->properties;
 
     TypeParam out;
     if (is_unique_ptr<TypeParam>::value)
@@ -623,32 +673,35 @@ TYPED_TEST_P(PropertyT_TestP, Properties_SmokeTest)
 
 TYPED_TEST_P(PropertyT_TestP, DynamicProperty)
 {
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const auto& NEW_VALUE = strip_unique_ptr(DATA);
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
+    // Testing that PropertyT unbinds itself when it gets out of scope.
 
-    {
-        // Testing that PropertyT unbinds itself when it gets out of scope.
-        PropertyT<TypeParam> property(properties, property_name);
-        properties.set_property_value(property_name, NEW_VALUE);
-        EXPECT_TRUE(property.is_set());
-        EXPECT_EQ(NEW_VALUE, strip_unique_ptr(*property));
-    }
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    auto& property = *this->property;
+    const auto& property_name = this->property_name;
+    auto& properties = *this->properties;
 
-    // property is unbound now, setting a value throws an exception rather than corrupting some
-    // random piece of memory.
+    properties.set_property_value(property_name, NEW_VALUE);
+    EXPECT_TRUE(property.is_set());
+    EXPECT_EQ(NEW_VALUE, strip_unique_ptr(*property));
+    void* value_ptr = &*property;
+
+    // Reset unique_ptr, destroying PropertyT object and unbinding the name and value.
+    this->property.reset();
+
+    EXPECT_FALSE(properties.is_set(value_ptr));
+    EXPECT_THROW(properties.get_property(property_name), Exception);
+    EXPECT_THROW(properties.get_property_by_value(value_ptr), Exception);
+
+    // property is unbound now, setting a value throws an exception
+    // rather than corrupting some random piece of memory.
     EXPECT_THROW(properties.set_property_value(property_name, NEW_VALUE), Exception);
 }
 
 TYPED_TEST_P(PropertyT_TestP, is_dirty)
 {
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const auto& NEW_VALUE = strip_unique_ptr(DATA);
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
-
-    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    const auto& property_name = this->property_name;
+    auto& properties = *this->properties;
 
     // it is dirty initially
     EXPECT_TRUE(properties.is_dirty());
@@ -671,12 +724,8 @@ TYPED_TEST_P(PropertyT_TestP, is_dirty)
 
 TYPED_TEST_P(PropertyT_TestP, set_value)
 {
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const auto& NEW_VALUE = strip_unique_ptr(DATA);
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
-
-    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    auto& property = *this->property;
 
     EXPECT_FALSE(property.is_set());
     property.set_value(NEW_VALUE);
@@ -687,12 +736,10 @@ TYPED_TEST_P(PropertyT_TestP, set_value)
 
 TYPED_TEST_P(PropertyT_TestP, get_value)
 {
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const auto& NEW_VALUE = strip_unique_ptr(DATA);
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
-
-    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    const auto& property_name = this->property_name;
+    auto& property = *this->property;
+    auto& properties = *this->properties;
 
     EXPECT_FALSE(property.is_set());
     EXPECT_THROW(property.get_value(), multy_core::internal::Exception);
@@ -704,13 +751,10 @@ TYPED_TEST_P(PropertyT_TestP, get_value)
 TYPED_TEST_P(PropertyT_TestP, operator_star)
 {
     // testing 'operator*' which is shorthand for 'get_value()'
-
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const auto& NEW_VALUE = strip_unique_ptr(DATA);
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
-
-    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    const auto& property_name = this->property_name;
+    auto& property = *this->property;
+    auto& properties = *this->properties;
 
     EXPECT_FALSE(property.is_set());
     EXPECT_THROW(*property, multy_core::internal::Exception);
@@ -721,11 +765,8 @@ TYPED_TEST_P(PropertyT_TestP, operator_star)
 
 TYPED_TEST_P(PropertyT_TestP, get_default_value)
 {
-    const TypeParam& DATA = get_test_data<TypeParam>();
-    const char* property_name = "p";
-    Properties properties(ERROR_SCOPE_GENERIC, "Test");
-
-    PropertyT<TypeParam> property(properties, property_name, Property::REQUIRED);
+    const auto& DATA = this->DATA;
+    auto& property = *this->property;
 
     EXPECT_FALSE(property.is_set());
     EXPECT_EQ(DATA, property.get_default_value(DATA));
@@ -743,3 +784,91 @@ REGISTER_TYPED_TEST_CASE_P(PropertyT_TestP,
 
 typedef ::testing::Types<int32_t, std::string, BigInt, BinaryDataPtr, PrivateKeyPtr> PropertyT_Types;
 INSTANTIATE_TYPED_TEST_CASE_P(PropertiesTest, PropertyT_TestP, PropertyT_Types);
+
+template <typename T>
+struct FunctionalPropertyT_TestP : public ::testing::Test
+{
+    const T DATA = get_test_data<T>();
+    const typename remove_unique_ptr<T>::type& NEW_VALUE = strip_unique_ptr(DATA);
+    const char* const property_name = "p";
+
+    typedef FunctionalPropertyT<FunctionalPropertyValue, typename remove_unique_ptr<T>::type> FunctionalPropertyType;
+
+    FunctionalPropertyT_TestP()
+        : properties(),
+          property()
+    {}
+
+    void SetUp() override
+    {
+        properties.reset(new Properties(ERROR_SCOPE_GENERIC, "Test"));
+
+        auto writer = &DefaultWriterFunc<FunctionalPropertyValue, typename remove_unique_ptr<T>::type>;
+        auto reader = &DefaultWriterFunc<T, FunctionalPropertyValue>;
+
+        property.reset(new FunctionalPropertyType(*properties,
+                property_name,
+                writer,
+                reader,
+                Property::REQUIRED));
+    }
+
+    void TearDown() override
+    {
+        property.reset();
+        properties.reset();
+    }
+
+public:
+    std::unique_ptr<Properties> properties;
+    std::unique_ptr<FunctionalPropertyType> property;
+};
+
+TYPED_TEST_CASE_P(FunctionalPropertyT_TestP);
+
+TYPED_TEST_P(FunctionalPropertyT_TestP, Properties_SmokeTest)
+{
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    const auto& property_name = this->property_name;
+    auto& property = *this->property;
+    auto& properties = *this->properties;
+
+    // Unlike PropertyT, output value is generated from stored value and it is safe to read it for unset property.
+    TypeParam out;
+    properties.get_property_value(property_name, &out);
+
+    properties.set_property_value(property_name, NEW_VALUE);
+    ASSERT_EQ(PROPERTY_SET, *property);
+
+    properties.get_property_value(property_name, &out);
+    EXPECT_EQ(NEW_VALUE, strip_unique_ptr(out));
+}
+
+TYPED_TEST_P(FunctionalPropertyT_TestP, FunctionalPropertyT_SmokeTest)
+{
+    const auto& NEW_VALUE = this->NEW_VALUE;
+    const auto& property_name = this->property_name;
+    auto& property = *this->property;
+
+    ASSERT_EQ(Property::REQUIRED, property.get_trait());
+    ASSERT_EQ(property_name, property.get_name());
+
+    ASSERT_FALSE(property.is_set());
+    ASSERT_THROW(property.get_value(), Exception);
+    ASSERT_THROW(*property, Exception);
+
+    ASSERT_EQ(PROPERTY_SET, property.get_default_value(PROPERTY_SET));
+
+    ASSERT_NO_THROW(property.set_value(NEW_VALUE));
+    ASSERT_TRUE(property.is_set());
+    ASSERT_EQ(PROPERTY_SET, property.get_value());
+    ASSERT_EQ(PROPERTY_SET, *property);
+
+    // Actually returns stored value.
+    ASSERT_EQ(&property.get_value(), &property.get_default_value(PROPERTY_SET));
+}
+
+REGISTER_TYPED_TEST_CASE_P(FunctionalPropertyT_TestP,
+        Properties_SmokeTest, FunctionalPropertyT_SmokeTest);
+
+INSTANTIATE_TYPED_TEST_CASE_P(PropertiesTest, FunctionalPropertyT_TestP, PropertyT_Types);

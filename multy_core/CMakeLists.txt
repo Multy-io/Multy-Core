@@ -41,6 +41,7 @@ add_library(multy_core
     properties.h
     sha3.h
     transaction.h
+    transaction_builder.h
 
     # implementation of API functions
     src/api/account.cpp
@@ -55,11 +56,14 @@ add_library(multy_core
     src/api/key_impl.cpp
     src/api/mnemonic.cpp
     src/api/properties.cpp
+    src/api/properties_impl.h
     src/api/properties_impl.cpp
     src/api/sha3.cpp
     src/api/sha3_impl.cpp
     src/api/transaction.cpp
     src/api/transaction_impl.cpp
+    src/api/transaction_builder.cpp
+    src/api/transaction_builder_impl.cpp
 
     # Common stuff
     src/codec.cpp
@@ -70,6 +74,7 @@ add_library(multy_core
     src/backtrace.cpp
 
     src/binary_data_utility.cpp
+    src/enum_name_map.cpp
     src/error_utility.cpp
     src/exception.cpp
     src/hd_path.cpp
@@ -89,8 +94,10 @@ add_library(multy_core
     ethereum.h
     src/ethereum/ethereum_facade.cpp
     src/ethereum/ethereum_account.cpp
+    src/ethereum/ethereum_address.cpp
     src/ethereum/ethereum_transaction.cpp
     src/ethereum/ethereum_token.cpp
+    src/ethereum/ethereum_transaction_builder_multisig.cpp
 
     # Golos
     golos.h

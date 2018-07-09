@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <iosfwd>
 
 /** BigInt: class to deal with integers that may be too big for int64.
  *
@@ -103,7 +104,7 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     }
 
     /** C-style comparison:
-     * almost equivalent to this - other
+     * almost equivalent to (this - other)
      *
      * @return:
      *      <0  if this < other
@@ -126,6 +127,8 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
 private:
     mpz_t m_value;
 };
+
+std::ostream& operator<<(std::ostream& out, const BigInt& big_int);
 
 template <>
 inline uint64_t BigInt::get<uint64_t>() const

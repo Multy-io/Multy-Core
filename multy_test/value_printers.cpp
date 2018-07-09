@@ -16,7 +16,9 @@
 #include "multy_core/src/account_base.h"
 #include "multy_core/src/api/big_int_impl.h"
 #include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/api/properties_impl.h"
 #include "multy_core/src/api/transaction_impl.h"
+#include "multy_core/src/api/transaction_builder_impl.h"
 #include "multy_core/src/utility.h"
 
 #include "wally_elements.h"
@@ -146,6 +148,11 @@ void PrintTo(const AddressType& a, std::ostream* out)
 void PrintTo(const Transaction& t, std::ostream* out)
 {
     *out << "Transaction {" << t.get_blockchain_type() << "}";
+}
+
+void PrintTo(const TransactionBuilder& builder, std::ostream* out)
+{
+    *out << "TransactionBuilder { 0x" << static_cast<const void*>(&builder) << "}";
 }
 
 void PrintTo(const BigInt& a, std::ostream* out)
