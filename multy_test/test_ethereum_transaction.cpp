@@ -12,9 +12,11 @@
 #include "multy_core/account.h"
 #include "multy_core/big_int.h"
 #include "multy_core/properties.h"
+#include "multy_core/transaction_builder.h"
 
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/api/transaction_builder_impl.h"
 #include "multy_core/src/u_ptr.h"
 #include "multy_core/src/utility.h"
 
@@ -733,6 +735,321 @@ GTEST_TEST(EthereumTransactionTest, SmokeTest_mainnet_ERC20_transfer)
             "a0d8b4a62dfaba55e669afbf3204429a7d62ac548992bb63c1f77c2917bb44832ea01a153de112f0c89fc78667823bcca59dbb0cbc"
             "5327d5d6682ff7904e56126739")),
             *serialied);
+}
+
+GTEST_TEST(EthereumTransactionBuilderTest, Create_multisig_wallet)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x6b4be1fc5fa05c5d959d27155694643b8af72fd8", account->get_address());
+
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(
+            make_transaction_builder(
+                    account.get(),
+                    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+                    "new_wallet",
+                    reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
+
+
+    {
+        Properties* builder_propertie;
+        BigIntPtr balance;
+        BigIntPtr price;
+        HANDLE_ERROR(make_big_int("1000000000000000000", reset_sp(balance)));
+        HANDLE_ERROR(make_big_int("0", reset_sp(price)));
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "price", price.get()));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "factory_address", "0x116ffa11dd8829524767f561da5d33d3d170e17d"));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "owners", "[0x6b4be1fc5fa05c5d959d27155694643b8af72fd8, 0x2b74679d2a190fd679a85ce7767c05605237f030, 0xbc11d8f8d741515d2696e34333a0671adb6aee34]"));
+        HANDLE_ERROR(properties_set_int32_value(builder_propertie, "confirmations", 2));
+    }
+
+    TransactionPtr transaction = builder->make_transaction();
+
+    {
+        Properties* transaction_properties = nullptr;
+        const BigInt nonce("1");
+        HANDLE_ERROR(transaction_get_properties(transaction.get(), &transaction_properties));
+        HANDLE_ERROR(properties_set_big_int_value(transaction_properties, "nonce", &nonce));
+    }
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+
+        BigIntPtr amount_gas_price;
+        HANDLE_ERROR(make_big_int("6000000000", reset_sp(amount_gas_price)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
+
+        BigIntPtr amount_gas_limit;
+        HANDLE_ERROR(make_big_int("2029935", reset_sp(amount_gas_limit)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // 0xbde331468064c6a40f3c756235df2e32139e5c5088e5703117f0b26603c652d4
+    ASSERT_EQ(as_binary_data(from_hex("f9012a01850165a0bc00831ef96f94116ffa11dd8829524767f561da5d33d3d170e17d80b8c4f8f738080000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030000000000000000000000006b4be1fc5fa05c5d959d27155694643b8af72fd80000000000000000000000002b74679d2a190fd679a85ce7767c05605237f030000000000000000000000000bc11d8f8d741515d2696e34333a0671adb6aee342ca08d0f4fb6be9aa2577aabe32a505a98f0afb6e40761555146e28673edfa90509aa02d704ab99b02e36f787607d975a3b0da18d94cb711afae5a3abe29078f0a27b3")), *serialied);
+
+}
+
+GTEST_TEST(EthereumTransactionBuilderTest, Submit_from_multisig)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x6b4be1fc5fa05c5d959d27155694643b8af72fd8", account->get_address());
+
+
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(
+            make_transaction_builder(
+                    account.get(),
+                    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+                    "new_request",
+                    reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
+
+    {
+        Properties* builder_propertie;
+        BigIntPtr amount;
+        BigIntPtr balance;
+        HANDLE_ERROR(make_big_int("1000000000000000000", reset_sp(balance)));
+        HANDLE_ERROR(make_big_int("400000000000000000", reset_sp(amount)));
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "wallet_address", "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F"));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "dest_address", "0x2B74679D2a190Fd679a85cE7767c05605237f030"));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "amount", amount.get()));
+
+    }
+
+
+    TransactionPtr transaction = builder->make_transaction();
+
+    {
+        Properties* transaction_properties = nullptr;
+        const BigInt nonce("2");
+        HANDLE_ERROR(transaction_get_properties(transaction.get(), &transaction_properties));
+        HANDLE_ERROR(properties_set_big_int_value(transaction_properties, "nonce", &nonce));
+    }
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+
+        BigIntPtr amount_gas_price;
+        HANDLE_ERROR(make_big_int("5000000000", reset_sp(amount_gas_price)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
+
+        BigIntPtr amount_gas_limit;
+        HANDLE_ERROR(make_big_int("141346", reset_sp(amount_gas_limit)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // 0x3f591a7f391d1aadee9cc389233ba1ed3899b8ffebe69d1887dec46c65396e9f
+    ASSERT_EQ(as_binary_data(from_hex("f8ea0285012a05f20083022822949b9a4102fb0f17aa2ee8e1dbf8e8e3a62cc01a3f80b884c64274740000000000000000000000002b74679d2a190fd679a85ce7767c05605237f030000000000000000000000000000000000000000000000000058d15e176280000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000002ca067f31718d0d0371f0417df1bad027b7f13172be53002835f60c6e893b666d187a06f6aebea21b40a0d89ce16272b9db1ddbeebe3a7fdcc3c10f44da07b12b74f97")), *serialied);
+}
+
+GTEST_TEST(EthereumTransactionBuilderTest, Reject_multisig_transaction)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x6b4be1fc5fa05c5d959d27155694643b8af72fd8", account->get_address());
+
+
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(
+            make_transaction_builder(
+                    account.get(),
+                    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+                    "request",
+                    reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
+    {
+        Properties* builder_propertie;
+        BigIntPtr request;
+        BigIntPtr balance;
+        HANDLE_ERROR(make_big_int("1000000000000000000", reset_sp(balance)));
+        HANDLE_ERROR(make_big_int("0", reset_sp(request)));
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "wallet_address", "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F"));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "action", "reject"));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "request_id", request.get()));
+
+    }
+
+    TransactionPtr transaction = builder->make_transaction();
+
+    {
+        Properties* transaction_properties = nullptr;
+        const BigInt nonce("3");
+        HANDLE_ERROR(transaction_get_properties(transaction.get(), &transaction_properties));
+        HANDLE_ERROR(properties_set_big_int_value(transaction_properties, "nonce", &nonce));
+    }
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+
+        BigIntPtr amount_gas_price;
+        HANDLE_ERROR(make_big_int("5000000000", reset_sp(amount_gas_price)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
+
+        BigIntPtr amount_gas_limit;
+        HANDLE_ERROR(make_big_int("29747", reset_sp(amount_gas_limit)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // 0x91ffa3574067325cd08cb25addd2a7d815b5359b686301abc25a7fbe8c2f63df
+    ASSERT_EQ(as_binary_data(from_hex("f8880385012a05f200827433949b9a4102fb0f17aa2ee8e1dbf8e8e3a62cc01a3f80a420ea8d8600000000000000000000000000000000000000000000000000000000000000002ca0ba9332b6d80764428e28d2756fa0c773586844b1676d4d96cb8da5176105373ba079e628a3819dd86332030b1d3ccf0ed8fde94c33fcb9593c04af552776f7f63c")), *serialied);
+}
+
+GTEST_TEST(EthereumTransactionBuilderTest, Confirm_multisig_transaction)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x6b4be1fc5fa05c5d959d27155694643b8af72fd8", account->get_address());
+
+
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(
+            make_transaction_builder(
+                    account.get(),
+                    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+                    "request",
+                    reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
+    {
+        Properties* builder_propertie;
+        BigIntPtr request;
+        BigIntPtr balance;
+        HANDLE_ERROR(make_big_int("1000000000000000000", reset_sp(balance)));
+        HANDLE_ERROR(make_big_int("0", reset_sp(request)));
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "wallet_address", "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F"));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "action", "confirm"));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "request_id", request.get()));
+
+    }
+
+    TransactionPtr transaction = builder->make_transaction();
+
+    {
+        Properties* transaction_properties = nullptr;
+        const BigInt nonce("4");
+        HANDLE_ERROR(transaction_get_properties(transaction.get(), &transaction_properties));
+        HANDLE_ERROR(properties_set_big_int_value(transaction_properties, "nonce", &nonce));
+    }
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+
+        BigIntPtr amount_gas_price;
+        HANDLE_ERROR(make_big_int("5000000000", reset_sp(amount_gas_price)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
+
+        BigIntPtr amount_gas_limit;
+        HANDLE_ERROR(make_big_int("50861", reset_sp(amount_gas_limit)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // 0xde7b6dac7283d46b2002f2da454a39af1ce75b3fbfdc40e0cac4ef1bd533a484
+    ASSERT_EQ(as_binary_data(from_hex("f8880485012a05f20082c6ad949b9a4102fb0f17aa2ee8e1dbf8e8e3a62cc01a3f80a4c01a8c8400000000000000000000000000000000000000000000000000000000000000002ba007bd354b0f07bb63dbd72f535fda8b5c4abcab2382846bd6a147491773fc474aa06e1845b051cec2af3f9fc17f8014a4ec46649bac021348e7e94a8a6dededf215")), *serialied);
+}
+
+GTEST_TEST(EthereumTransactionBuilderTest, Execute_multisig_transaction)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x6b4be1fc5fa05c5d959d27155694643b8af72fd8", account->get_address());
+
+
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(
+            make_transaction_builder(
+                    account.get(),
+                    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+                    "request",
+                    reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
+    {
+        Properties* builder_propertie;
+        BigIntPtr request;
+        BigIntPtr balance;
+        HANDLE_ERROR(make_big_int("1000000000000000000", reset_sp(balance)));
+        HANDLE_ERROR(make_big_int("0", reset_sp(request)));
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "wallet_address", "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F"));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "action", "send"));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "request_id", request.get()));
+
+    }
+
+    TransactionPtr transaction = builder->make_transaction();
+
+    {
+        Properties* transaction_properties = nullptr;
+        const BigInt nonce("6");
+        HANDLE_ERROR(transaction_get_properties(transaction.get(), &transaction_properties));
+        HANDLE_ERROR(properties_set_big_int_value(transaction_properties, "nonce", &nonce));
+    }
+
+    {
+        Properties* fee = nullptr;
+        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
+
+        BigIntPtr amount_gas_price;
+        HANDLE_ERROR(make_big_int("5000000000", reset_sp(amount_gas_price)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
+
+        BigIntPtr amount_gas_limit;
+        HANDLE_ERROR(make_big_int("57572", reset_sp(amount_gas_limit)));
+        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
+    }
+
+    const BinaryDataPtr serialied = transaction->serialize();
+
+    // 0x1bbadd33cf32d3f34c722e655d1ff4bce3f1bfef872674f24676ac3f96550c77
+    ASSERT_EQ(as_binary_data(from_hex("f8880685012a05f20082e0e4949b9a4102fb0f17aa2ee8e1dbf8e8e3a62cc01a3f80a4ee22610b00000000000000000000000000000000000000000000000000000000000000002ca01ad7628b18c164e1dae82a88ca2ac70dbeaf749bcc533862b80215827da0ac47a0536c1153e0649a4af95c829146b8e022f809798ebbc473676271170a9a25dc81")), *serialied);
 }
 
 struct PayloadTestCase

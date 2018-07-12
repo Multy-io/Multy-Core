@@ -98,6 +98,7 @@ add_library(multy_core
     src/ethereum/ethereum_transaction.cpp
     src/ethereum/ethereum_token.cpp
     src/ethereum/ethereum_transaction_builder_multisig.cpp
+    src/ethereum/ethereum_stream.cpp
 
     # Golos
     golos.h
