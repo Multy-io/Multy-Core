@@ -8,6 +8,8 @@
 #define MULTY_TRANSACTION_ETHEREUM_EXTRA_DATA_H
 
 #include "multy_core/src/transaction_base.h"
+
+#include "multy_core/src/ethereum/ethereum_address.h"
 #include "multy_core/src/ethereum/ethereum_account.h"
 #include "multy_core/src/api/properties_impl.h"
 #include "multy_core/src/api/big_int_impl.h"
@@ -26,7 +28,7 @@ struct EthereumTransactionDestination : public TransactionDestinationBase
         : string_address(get_properties(), "address", Property::REQUIRED,
             [this](const std::string& new_address)
             {
-                this->address = ethereum_parse_address(new_address.c_str());
+                this->address = make_clone(EthereumAddress::from_string(new_address).address_data());
             }),
           amount(get_properties(), "amount"),
           address()
@@ -42,6 +44,7 @@ struct EthereumTransactionDestination : public TransactionDestinationBase
     }
 
 public:
+    // TODO: replace with FunctionalPropertyT<EthereumAddress, std::string> string_address;
     PropertyT<std::string> string_address;
     PropertyT<BigInt> amount;
     BinaryDataPtr address;

@@ -21,6 +21,7 @@ struct Key;
 struct PrivateKey;
 struct PublicKey;
 struct Transaction;
+struct TransactionBuilder;
 
 namespace multy_core
 {
@@ -42,6 +43,7 @@ public:
     void operator()(PublicKey*) const;
     void operator()(PrivateKey*) const;
     void operator()(Transaction*) const;
+    void operator()(TransactionBuilder*) const;
 };
 
 template <typename T>
@@ -59,6 +61,7 @@ typedef UPtr<Key> KeyPtr;
 typedef UPtr<PrivateKey> PrivateKeyPtr;
 typedef UPtr<PublicKey> PublicKeyPtr;
 typedef UPtr<Transaction> TransactionPtr;
+typedef UPtr<TransactionBuilder> TransactionBuilderPtr;
 
 } // namespace multy_core
 } // namespace internal

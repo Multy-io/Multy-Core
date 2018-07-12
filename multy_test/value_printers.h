@@ -19,6 +19,7 @@ struct BIP39TestCase;
 struct Error;
 struct Key;
 struct Transaction;
+struct TransactionBuilder;
 
 namespace std
 {
@@ -36,13 +37,8 @@ void PrintTo(const Blockchain& e, std::ostream* out);
 void PrintTo(const BlockchainType& e, std::ostream* out);
 void PrintTo(const AddressType& e, std::ostream* out);
 void PrintTo(const Transaction& e, std::ostream* out);
+void PrintTo(const TransactionBuilder& e, std::ostream* out);
 void PrintTo(const BigInt& a, std::ostream* out);
-
-inline std::ostream& operator<<(std::ostream& out, const BigInt& value)
-{
-    PrintTo(value, &out);
-    return out;
-}
 
 inline std::ostream& operator<<(std::ostream& out, const BinaryData& value)
 {
@@ -56,7 +52,6 @@ inline std::ostream& operator<<(std::ostream& out, const Error& e)
 
     return out;
 }
-
 
 template <typename T, typename D>
 inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)

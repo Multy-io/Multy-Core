@@ -109,6 +109,18 @@ inline bool operator!=(const BinaryData& left, const BinaryData& right)
     return !(left == right);
 }
 
+template <typename T>
+BinaryData slice(const T& data, size_t offset, size_t size)
+{
+    return slice(as_binary_data(data), offset, size);
+}
+
+template <typename T>
+BinaryData power_slice(const T& data, int32_t offset, int32_t size)
+{
+    return power_slice(as_binary_data(data), offset, size);
+}
+
 } // namespace internal
 } // namespace multy_core
 

@@ -9,8 +9,8 @@
 
 #include "multy_core/src/exception.h"
 
-
 #include <sstream>
+#include <string>
 
 namespace multy_core
 {

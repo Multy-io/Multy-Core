@@ -431,7 +431,7 @@ void EthereumTransaction::verify()
     std::string missing_properties;
     if (!validate_all_properties(&missing_properties))
     {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_NOT_ALL_REQUIRED_PROPERTIES_SET,
+        THROW_EXCEPTION2(ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
                 "Not all required properties set.")
                 << "\n" << missing_properties;
     }

@@ -27,6 +27,7 @@ typedef std::unique_ptr<BlockchainFacadeBase> BlockchainBasePtr;
 class BlockchainFacadeBase
 {
 public:
+    BlockchainFacadeBase();
     virtual ~BlockchainFacadeBase();
 
     virtual HDAccountPtr make_hd_account(
@@ -41,6 +42,11 @@ public:
             const char* serialized_private_key) const = 0;
 
     virtual TransactionPtr make_transaction(const Account&) const = 0;
+
+    virtual TransactionBuilderPtr make_transaction_builder(
+            const Account& account,
+            uint32_t type,
+            const char* action) const;
 
     virtual void validate_address(BlockchainType, const char*) const = 0;
 

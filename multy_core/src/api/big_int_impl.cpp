@@ -13,6 +13,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <iostream>
 
 namespace
 {
@@ -356,4 +357,9 @@ bool BigInt::operator>=(const BigInt& other) const
 const void* BigInt::get_object_magic()
 {
     RETURN_MAGIC();
+}
+
+std::ostream& operator<<(std::ostream& out, const BigInt& big_int)
+{
+    return out << big_int.get_value();
 }

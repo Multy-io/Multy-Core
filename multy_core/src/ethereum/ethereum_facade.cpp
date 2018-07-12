@@ -6,13 +6,18 @@
 
 #include "multy_core/src/ethereum/ethereum_facade.h"
 
+#include "multy_core/ethereum.h"
 #include "multy_core/src/ethereum/ethereum_account.h"
+#include "multy_core/src/ethereum/ethereum_address.h"
 #include "multy_core/src/ethereum/ethereum_transaction.h"
+#include "multy_core/src/ethereum/ethereum_transaction_builder_multisig.h"
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 
 #include "multy_core/src/codec.h"
+
+#include <unordered_map>
 
 namespace
 {
@@ -68,10 +73,34 @@ TransactionPtr EthereumFacade::make_transaction(const Account& account) const
     return TransactionPtr(new EthereumTransaction(account));
 }
 
+TransactionBuilderPtr EthereumFacade::make_transaction_builder(
+        const Account& account, uint32_t type, const char* action) const
+{
+    typedef TransactionBuilderPtr (*BuilderFactoryFunction)(const Account&, const std::string&);
+    static const std::unordered_map<size_t, BuilderFactoryFunction> BUILDERS =
+    {
+        {
+            ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
+            &make_ethereum_multisig_transaction_builder
+        },
+    };
+
+    const auto builder = BUILDERS.find(type);
+    if (builder == BUILDERS.end())
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                "Invalid TransactionBuilder type.")
+                << " Type: " << type
+                << ", action: \"" << (action ? action : "") << "\".";
+    }
+
+    return builder->second(account, std::string(action ? action : ""));
+}
+
 void EthereumFacade::validate_address(
         BlockchainType, const char* address) const
 {
-    ethereum_parse_address(address);
+    EthereumAddress::from_string(address);
 }
 
 std::string EthereumFacade::encode_serialized_transaction(

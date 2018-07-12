@@ -31,8 +31,23 @@ BlockchainFacadeBase& get_blockchain(Blockchain blockchain_type)
     return BlockchainFacadeRegistry::get_instance().get_blockchain(blockchain_type);
 }
 
+BlockchainFacadeBase::BlockchainFacadeBase()
+{
+}
+
 BlockchainFacadeBase::~BlockchainFacadeBase()
 {
+}
+
+TransactionBuilderPtr BlockchainFacadeBase::make_transaction_builder(
+        const Account& /*account*/,
+        uint32_t /*type*/,
+        const char* /*action*/) const
+{
+    THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
+            "TransactionBuilder is not supported.");
+
+    return nullptr;
 }
 
 BlockchainFacadeRegistry::BlockchainFacadeRegistry()
@@ -89,10 +104,10 @@ void BlockchainFacadeRegistry::register_blockchain(
         Blockchain blockchain_type,
         BlockchainFacadeRegistry::FactoryFunction factory_function)
 {
-    const auto p = m_factory_functions.emplace(blockchain_type,
+    const auto registration_result = m_factory_functions.emplace(blockchain_type,
             std::move(factory_function));
 
-    INVARIANT2(p.second == true, blockchain_type);
+    INVARIANT2(registration_result.second == true, blockchain_type);
 }
 
 } // namespace internal

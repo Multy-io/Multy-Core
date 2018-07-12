@@ -110,6 +110,81 @@ GTEST_TEST(UtilityTest, power_slice)
     }
 }
 
+template <typename T, size_t N>
+std::array<T, N> wrap_array(const T (&array)[N])
+{
+    std::array<T, N> result;
+    std::copy(std::begin(array), std::end(array), std::begin(result));
+
+    return result;
+}
+
+GTEST_TEST(UtilityTest, slice_implicit_convertion_to_BinaryData)
+{
+    // Verify that automatic convertion to BinaryData for slice<T>(t)
+    // hash same effect as explicit slice(as_binary_data(t)).
+
+    const unsigned char C_array[11] = {'S', 'a', 'm', 'p', 'l', 'e', ' ', 'd', 'a', 't', 'a'};
+    const BinaryData binary_data = as_binary_data(C_array);
+    ASSERT_EQ(sizeof(C_array), binary_data.len);
+
+    const std::string string(reinterpret_cast<const char*>(C_array), sizeof(C_array));
+    const char* C_string = string.c_str();
+    const std::vector<unsigned char> vector(std::begin(C_array), std::end(C_array));
+    const std::array<unsigned char, sizeof(C_array)> array = wrap_array(C_array);
+
+    for (int offset = 0; offset < binary_data.len; ++offset)
+    {
+        SCOPED_TRACE(offset);
+
+        for (int size = binary_data.len - offset - 1; size >= 0; --size)
+        {
+            SCOPED_TRACE(size);
+
+            const BinaryData sliced_binary_data = slice(binary_data, offset, size);
+
+            EXPECT_EQ(sliced_binary_data, slice(C_array, offset, size));
+            EXPECT_EQ(sliced_binary_data, slice(C_string, offset, size));
+            EXPECT_EQ(sliced_binary_data, slice(string, offset, size));
+            EXPECT_EQ(sliced_binary_data, slice(vector, offset, size));
+            EXPECT_EQ(sliced_binary_data, slice(array, offset, size));
+        }
+    }
+}
+
+GTEST_TEST(UtilityTest, power_slice_implicit_convertion_to_BinaryData)
+{
+    // Verify that automatic convertion to BinaryData for power_slice<T>(t)
+    // hash same effect as explicit power_slice(as_binary_data(t)).
+
+    const unsigned char C_array[11] = {'S', 'a', 'm', 'p', 'l', 'e', ' ', 'd', 'a', 't', 'a'};
+    const BinaryData binary_data = as_binary_data(C_array);
+    ASSERT_EQ(sizeof(C_array), binary_data.len);
+
+    const std::string string(reinterpret_cast<const char*>(C_array), sizeof(C_array));
+    const char* C_string = string.c_str();
+    const std::vector<unsigned char> vector(std::begin(C_array), std::end(C_array));
+    const std::array<unsigned char, sizeof(C_array)> array = wrap_array(C_array);
+
+    for (int offset = 0; offset < binary_data.len; ++offset)
+    {
+        SCOPED_TRACE(offset);
+
+        for (int size = binary_data.len - offset - 1; size >= 0; --size)
+        {
+            SCOPED_TRACE(size);
+
+            const BinaryData sliced_binary_data = power_slice(binary_data, offset, size);
+
+            EXPECT_EQ(sliced_binary_data, power_slice(C_array, offset, size));
+            EXPECT_EQ(sliced_binary_data, power_slice(C_string, offset, size));
+            EXPECT_EQ(sliced_binary_data, power_slice(string, offset, size));
+            EXPECT_EQ(sliced_binary_data, power_slice(vector, offset, size));
+            EXPECT_EQ(sliced_binary_data, power_slice(array, offset, size));
+        }
+    }
+}
+
 GTEST_TEST(UtilityInvalidArgsTest, power_slice)
 {
     const BinaryData data = as_binary_data("Sample BinaryData");

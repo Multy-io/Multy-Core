@@ -18,6 +18,7 @@
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/property_predicates.h"
 
 #include <chrono>
 #include <cstddef>
@@ -25,6 +26,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <unordered_map>
 
 namespace multy_core
 {
@@ -258,14 +260,7 @@ public:
                                     new_address.c_str());
                 }),
           amount(m_properties, "amount", Property::OPTIONAL,
-                [](const BigInt& new_amount)
-                {
-                    if (new_amount < BigInt(0))
-                    {
-                        THROW_EXCEPTION("Can't set negative amount as"
-                                " transaction source value.");
-                    }
-                })
+                    &verify_bigger_than<BigInt, 0>)
     {}
 
 public:
@@ -284,14 +279,7 @@ public:
                                     new_address.c_str());
                 }),
           amount(m_properties, "amount", Property::OPTIONAL,
-                [](const BigInt& new_amount)
-                {
-                    if (new_amount < BigInt(0))
-                    {
-                        THROW_EXCEPTION("Can't set negative amount as"
-                                " transaction destination value.");
-                    }
-                })
+                    &verify_bigger_than<BigInt, 0>)
     {}
 
 public:
@@ -309,15 +297,7 @@ GolosTransaction::GolosTransaction(BlockchainType blockchain_type)
             get_transaction_properties(),
             "expire_duration",
             Property::OPTIONAL,
-            [](int32_t new_expire_duration)
-            {
-                if (new_expire_duration <= 10)
-                {
-                    THROW_EXCEPTION("Expire duration is too small.")
-                            << " Expected at least : " << GOLOS_EXPIRE_MIN_SECONDS
-                            << " Received: " << new_expire_duration;
-                }
-            }),
+            &verify_bigger_than<int32_t, GOLOS_EXPIRE_MIN_SECONDS>),
       m_explicit_expiration(
             get_transaction_properties(),
             "expiration",

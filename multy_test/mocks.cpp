@@ -61,6 +61,12 @@ TestAccount::TestAccount(BlockchainType blockchain_type,
 {
 }
 
+TestAccount::TestAccount(BlockchainType blockchain_type,
+        std::string address,
+        Account::HDPath path)
+    : TestAccount(blockchain_type, address, path, make_test_private_key(), make_test_public_key())
+{}
+
 HDPath TestAccount::get_path() const
 {
     return path;
@@ -180,6 +186,21 @@ Properties& TestTransaction::get_transaction_properties()
     return m_properties;
 }
 
-void TestTransaction::set_message(const BinaryData& value)
+void TestTransaction::set_message(const BinaryData& /*value*/)
 {
+}
+
+TestTransactionBuilder::TestTransactionBuilder()
+    : m_properties(ERROR_SCOPE_TRANSACTION_BUILDER, "TestTransactionBuilder")
+{
+}
+
+TransactionPtr TestTransactionBuilder::make_transaction() const
+{
+    return TransactionPtr(new TestTransaction);
+}
+
+Properties& TestTransactionBuilder::get_properties()
+{
+    return m_properties;
 }

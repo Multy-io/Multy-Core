@@ -14,6 +14,7 @@
 #include "multy_core/key.h"
 #include "multy_core/mnemonic.h"
 #include "multy_core/transaction.h"
+#include "multy_core/transaction_builder.h"
 
 #include "multy_core/src/api/key_impl.h"
 
@@ -80,6 +81,11 @@ void UniversalDeleter::operator()(char* str) const
 void UniversalDeleter::operator()(Transaction* transaction) const
 {
     free_transaction(transaction);
+}
+
+void UniversalDeleter::operator()(TransactionBuilder* builder) const
+{
+    free_transaction_builder(builder);
 }
 
 } // namespace internal

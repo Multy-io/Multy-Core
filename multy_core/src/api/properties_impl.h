@@ -28,6 +28,27 @@ struct CodeLocation;
 
 struct Properties;
 
+namespace property_traits
+{
+    template <typename T>
+    struct WriterReturnTraits
+    {
+        typedef T ReturnType;
+    };
+
+    template <>
+    struct WriterReturnTraits<BinaryData>
+    {
+        typedef multy_core::internal::BinaryDataPtr ReturnType;
+    };
+
+    template <>
+    struct WriterReturnTraits<PrivateKey>
+    {
+        typedef multy_core::internal::PrivateKeyPtr ReturnType;
+    };
+} // namespace property_traits
+
 class MULTY_CORE_API Property
 {
 public:
@@ -140,6 +161,7 @@ public:
         set_dirty();
     }
 
+    // TODO: this should throw an exception if property is unset.
     template <typename T>
     void get_property_value(const std::string& name, T* out_value) const
     {
@@ -157,6 +179,12 @@ public:
      * side-effect: on success causes is_dirty() to return false until any property is modified or reset.
      */
     bool validate(std::vector<std::string>* unset_properties_names) const;
+
+    /** Validate all bound properties, throw exception if any required property is not set.
+     */
+    void validate(const CodeLocation& location) const;
+
+    std::string get_specification() const;
 
     /** Returns true if validation is required.
      *
@@ -221,6 +249,47 @@ public:
             Property::Trait trait = Property::REQUIRED,
             Predicate<PrivateKey> predicate = Predicate<PrivateKey>());
 
+    // Properties with functions.
+    template <typename U>
+    using Writer = std::function<void(const U&)>;
+    template <typename U>
+    using Reader = std::function<typename property_traits::WriterReturnTraits<U>::ReturnType (void)>;
+
+    void bind_functional_property(
+            const std::string& name,
+            void* value,
+            Writer<int32_t> writer,
+            Reader<int32_t> reader,
+            Property::Trait trait = Property::REQUIRED);
+
+    void bind_functional_property(
+            const std::string& name,
+            void* value,
+            Writer<std::string> writer,
+            Reader<std::string> reader,
+            Property::Trait trait = Property::REQUIRED);
+
+    void bind_functional_property(
+            const std::string& name,
+            void* value,
+            Writer<BigInt> writer,
+            Reader<BigInt> reader,
+            Property::Trait trait = Property::REQUIRED);
+
+    void bind_functional_property(
+            const std::string& name,
+            void* value,
+            Writer<BinaryData> writer,
+            Reader<BinaryData> reader,
+            Property::Trait trait = Property::REQUIRED);
+
+    void bind_functional_property(
+            const std::string& name,
+            void* value,
+            Writer<PrivateKey> writer,
+            Reader<PrivateKey> reader,
+            Property::Trait trait = Property::REQUIRED);
+
     // Returns true if property was unbound, false if there was not such
     // property.
     bool unbind_property(const std::string& name);
@@ -248,7 +317,7 @@ public:
 
     std::string get_name() const;
 
-    // Not a part of public interface.
+    // Not part of interface, made public to be accessible by Binder subclasses.
     void throw_exception(ErrorCode error, const std::string& message, const CodeLocation& location) const;
 
     static const void* get_object_magic();
@@ -261,7 +330,14 @@ private:
             Property::Trait trait,
             P predicate);
 
-protected:
+    template <typename Arg>
+    void do_bind_functional_property(
+            const std::string& name,
+            void* value,
+            Writer<Arg> writer,
+            Reader<Arg> reader,
+            Property::Trait trait);
+
     BinderPtr& make_property(const std::string& name, const void* value);
 
 private:
@@ -273,30 +349,18 @@ private:
 };
 
 template <typename T>
-class PropertyT : public Property
+class PropertyTBase : public Property
 {
-public:
-    PropertyT(
-            Properties& props,
-            const std::string& name,
-            Trait trait = Property::REQUIRED,
-            Predicate<T> predicate = Predicate<T>())
-        : PropertyT(T(), props, name, trait, std::move(predicate))
-    {}
-
-    PropertyT(
-            T initial_value,
-            Properties& props,
-            const std::string& name,
-            Trait trait = Property::REQUIRED,
-            Predicate<T> predicate = Predicate<T>())
+protected:
+    PropertyTBase(T initial_value, Properties& props)
         : Property(props, &m_value),
           m_value(std::move(initial_value))
-    {
-        props.bind_property(name, &m_value, trait, std::move(predicate));
-        // TODO: set value through props.set_value();
-    }
+    {}
 
+    ~PropertyTBase()
+    {}
+
+public:
     const T& operator*() const
     {
         return get_value();
@@ -329,22 +393,108 @@ public:
         return m_value;
     }
 
-    void set_value(const typename PredicateArgTraits<T>::ArgumentType& new_value)
-    {
-        m_properties.get_property_by_value(&m_value).set_value(new_value);
-    }
-
     const T& get_default_value(const T& default_value) const
     {
-        if (!is_set())
+        if (!Property::is_set())
         {
             return default_value;
         }
         return m_value;
     }
 
-private:
+protected:
+    Properties::Binder& get_binder()
+    {
+        return get_properties().get_property_by_value(&m_value);
+    }
+
+protected:
     T m_value;
+};
+
+template <typename T>
+class PropertyT : public PropertyTBase<T>
+{
+private:
+    typedef PropertyTBase<T> Base;
+
+public:
+    PropertyT(
+            Properties& props,
+            const std::string& name,
+            Property::Trait trait = Property::REQUIRED,
+            Property::Predicate<T> predicate = Property::Predicate<T>())
+        : PropertyT(T(), props, name, trait, std::move(predicate))
+    {}
+
+    PropertyT(
+            T initial_value,
+            Properties& props,
+            const std::string& name,
+            Property::Trait trait = Property::REQUIRED,
+            Property::Predicate<T> predicate = Property::Predicate<T>())
+        : Base(std::move(initial_value), props)
+    {
+        props.bind_property(name, &(Base::m_value), trait, std::move(predicate));
+        // TODO: set value through props.set_value();
+    }
+
+public:
+    void set_value(const typename Property::PredicateArgTraits<T>::ArgumentType& new_value)
+    {
+        Base::get_binder().set_value(new_value);
+    }
+};
+
+// TODO: move code common to PropertyT and FunctionalPropertyT to base class.
+template <typename T, typename Argument>
+class FunctionalPropertyT : public PropertyTBase<T>
+{
+private:
+    typedef PropertyTBase<T> Base;
+
+public:
+    template <typename Writer, typename Reader>
+    FunctionalPropertyT(
+            Properties& props,
+            const std::string& name,
+            Writer writer,
+            Reader reader,
+            Property::Trait trait = Property::REQUIRED)
+        : FunctionalPropertyT(T(), props, name, std::move(writer), std::move(reader), trait)
+    {}
+
+    template <typename Writer, typename Reader>
+    FunctionalPropertyT(
+            T initial_value,
+            Properties& props,
+            const std::string& name,
+            Writer writer,
+            Reader reader,
+            Property::Trait trait = Property::REQUIRED)
+        : Base(std::move(initial_value), props)
+    {
+        auto setter = [this, writer](const Argument& arg)
+        {
+            this->m_value = writer(arg);
+        };
+
+        auto getter = [this, reader]()
+        {
+            return reader(this->m_value);
+        };
+        props.bind_functional_property(
+                name,
+                &(Base::m_value),
+                std::move(setter),
+                std::move(getter),
+                trait);
+    }
+
+    void set_value(const Argument& new_value)
+    {
+        Base::get_binder().set_value(new_value);
+    }
 };
 
 #endif // MULTY_CORE_SRC_API_PROPERTIES_IMPL_H

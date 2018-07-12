@@ -9,6 +9,8 @@
 
 #include "multy_core/src/account_base.h"
 
+#include <string>
+
 namespace multy_core
 {
 namespace internal
@@ -26,8 +28,6 @@ protected:
 
 AccountPtr make_ethereum_account(BlockchainType blockchain_type,
         const char* serialized_private_key);
-
-BinaryDataPtr ethereum_parse_address(const char* address);
 
 } // namespace internal
 } // namespace multy_core
