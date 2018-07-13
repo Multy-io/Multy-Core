@@ -60,7 +60,7 @@
 #define E(statement)                                                           \
     if ((statement) != 0)                                                      \
     {                                                                          \
-        test_utility::throw_exception(#statement);                             \
+        test_utility::throw_exception("ERROR IN TEST CODE: " #statement);      \
     }
 
 struct BinaryData;

@@ -12,7 +12,6 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
 
-
 namespace
 {
 using namespace multy_core::internal;
@@ -20,11 +19,11 @@ using namespace multy_core::internal;
 // based on cpp-ethereum/libdevcore/RLP.h
 const uint8_t RLP_MAX_LENGTH_BYTES = 8;
 const uint8_t RLP_DATA_IMM_LEN_START = 0x80;
-const uint8_t RLP_LIST_START = 0xc0;
-const uint8_t RLP_DATA_IMM_LEN_COUNT = RLP_LIST_START - RLP_DATA_IMM_LEN_START - RLP_MAX_LENGTH_BYTES;
+const uint8_t RLP_LIST_IMM_LEN_START = 0xc0;
+const uint8_t RLP_DATA_IMM_LEN_COUNT = RLP_LIST_IMM_LEN_START - RLP_DATA_IMM_LEN_START - RLP_MAX_LENGTH_BYTES;
 const uint8_t RLP_DATA_IND_LEN_ZERO = RLP_DATA_IMM_LEN_START + RLP_DATA_IMM_LEN_COUNT - 1;
-const uint8_t RLP_LIST_IMM_LEN_COUNT = 256 - RLP_LIST_START - RLP_MAX_LENGTH_BYTES;
-const uint8_t RLP_LIST_IND_LEN_ZERO = RLP_LIST_START + RLP_LIST_IMM_LEN_COUNT - 1;
+const uint8_t RLP_LIST_IMM_LEN_COUNT = 256 - RLP_LIST_IMM_LEN_START - RLP_MAX_LENGTH_BYTES;
+const uint8_t RLP_LIST_IND_LEN_ZERO = RLP_LIST_IMM_LEN_START + RLP_LIST_IMM_LEN_COUNT - 1;
 
 template <typename T>
 struct IntWrapper
@@ -130,18 +129,19 @@ EthereumDataStream& operator<<(EthereumDataStream& stream, const IntWrapper<uint
     return stream;
 }
 
-template <typename T>
-EthereumDataStream& operator<<(EthereumDataStream& stream, const IntWrapper<T>& wrapper)
-{
-    assert(wrapper.size <= sizeof(wrapper.value));
-    T value = wrapper.value;
-    for (size_t i = 0; i < wrapper.size; ++i)
-    {
-        value >>= 8;
-        stream << as_uint8(value);
-    }
-    return stream;
-}
+// TODO: this implementation has a bug for values with `wrapper.size > 2`
+//template <typename T>
+//EthereumDataStream& operator<<(EthereumDataStream& stream, const IntWrapper<T>& wrapper)
+//{
+//    assert(wrapper.size <= sizeof(wrapper.value));
+//    T value = wrapper.value;
+//    for (size_t i = 0; i < wrapper.size; ++i)
+//    {
+//        value >>= 8;
+//        stream << as_uint8(value);
+//    }
+//    return stream;
+//}
 
 EthereumDataStream& operator<<(EthereumDataStream& stream, const IntWrapper<BigInt>& wrapper)
 {
@@ -200,9 +200,9 @@ void write_int(const T& value, EthereumDataStream* stream)
                 THROW_EXCEPTION("Number is too big for RLP") << to_string(value);
             }
             *stream << as_uint8(RLP_DATA_IND_LEN_ZERO + len_of_len);
-            *stream << as_int(len, len_of_len);
+            *stream << as_int(BigInt(static_cast<uint64_t>(len)), len_of_len);
         }
-        *stream << as_int(value, len);
+        *stream << as_int(BigInt(value), len);
     }
 }
 
@@ -246,15 +246,11 @@ EthereumDataStream& operator<<(EthereumDataStream& stream, const BinaryData& bin
             if (RLP_DATA_IND_LEN_ZERO + length_size > 0xFF)
             {
                 THROW_EXCEPTION("BinaryData is too big for RLP")
-                        << " length : " << to_string(len);
+                        << " length : " << len;
             }
 
             stream << as_uint8(RLP_DATA_IND_LEN_ZERO + length_size);
-            size_t writen_len =len ;
-            for (; writen_len != 0; writen_len >>= 8)
-            {
-                stream << as_uint8(writen_len);
-            }
+            stream << as_int(BigInt(static_cast<uint64_t>(len)), length_size);
         }
         stream.write_data(data, len);
     }
@@ -263,26 +259,27 @@ EthereumDataStream& operator<<(EthereumDataStream& stream, const BinaryData& bin
 
 EthereumDataStream& operator<<(EthereumDataStream& stream, const EthereumDataStreamList& list)
 {
-    const size_t length_size = get_bytes_len(list.length());
-    if (list.length() < RLP_LIST_IMM_LEN_COUNT)
+    const size_t len = list.length();
+    const unsigned char* data = list.data();
+
+    if (len < RLP_LIST_IMM_LEN_COUNT)
     {
-        stream << as_uint8(RLP_LIST_START + list.length());
-    }
-    else if (RLP_LIST_IND_LEN_ZERO + length_size < 0xFF)
-    {
-        stream << as_uint8(RLP_LIST_IND_LEN_ZERO + length_size);
-        for (size_t list_size = list.length(); list_size != 0; list_size >>= 8)
-        {
-            stream << as_uint8(list_size);
-        }
+        stream << as_uint8(len + RLP_LIST_IMM_LEN_START);
     }
     else
     {
-        THROW_EXCEPTION("List is too big for RLP. ")
-                << " Length: " << list.length();
+        const size_t length_size = get_bytes_len(len);
+        if (RLP_LIST_IND_LEN_ZERO + length_size > 0xFF)
+        {
+            THROW_EXCEPTION("List is too big for RLP. ")
+                    << " Length: " << len;
+        }
+
+        stream << as_uint8(RLP_LIST_IND_LEN_ZERO + length_size);
+        stream << as_int(BigInt(static_cast<uint64_t>(len)), length_size);
     }
 
-    stream.write_data(list.data(), list.length());
+    stream.write_data(data, len);
     return stream;
 }
 
