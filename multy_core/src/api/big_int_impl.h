@@ -36,6 +36,11 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     explicit BigInt(int64_t value);
     explicit BigInt(uint64_t value);
     explicit BigInt(double value);
+
+    explicit BigInt(uint32_t value)
+        : BigInt(static_cast<uint64_t>(value))
+    {}
+
     // TODO: implement template constructor that would choose appropriate overload based on signess and size of the int argument.
 
     BigInt(const BigInt& other);
