@@ -60,8 +60,14 @@ BlockchainFacadeRegistry::BlockchainFacadeRegistry()
     // Static initializers are not invoked and blockchains stay unregistered.
     register_blockchain<BitcoinFacade>(BLOCKCHAIN_BITCOIN);
     register_blockchain<EthereumFacade>(BLOCKCHAIN_ETHEREUM);
+
+#if MULTY_WITH_GOLOS
     register_blockchain<GolosFacade>(BLOCKCHAIN_GOLOS);
+#endif
+
+#if MULTY_WITH_EOS
     register_blockchain<EOSFacade>(BLOCKCHAIN_EOS);
+#endif
 }
 
 BlockchainFacadeRegistry::~BlockchainFacadeRegistry()

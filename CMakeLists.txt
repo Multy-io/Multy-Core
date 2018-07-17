@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+include(CMakeDependentOption)
+
 # General options
 option(MULTY_WITH_TESTS "Build multy_test library" NO)
 option(MULTY_MORE_WARNINGS "More warnings" OFF)
@@ -16,6 +18,10 @@ option(BUILD_SHARED_LIBS "Build as shared libraries." OFF)
 option(MULTY_WITH_TEST_APP "Build sample app that runs the tests (consider MULTY_WITH_TESTS)." OFF)
 option(MULTY_TEST_DISABLE_DEATH_TESTS "Explicitly disable death tests." ON)
 option(MULTY_FORCE_ENABLE_ERROR_BACKTRACE "Force collecting backtrace for Release builds." OFF)
+
+option(MULTY_WITH_ALL_BLOCKCHAINS "Force-enable all blockchains support." OFF)
+cmake_dependent_option(MULTY_WITH_GOLOS "Enable Golos blockchain support." ON "MULTY_WITH_ALL_BLOCKCHAINS" OFF)
+cmake_dependent_option(MULTY_WITH_EOS "Enable EOS blockchain support." ON "MULTY_WITH_ALL_BLOCKCHAINS" OFF)
 
 project(multy C CXX)
 
@@ -44,7 +50,14 @@ else()
             add_definitions(-DMULTY_BUILD_FOR_UNIX=1)
         endif()
     endif()
+endif()
 
+if (MULTY_WITH_GOLOS)
+    add_definitions(-DMULTY_WITH_GOLOS=1)
+endif()
+
+if (MULTY_WITH_EOS)
+    add_definitions(-DMULTY_WITH_EOS=1)
 endif()
 
 if(MULTY_WITH_TEST_APP)

@@ -77,9 +77,6 @@ Error* make_account(
         const char* serialized_private_key,
         Account** new_account)
 {
-    ARG_CHECK(blockchain.blockchain == BLOCKCHAIN_BITCOIN
-            || blockchain.blockchain == BLOCKCHAIN_ETHEREUM
-            || blockchain.blockchain == BLOCKCHAIN_GOLOS);
     ARG_CHECK(serialized_private_key);
     ARG_CHECK(new_account);
 

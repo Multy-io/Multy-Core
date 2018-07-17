@@ -28,7 +28,7 @@ if (MULTY_WARNINGS_AS_ERRORS)
     add_definitions(-Werror)
 endif()
 
-add_library(multy_core
+set(MULTY_CORE_SOURCES
     # API headers
     account.h
     api.h
@@ -99,18 +99,31 @@ add_library(multy_core
     src/ethereum/ethereum_token.cpp
     src/ethereum/ethereum_transaction_builder_multisig.cpp
     src/ethereum/ethereum_stream.cpp
+)
 
-    # Golos
-    golos.h
-    src/golos/golos.cpp
-    src/golos/golos_facade.cpp
-    src/golos/golos_account.cpp
-    src/golos/golos_transaction.cpp
+# Golos
+if (MULTY_WITH_GOLOS)
+    list(APPEND MULTY_CORE_SOURCES
+        golos.h
+        src/golos/golos.cpp
+        src/golos/golos_facade.cpp
+        src/golos/golos_account.cpp
+        src/golos/golos_transaction.cpp
+    )
+endif()
 
-    # EOS
-    EOS.h
-    src/EOS/EOS_facade.cpp
-    src/EOS/EOS_account.cpp
+# EOS
+if (MULTY_WITH_EOS)
+    list(APPEND MULTY_CORE_SOURCES
+        EOS.h
+        src/EOS/EOS_facade.cpp
+        src/EOS/EOS_account.cpp
+    )
+endif()
+
+add_library(
+    multy_core
+    ${MULTY_CORE_SOURCES}
 )
 
 # Run a script that generates version.h in build dir
