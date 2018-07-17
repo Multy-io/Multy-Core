@@ -25,7 +25,7 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-string(REGEX MATCH "^release-([0-9]+)\\.([0-9]+)\\.([0-9]+)-([^-]*)-?([^-]*)$" MULTY_CORE_VERSION_STRING "${GIT_DESCRIPTION}")
+string(REGEX MATCH "^release-([0-9]+)\\.([0-9]+)\\.([0-9]+)-?([^-]*)-?([^-]*)$" MULTY_CORE_VERSION_STRING "${GIT_DESCRIPTION}")
 if (CMAKE_MATCH_COUNT)
     set(MULTY_CORE_VERSION_MAJOR ${CMAKE_MATCH_1})
     set(MULTY_CORE_VERSION_MINOR ${CMAKE_MATCH_2})
@@ -46,7 +46,13 @@ if(MULTY_CORE_VERSION_STATUS)
     string(CONCAT MULTY_CORE_VERSION_COMMIT ${MULTY_CORE_VERSION_COMMIT} "-" ${MULTY_CORE_VERSION_STATUS})
 endif()
 
-configure_file(
-    "${IN_FILE}"
-    "${OUT_FILE}"
+set(MULTY_CORE_VERSION
+    "${MULTY_CORE_VERSION_MAJOR}.${MULTY_CORE_VERSION_MINOR}.${MULTY_CORE_VERSION_BUILD}-${MULTY_CORE_VERSION_NOTE} on ${MULTY_CORE_VERSION_COMMIT}"
 )
+
+if (IN_FILE AND OUT_FILE)
+    configure_file(
+        "${IN_FILE}"
+        "${OUT_FILE}"
+    )
+endif()

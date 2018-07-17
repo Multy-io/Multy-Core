@@ -155,3 +155,7 @@ target_link_libraries(multy_core
 add_dependencies(multy_core multy_core_generate_version)
 
 set_target_properties(multy_core PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
+set(GIT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+include(${CMAKE_CURRENT_SOURCE_DIR}/version_from_git.cmake)
+message("Multy Core version: ${MULTY_CORE_VERSION}")
