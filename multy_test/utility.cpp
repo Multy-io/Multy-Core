@@ -170,8 +170,10 @@ bool blockchain_can_derive_address_from_private_key(Blockchain blockchain)
         case BLOCKCHAIN_BITCOIN:
         case BLOCKCHAIN_ETHEREUM:
             return true;
+#if MULTY_WITH_GOLOS
         case BLOCKCHAIN_GOLOS:
             return false;
+#endif // MULTY_WITH_GOLOS
         default:
             assert(false && "Unsupported blockchain type");
     }
