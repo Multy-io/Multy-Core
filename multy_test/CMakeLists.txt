@@ -89,3 +89,9 @@ if (MULTY_TEST_DISABLE_DEATH_TESTS)
     target_compile_definitions(multy_test PRIVATE MULTY_TEST_DISABLE_DEATH_TESTS)
     message("DEATH tests disabled.")
 endif()
+
+add_custom_command(TARGET multy_test POST_BUILD
+    COMMENT "Size of multy_test:"
+    COMMAND ls -la $<TARGET_FILE:multy_test>
+    VERBATIM
+    USES_TERMINAL)

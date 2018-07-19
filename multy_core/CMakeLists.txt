@@ -162,3 +162,10 @@ set_target_properties(multy_core PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set(GIT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(${CMAKE_CURRENT_SOURCE_DIR}/version_from_git.cmake)
 message("Multy Core version: ${MULTY_CORE_VERSION}")
+
+add_custom_command(TARGET multy_core POST_BUILD
+    COMMENT "Size of multy_core:"
+    COMMAND ls -la $<TARGET_FILE:multy_core>
+    VERBATIM
+    USES_TERMINAL)
+
