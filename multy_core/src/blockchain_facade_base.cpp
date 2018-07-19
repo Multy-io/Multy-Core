@@ -8,8 +8,14 @@
 
 #include "multy_core/src/bitcoin/bitcoin_facade.h"
 #include "multy_core/src/ethereum/ethereum_facade.h"
+
+#if MULTY_WITH_GOLOS
 #include "multy_core/src/golos/golos_facade.h"
+#endif // MULTY_WITH_GOLOS
+
+#if MULTY_WITH_EOS
 #include "multy_core/src/EOS/EOS_facade.h"
+#endif // MULTY_WITH_EOS
 
 namespace
 {
