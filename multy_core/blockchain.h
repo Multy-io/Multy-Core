@@ -24,13 +24,8 @@ enum Blockchain
     BLOCKCHAIN_BITCOIN = 0x00,
     BLOCKCHAIN_ETHEREUM = 0x3c,
 
-#if MULTY_WITH_GOLOS
     BLOCKCHAIN_GOLOS = 0x060105,
-#endif /* MULTY_WITH_GOLOS */
-
-#if MULTY_WITH_EOS
     BLOCKCHAIN_EOS = 0xc2
-#endif /* MULTY_WITH_EOS */
 };
 
 // TODO: rename BlockchainType to BlockchainSpec

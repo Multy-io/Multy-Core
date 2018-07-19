@@ -84,11 +84,9 @@ std::string to_string(const BlockchainType& blockchain_type)
         case BLOCKCHAIN_ETHEREUM:
             net_type = to_string(static_cast<EthereumChainId>(blockchain_type.net_type));
             break;
-#if MULTY_WITH_GOLOS
         case BLOCKCHAIN_GOLOS:
             net_type = to_string(static_cast<GolosNetType>(blockchain_type.net_type));
             break;
-#endif // MULTY_WITH_GOLOS
         default:
             net_type = "UNKNOWN";
     }
@@ -104,9 +102,7 @@ std::string to_string(Blockchain blockchain)
         {
             {BLOCKCHAIN_BITCOIN, "Bitcoin"},
             {BLOCKCHAIN_ETHEREUM, "Ethereum"},
-#if MULTY_WITH_GOLOS
             {BLOCKCHAIN_GOLOS, "Golos"}
-#endif // MULTY_WITH_GOLOS
         }
     };
 
