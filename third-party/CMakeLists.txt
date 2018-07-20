@@ -1,5 +1,9 @@
 add_subdirectory(libwally-core)
 
+set(JSONCPP_WITH_TESTS OFF CACHE INTERNAL "Do not build JsonCpp tests.")
+set(JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE INTERNAL "Do not run JsonCpp tests after build.")
+add_subdirectory(jsoncpp)
+
 add_library(keccak-tiny STATIC
     ../third-party/keccak-tiny/keccak-tiny.c
 )

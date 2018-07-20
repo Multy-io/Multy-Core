@@ -82,6 +82,7 @@ set(MULTY_CORE_SOURCES
     src/transaction_base.cpp
     src/u_ptr.cpp
     src/utility.cpp
+    src/json_helpers.cpp
 
     # Bitcoin
     bitcoin.h
@@ -142,6 +143,7 @@ target_include_directories(multy_core PRIVATE
     ..
     ../third-party/libwally-core/include/
     ../third-party
+    ../third-party/jsoncpp/include/
     ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
@@ -151,6 +153,7 @@ target_link_libraries(multy_core
     keccak-tiny
     mini-gmp
     ccan
+    jsoncpp_lib
 )
 add_dependencies(multy_core multy_core_generate_version)
 
