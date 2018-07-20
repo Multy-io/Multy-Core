@@ -113,5 +113,7 @@ IF(BUILD_STATIC_LIBS)
                                 $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${JSONCPP_INCLUDE_DIR}>
                                 )
     ENDIF()
-
+    if (NOT BUILD_SHARED_LIBS)
+        add_library(jsoncpp_lib ALIAS jsoncpp_lib_static)
+    endif()
 ENDIF()
