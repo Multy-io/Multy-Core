@@ -52,6 +52,7 @@ endif()
 if (MULTY_WITH_EOS)
     list(APPEND MULTY_TEST_SOURCES
         test_eos_account.cpp
+        test_eos_transaction.cpp
     )
 endif()
 

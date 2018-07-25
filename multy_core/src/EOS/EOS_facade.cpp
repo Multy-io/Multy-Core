@@ -11,6 +11,7 @@
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/EOS/EOS_transaction.h"
 
 namespace
 {
@@ -61,15 +62,15 @@ AccountPtr EOSFacade::make_account(
     return make_EOS_account(blockchain_type, serialized_private_key);
 }
 
-TransactionPtr EOSFacade::make_transaction(const Account& /*account*/) const
+TransactionPtr EOSFacade::make_transaction(const Account& account) const
 {
-    THROW_EXCEPTION("Not implimented yet");
+    return TransactionPtr(new EOSTransaction(account));
 }
 
 void EOSFacade::validate_address(
         BlockchainType /*blockchain_type*/, const char* /*address*/) const
 {
-    THROW_EXCEPTION("Not implimented yet");
+    //  TODO: add logic to validate address
 }
 
 std::string EOSFacade::encode_serialized_transaction(

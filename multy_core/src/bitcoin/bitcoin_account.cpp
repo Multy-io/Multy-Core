@@ -50,7 +50,7 @@ uint8_t get_address_prefix(BitcoinNetType net_type, BitcoinAddressType address_t
     return ADDRESS_PREFIXES[net_type][address_type];
 }
 
-std::string to_hex_string(const uint8_t value)
+std::string uint8_to_hex_string(const uint8_t value)
 {
     std::stringstream stream;
     stream << std::hex;
@@ -327,7 +327,7 @@ BinaryDataPtr bitcoin_parse_address(const char* address,
     {
         THROW_EXCEPTION("Unknown address type.")
                 << " Address type prefix: "
-                << to_hex_string(address_version);
+                << uint8_to_hex_string(address_version);
     }
 
     return out_binary_data;

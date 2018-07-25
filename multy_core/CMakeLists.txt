@@ -118,6 +118,7 @@ if (MULTY_WITH_EOS)
         EOS.h
         src/EOS/EOS_facade.cpp
         src/EOS/EOS_account.cpp
+        src/EOS/EOS_transaction.cpp
     )
 endif()
 
