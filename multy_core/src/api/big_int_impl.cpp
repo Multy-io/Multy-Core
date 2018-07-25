@@ -194,13 +194,14 @@ int64_t BigInt::get_value_as_int64() const
 size_t BigInt::get_exported_size_in_bytes() const
 {
     const size_t limbs_count = mpz_size(m_value);
+    if (limbs_count == 0)
+    {
+        return 1;
+    }
     const mp_limb_t* limbs = mpz_limbs_read(m_value);
 
-    size_t result = 0;
-    for (size_t i = 0; i < limbs_count; ++i)
-    {
-        result += get_bytes_len(limbs[i]);
-    }
+    size_t result = sizeof(limbs[0]) * (limbs_count - 1);
+    result += get_bytes_len(limbs[limbs_count -1]);
 
     return result;
 }
