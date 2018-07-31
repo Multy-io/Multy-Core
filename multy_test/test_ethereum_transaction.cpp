@@ -1208,3 +1208,50 @@ static const PayloadTestCase PAYLOAD_CASES[] =
 
 INSTANTIATE_TEST_CASE_P(
         EthereumTransaction, PayloadTestP, ::testing::ValuesIn(PAYLOAD_CASES));
+
+GTEST_TEST(EthereumTransactionTest, transfer_more_than_18ETH)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "942116b87f5846cd23737cc3d668606872a64b9db2e8e55e8c6a2dbdeeb52800",
+            reset_sp(account)));
+    ASSERT_NE(nullptr, account);
+    ASSERT_EQ("0x2f2e3598fb63f9512352d5ddf8b3a82871418628", account->get_address());
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
+
+    const BigInt balance("20000000000000000000");
+    const BigInt value("18450000000000000000");
+    const BigInt gas_limit(21000);
+    const BigInt gas_price(3.0_GWEI);
+
+    {
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt("0"));
+    }
+
+    {
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
+    }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", "0x310e65003c335a1b483eedcf1abb05e542cbb756");
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+    BinaryDataPtr serialied = transaction->serialize();
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f86c8084b2d05e0082520894310e65003c335a1b483eedcf1abb05e542cbb7568901000b913f69f50000802ba07f3674211be3775872ac2aa9c31a0c9f7e0d2ea7e9c018658897b6f09868838aa0180422bc552bd71d8c5eeeb0f9b511a285fb9aa7f469f73e1501548ae453e782")),
+            *serialied);
+}
