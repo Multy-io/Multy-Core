@@ -206,3 +206,57 @@ GTEST_TEST(UtilityTest, minify_json)
     ASSERT_EQ(minify_json(R"( " \" " )"), R"(" \" ")");
     ASSERT_EQ(minify_json(R"( " a \\ a" \\ )"), R"(" a \\ a"\\)");
 }
+
+GTEST_TEST(UtilityTestInvalidArgs, parse_iso8601_string)
+{
+    using namespace multy_core::internal;
+    EXPECT_THROW(parse_iso8601_string("2018-07-99T16:35:37Z"), Exception);
+    EXPECT_THROW(parse_iso8601_string("2018-07-99T16:35:37:99999Z"), Exception);
+    EXPECT_THROW(parse_iso8601_string("9999999999999999999999999Z"), Exception);
+    EXPECT_THROW(parse_iso8601_string("9999999999999999999999999999Z"), Exception);
+    EXPECT_THROW(parse_iso8601_string("--T::Z"), Exception);
+    EXPECT_THROW(parse_iso8601_string(""), Exception);
+
+    EXPECT_THROW(parse_iso8601_string("2018-99-19T16:35:37:99999Z"), Exception);
+    EXPECT_THROW(parse_iso8601_string("0000-07-19T16:35:37:99999Z"), Exception);
+}
+
+struct Iso8601ParseTestCase
+{
+    const char* time_string;
+    std::time_t time_value;
+};
+
+struct Iso8601ParseTestP : public ::testing::TestWithParam<Iso8601ParseTestCase>
+{};
+
+std::ostream& operator<<(std::ostream& ostr, const Iso8601ParseTestCase& test_case)
+{
+    return ostr << "Iso8601ParseTestCase{\n\t"
+                << "\"" << test_case.time_string << "\",\n\t"
+                << test_case.time_value << "\n"
+                << "}";
+}
+
+
+TEST_P(Iso8601ParseTestP, parse_iso8601_string)
+{
+    using namespace multy_core::internal;
+
+    const auto& p = GetParam();
+    EXPECT_EQ(p.time_value, parse_iso8601_string(p.time_string));
+}
+
+INSTANTIATE_TEST_CASE_P(
+        UtilityTest,
+        Iso8601ParseTestP,
+        ::testing::Values(
+                Iso8601ParseTestCase{
+                    "2018-07-19T16:35:37Z",
+                    1532018137
+                },
+                Iso8601ParseTestCase{
+                    "2002-09-14T13:28:20Z",
+                    1032010100
+                }
+        ));

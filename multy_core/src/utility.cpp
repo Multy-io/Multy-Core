@@ -20,8 +20,12 @@
 #include "wally_core.h"
 
 #include <cassert>
+#include <chrono>
+#include <ctime>
 #include <string>
 #include <string.h>
+#include <sstream>
+#include <iomanip>
 
 namespace
 {
@@ -158,6 +162,126 @@ std::string to_string(GolosNetType net_type)
 
     return GOLOS_NET_TYPE_NAMES.get_name_or_dummy(net_type);
 }
+
+namespace
+{
+const char* ISO8601_TIME_FORMAT="%FT%T";
+
+std::time_t get_timezone_offset()
+{
+    // local time
+    static const auto t0 = std::time(nullptr);
+    // global time (UTC)
+    static const auto t1 = std::mktime(std::gmtime(&t0));
+
+    return t0 - t1;
+}
+
+struct ExpectedSymbol
+{
+    const char symbol;
+};
+
+std::istream& operator>>(std::istream& istr, const ExpectedSymbol& expected)
+{
+    char c = '\0';
+    istr >> c;
+    if (c != expected.symbol)
+    {
+        THROW_EXCEPTION("Unexpected symbol.")
+                << " At position: " << istr.tellg()
+                << " expected: '" << expected.symbol
+                << "' got: '" << c << "'";
+    }
+
+    return istr;
+}
+} // namespace
+
+std::string format_iso8601_string(const std::time_t& time)
+{
+    std::ostringstream ss;
+    ss << std::put_time(std::gmtime(&time), ISO8601_TIME_FORMAT);
+
+    return ss.str();
+}
+
+std::time_t parse_iso8601_string(const std::string& str)
+{
+    std::string time_string = str;
+
+    bool global_time = false;
+    // UTC (Zulu-time)
+    if (time_string.length() > 0 && time_string.back() == 'Z')
+    {
+        global_time = true;
+        time_string.pop_back();
+    }
+
+    std::tm tm;
+    memset(&tm, 0, sizeof(tm));
+
+    std::istringstream ss(time_string);
+    try
+    {
+        ss.exceptions(std::ios::failbit | std::ios::badbit);
+
+        ss >> tm.tm_year >> ExpectedSymbol{'-'}
+            >> tm.tm_mon >> ExpectedSymbol{'-'}
+            >> tm.tm_mday >> ExpectedSymbol{'T'}
+            >> tm.tm_hour >> ExpectedSymbol{':'}
+            >> tm.tm_min >> ExpectedSymbol{':'}
+            >> tm.tm_sec;
+        if (!ss.eof())
+        {
+            THROW_EXCEPTION2(ERROR_INVALID_TIME_STRING,
+                    "Failed to parse ISO8601 time.")
+                    << " Leftovers after parsing: \"" << ss.str() << "\".";
+        }
+
+        tm.tm_year -= 1900;
+        tm.tm_mon -= 1;
+    } catch (const std::exception& e) {
+        THROW_EXCEPTION2(ERROR_INVALID_TIME_STRING,
+                "Failed to parse ISO8601-time.")
+                << " " << e.what();
+    }
+    if (tm.tm_year < 0
+        || tm.tm_mon < 0 || tm.tm_mon > 11
+        || tm.tm_mday < 1 || tm.tm_mday > 31
+        || tm.tm_hour < 0 || tm.tm_hour > 23
+        || tm.tm_min < 0 || tm.tm_min > 59
+        || tm.tm_sec < 0 || tm.tm_sec > 60)
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_TIME_STRING,
+                "Failed to parse ISO8601-time.")
+                << " Value is out of range: " << str;
+    }
+
+    const auto result = std::mktime(&tm);
+    if (result < 0)
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_TIME_STRING,
+                "Invalid ISO8601 date/time value.");
+    }
+
+    // mktime() converts to localtime, adding timezone offset to make global time.
+    return result + (global_time ? get_timezone_offset() : 0);
+}
+
+std::time_t to_system_seconds(size_t seconds)
+{
+    return std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::from_time_t(0)
+            + std::chrono::seconds(seconds));
+}
+
+std::time_t get_system_time_now()
+{
+    return std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now());
+}
+
 
 void trim_excess_trailing_null(std::string* str)
 {

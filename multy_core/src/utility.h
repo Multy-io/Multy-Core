@@ -31,6 +31,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <ctime>
 
 extern "C" struct BlockchainType;
 
@@ -209,6 +210,12 @@ MULTY_CORE_API std::string to_string(Blockchain blockchain);
 MULTY_CORE_API std::string to_string(BitcoinNetType net_type);
 MULTY_CORE_API std::string to_string(EthereumChainId net_type);
 MULTY_CORE_API std::string to_string(GolosNetType net_type);
+
+MULTY_CORE_API std::string format_iso8601_string(const std::time_t& time);
+MULTY_CORE_API std::time_t parse_iso8601_string(const std::string& str);
+
+std::time_t to_system_seconds(size_t seconds);
+std::time_t get_system_time_now();
 
 // remove excess '\0' chars at end of string.
 void trim_excess_trailing_null(std::string* str);
