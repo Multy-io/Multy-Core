@@ -19,6 +19,8 @@ enum EOSNetType
     EOS_NET_TYPE_TESTNET = 1,
 };
 
+const size_t EOS_ADDRESS_MAX_SIZE = 12;
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

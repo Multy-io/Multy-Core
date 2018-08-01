@@ -205,6 +205,7 @@ inline bool operator!=(const BlockchainType& left, const BlockchainType& right)
     return !(left == right);
 }
 
+MULTY_CORE_API std::string to_hex_string(const BinaryData& data);
 MULTY_CORE_API std::string to_string(const BlockchainType& blockchain_type);
 MULTY_CORE_API std::string to_string(Blockchain blockchain);
 MULTY_CORE_API std::string to_string(BitcoinNetType net_type);

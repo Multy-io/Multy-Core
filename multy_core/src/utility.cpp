@@ -16,6 +16,7 @@
 #include "multy_core/src/enum_name_map.h"
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
+#include "multy_core/src/u_ptr.h"
 
 #include "wally_core.h"
 
@@ -125,6 +126,13 @@ std::string to_string(BitcoinNetType net_type)
     };
 
     return BITCOIN_NET_TYPE_NAMES.get_name_or_dummy(net_type);
+}
+
+std::string to_hex_string(const BinaryData& data)
+{
+    multy_core::internal::CharPtr hex_str;
+    wally_hex_from_bytes(data.data, data.len, reset_sp(hex_str));
+    return  std::string(hex_str.get());
 }
 
 std::string to_string(EthereumChainId net_type)
