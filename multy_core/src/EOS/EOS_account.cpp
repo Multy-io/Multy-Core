@@ -78,15 +78,15 @@ namespace multy_core
 namespace internal
 {
 
-class EOSPublicKey : public PublicKey
+class EosPublicKey : public PublicKey
 {
 public:
     typedef std::vector<uint8_t> KeyData;
-    explicit EOSPublicKey(KeyData data)
+    explicit EosPublicKey(KeyData data)
         : m_data(std::move(data))
     {}
 
-    ~EOSPublicKey()
+    ~EosPublicKey()
     {
     }
 
@@ -121,28 +121,28 @@ private:
     KeyData m_data;
 };
 
-class EOSPrivateKey : public PrivateKey
+class EosPrivateKey : public PrivateKey
 {
 public:
     typedef std::vector<uint8_t> KeyData;
-    explicit EOSPrivateKey(const KeyData& data)
+    explicit EosPrivateKey(const KeyData& data)
         : m_data(data)
     {}
 
-    explicit EOSPrivateKey(const BinaryData& data)
+    explicit EosPrivateKey(const BinaryData& data)
         : m_data(data.data, data.data + data.len)
     {}
 
     PublicKeyPtr make_public_key() const override
     {
-        EOSPublicKey::KeyData key_data(EC_PUBLIC_KEY_LEN, 0);
+        EosPublicKey::KeyData key_data(EC_PUBLIC_KEY_LEN, 0);
         BinaryData public_key_data = as_binary_data(key_data);
 
         ec_private_to_public_key(as_binary_data(m_data),
                 EC_PUBLIC_KEY_COMPRESSED,
                 &public_key_data);
 
-        return PublicKeyPtr(new EOSPublicKey(std::move(key_data)));
+        return PublicKeyPtr(new EosPublicKey(std::move(key_data)));
     }
 
     PrivateKeyPtr clone() const override
@@ -211,17 +211,17 @@ private:
     KeyData m_data;
 };
 
-EOSHDAccount::EOSHDAccount(
+EosHDAccount::EosHDAccount(
         BlockchainType blockchain_type,
         const ExtendedKey& bip44_master_key,
         uint32_t index)
     : HDAccountBase(blockchain_type, get_chain_index(blockchain_type), bip44_master_key, index)
 {}
 
-EOSHDAccount::~EOSHDAccount()
+EosHDAccount::~EosHDAccount()
 {}
 
-AccountPtr EOSHDAccount::make_account(
+AccountPtr EosHDAccount::make_account(
         const ExtendedKey& parent_key,
         AddressType type,
         uint32_t index) const
@@ -230,12 +230,12 @@ AccountPtr EOSHDAccount::make_account(
     throw_if_error(make_child_key(&parent_key, index, reset_sp(address_key)));
 
     const BinaryData priv_key_data = as_binary_data(address_key->key.priv_key);
-    EOSPrivateKeyPtr private_key(
-            new EOSPrivateKey(
+    EosPrivateKeyPtr private_key(
+            new EosPrivateKey(
                     slice(priv_key_data, 1, priv_key_data.len - 1)));
 
     return AccountPtr(
-            new EOSAccount(
+            new EosAccount(
                     get_blockchain_type(),
                     std::move(private_key),
                     make_child_path(get_path(),{type, index})));
@@ -247,7 +247,7 @@ AccountPtr make_EOS_account(BlockchainType blockchain_type,
     // serialized key structure like: BASE58("EOS" + DATA + HASH(DATA))
     INVARIANT(serialized_private_key);
 
-    EOSPrivateKey::KeyData private_key_bytes(strlen(serialized_private_key), 0);
+    EosPrivateKey::KeyData private_key_bytes(strlen(serialized_private_key), 0);
     BinaryData private_key_bytes_data = as_binary_data(private_key_bytes);
     size_t private_key_size = 0;
     THROW_IF_WALLY_ERROR(
@@ -291,20 +291,20 @@ AccountPtr make_EOS_account(BlockchainType blockchain_type,
     // skipping prefix
     key_data = slice(key_data, sizeof(EOS_KEY_PREFIX), key_data.len - sizeof(EOS_KEY_PREFIX));
 
-    EOSPrivateKeyPtr private_key(new EOSPrivateKey(key_data));
+    EosPrivateKeyPtr private_key(new EosPrivateKey(key_data));
 
-    return AccountPtr(new EOSAccount(
+    return AccountPtr(new EosAccount(
             blockchain_type,
             std::move(private_key),
             HDPath{}));
 }
 
-EOSAccount::EOSAccount(BlockchainType blockchain_type, EOSPrivateKeyPtr key, HDPath path)
+EosAccount::EosAccount(BlockchainType blockchain_type, EosPrivateKeyPtr key, HDPath path)
     : AccountBase(blockchain_type, *key, std::move(path)),
       m_private_key(std::move(key))
 {}
 
-std::string EOSAccount::get_address() const
+std::string EosAccount::get_address() const
 {
     THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
             "Not supported: can't derive address from private key "

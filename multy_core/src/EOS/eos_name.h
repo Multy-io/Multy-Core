@@ -19,7 +19,8 @@ namespace internal
 class EosName
 {
 public:
-    EosName(const std::string& name);
+    EosName();
+    explicit EosName(const std::string& name);
     ~EosName();
 
     uint64_t get_data() const;
@@ -29,7 +30,8 @@ public:
     static std::string to_string(const EosName& name);
 
 private:
-    const uint64_t m_data;
+    // Non-const to make it copyable.
+    uint64_t m_data;
 };
 
 typedef EosName EosAddress;

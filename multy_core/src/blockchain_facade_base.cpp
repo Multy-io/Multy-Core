@@ -72,7 +72,7 @@ BlockchainFacadeRegistry::BlockchainFacadeRegistry()
 #endif
 
 #if MULTY_WITH_EOS
-    register_blockchain<EOSFacade>(BLOCKCHAIN_EOS);
+    register_blockchain<EosFacade>(BLOCKCHAIN_EOS);
 #endif
 }
 

@@ -76,7 +76,10 @@ namespace multy_core
 namespace internal
 {
 
-// String name in EOS, packed 5-bytes per character into uint64_t, max 12 chars long.
+EosName::EosName()
+    : m_data(0)
+{
+}
 
 EosName::EosName(const std::string& name)
     : m_data(name_string_to_uint64(name))

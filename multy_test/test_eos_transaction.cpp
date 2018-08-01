@@ -23,7 +23,7 @@ using namespace test_utility;
 } // namespace
 
 
-GTEST_TEST(EOSTransactionTest, SmokeTest_testnet_1)
+GTEST_TEST(EosTransactionTest, SmokeTest_testnet_1)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
@@ -80,7 +80,7 @@ GTEST_TEST(EOSTransactionTest, SmokeTest_testnet_1)
                           "9d85490b1ca0a0000000000000004454f53000000000000\",\"compression\":\"none\",\"packed_context_free_data\":\"\"}"), std::string(signatures.get()));
 }
 
-GTEST_TEST(EOSTransactionTest, SmokeTest_testnet_2)
+GTEST_TEST(EosTransactionTest, SmokeTest_testnet_2)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(

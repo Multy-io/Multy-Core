@@ -23,7 +23,6 @@
 struct BigInt;
 struct BinaryData;
 struct PrivateKey;
-struct PrivateKey;
 struct CodeLocation;
 
 struct Properties;
