@@ -50,8 +50,7 @@ public:
 
     virtual void validate_address(BlockchainType, const char*) const = 0;
 
-    virtual std::string encode_serialized_transaction(
-            const BinaryData& serialized_transaction) const = 0;
+    virtual std::string encode_serialized_transaction(Transaction* transaction) const = 0;
 };
 
 BlockchainFacadeBase& get_blockchain(BlockchainType blockchain_type);

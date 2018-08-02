@@ -231,12 +231,11 @@ Error* transaction_serialize_encoded(
 
     try
     {
-        const auto serialized_transaction = transaction->serialize();
         const auto& blockchain_facade = get_blockchain(*transaction);
 
         *out_serialized_transaction = copy_string(
                 blockchain_facade.encode_serialized_transaction(
-                        *serialized_transaction));
+                        transaction));
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_TRANSACTION);
 

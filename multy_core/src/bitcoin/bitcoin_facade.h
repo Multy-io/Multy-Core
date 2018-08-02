@@ -44,7 +44,7 @@ public:
     void validate_address(BlockchainType blockchain_type, const char*) const override;
 
     std::string encode_serialized_transaction(
-            const BinaryData& serialized_transaction) const override;
+            Transaction* transaction) const override;
 };
 
 } // internal

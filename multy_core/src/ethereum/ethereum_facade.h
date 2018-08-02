@@ -51,7 +51,7 @@ public:
             const char* address) const override;
 
     std::string encode_serialized_transaction(
-                const BinaryData& serialized_transaction) const override;
+                Transaction* transaction) const override;
 };
 
 } // internal

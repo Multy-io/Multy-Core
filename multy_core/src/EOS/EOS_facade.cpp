@@ -94,9 +94,10 @@ void EOSFacade::validate_address(
 }
 
 std::string EOSFacade::encode_serialized_transaction(
-        const BinaryData& /*serialized_transaction*/) const
+        Transaction* transaction) const
 {
-    THROW_EXCEPTION("Not implimented yet");
+    INVARIANT(transaction != nullptr);
+    return transaction->encode_serialized();
 }
 
 } // namespace internal

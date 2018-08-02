@@ -96,12 +96,15 @@ void GolosFacade::validate_address(
 }
 
 std::string GolosFacade::encode_serialized_transaction(
-        const BinaryData& serialized_transaction) const
+        Transaction* transaction) const
 {
-    INVARIANT(serialized_transaction.data != nullptr);
-    INVARIANT(serialized_transaction.len != 0);
+    INVARIANT(transaction != nullptr);
 
-    return std::string(reinterpret_cast<const char*>(serialized_transaction.data), serialized_transaction.len);
+    const BinaryDataPtr serialized_transaction = transaction->serialize();
+    INVARIANT(serialized_transaction->data != nullptr);
+    INVARIANT(serialized_transaction->len != 0);
+
+    return std::string(reinterpret_cast<const char*>(serialized_transaction->data), serialized_transaction->len);
 }
 
 } // namespace internal

@@ -104,9 +104,11 @@ void EthereumFacade::validate_address(
 }
 
 std::string EthereumFacade::encode_serialized_transaction(
-        const BinaryData& serialized_transaction) const
+        Transaction* transaction) const
 {
-    return "0x" + encode(serialized_transaction, CODEC_HEX);
+    INVARIANT(transaction != nullptr);
+    const BinaryDataPtr serialized_transaction = transaction->serialize();
+    return "0x" + encode(*serialized_transaction, CODEC_HEX);
 }
 
 } // namespace internal

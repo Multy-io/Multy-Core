@@ -37,6 +37,8 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
      */
     virtual BinaryDataPtr serialize() = 0;
 
+    virtual std::string encode_serialized();
+
     virtual BigInt get_total_fee() const = 0;
 
     virtual BigInt get_total_spent() const = 0;
