@@ -380,6 +380,14 @@ BinaryDataPtr EOSTransaction::serialize()
     EOSBinaryStream data_stream;
     serialize_to_stream(data_stream, SERIALIZE);
 
+
+    return make_clone(data_stream.get_content());
+}
+
+std::string EOSTransaction::encode_serialized()
+{
+    update();
+
     CharPtr out_str;
     THROW_IF_WALLY_ERROR(
             wally_base58_from_bytes(
@@ -389,11 +397,16 @@ BinaryDataPtr EOSTransaction::serialize()
     std::string sig_base58 = "SIG_K1_";
     sig_base58 += out_str.get();
 
-    std::string result = to_hex_string(data_stream.get_content());
-    result += ", ";
-    result += sig_base58;
+    EOSBinaryStream data_stream;
+    serialize_to_stream(data_stream, SERIALIZE);
 
-    return make_clone(as_binary_data(result));
+    std::string result = "{\"signatures\":[\"";
+    result += sig_base58;
+    result += "\"],\"packed_trx\":\"";
+    result += to_hex_string(data_stream.get_content());
+    result += "\",\"compression\":\"none\",\"packed_context_free_data\":\"\"}";
+
+    return result;
 }
 
 

@@ -110,9 +110,11 @@ void BitcoinFacade::validate_address(BlockchainType blockchain_type, const char*
 }
 
 std::string BitcoinFacade::encode_serialized_transaction(
-        const BinaryData& serialized_transaction) const
+        Transaction* transaction) const
 {
-    return encode(serialized_transaction, CODEC_HEX);
+    INVARIANT(transaction != nullptr);
+    const BinaryDataPtr serialized_transaction = transaction->serialize();
+    return encode(*serialized_transaction, CODEC_HEX);
 }
 
 } // internal

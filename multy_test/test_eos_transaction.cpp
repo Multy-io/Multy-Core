@@ -73,10 +73,11 @@ GTEST_TEST(EOSTransactionTest, SmokeTest_testnet_1)
     }
 
     // transaction_id = "6b24ce668ff02ecdd438f799012b83b0e8d1904bfb0cbadfce02fda3e78124ec"
-    BinaryDataPtr signatures;
-    HANDLE_ERROR(transaction_serialize(transaction.get(), reset_sp(signatures)));
-    ASSERT_EQ(as_binary_data("d9bd505b2f25d1faa50f000000000100a6823403ea3055000000572d3ccdcd010000000000d3b0a900000000a8ed3232210000000000d3b0a9008069d85490b1ca0a0000000000000004454f53000000000000, SIG_K1_K48VoX8vnNYyx7fkmb5LivJn9XizfUCVdiF5HpDNYqgrYJp4khEHp8jvxEJtgAYFfw3ifpC9kZxeJpV1vhpndqfwuNjN8G"),
-            *signatures);
+    ConstCharPtr signatures;
+    HANDLE_ERROR(transaction_serialize_encoded(transaction.get(), reset_sp(signatures)));
+    ASSERT_EQ(std::string("{\"signatures\":[\"SIG_K1_K48VoX8vnNYyx7fkmb5LivJn9XizfUCVdiF5HpDNYqgrYJp4khEHp8jvxEJtgAYFfw3ifpC9kZxeJpV1vhpndqfwuNjN8G\"]"
+            ",\"packed_trx\":\"d9bd505b2f25d1faa50f000000000100a6823403ea3055000000572d3ccdcd010000000000d3b0a900000000a8ed3232210000000000d3b0a900806"
+                          "9d85490b1ca0a0000000000000004454f53000000000000\",\"compression\":\"none\",\"packed_context_free_data\":\"\"}"), std::string(signatures.get()));
 }
 
 GTEST_TEST(EOSTransactionTest, SmokeTest_testnet_2)
@@ -135,8 +136,9 @@ GTEST_TEST(EOSTransactionTest, SmokeTest_testnet_2)
     }
 
     // transaction_id = "6981ea5ac7da255c24b939216ca13d9348c483334700fdeba6e1539b7827ec39"
-    BinaryDataPtr signatures;
-    HANDLE_ERROR(transaction_serialize(transaction.get(), reset_sp(signatures)));
-    ASSERT_EQ(as_binary_data("8690555b6535ffd893a9000000000100a6823403ea3055000000572d3ccdcd010000000000d3b0a900000000a8ed3232260000000000d3b0a9008069d85490b1ca102700000000000004454f5300000000056d756c747900, SIG_K1_KBB8vFNJJyHcwMiVCvsYsUJ94FfbLQp9RnfUhU2E4vZLYYB2Rpzb7skzWM16ScNFTkiztcKZKM9A7XfmvnQAEyYFv7Tbp3"),
-            *signatures);
+    ConstCharPtr signatures;
+    HANDLE_ERROR(transaction_serialize_encoded(transaction.get(), reset_sp(signatures)));
+    ASSERT_EQ(std::string("{\"signatures\":[\"SIG_K1_KBB8vFNJJyHcwMiVCvsYsUJ94FfbLQp9RnfUhU2E4vZLYYB2Rpzb7skzWM16ScNFTkiztcKZKM9A7XfmvnQAEyYFv7Tbp3\"]"
+            ",\"packed_trx\":\"8690555b6535ffd893a9000000000100a6823403ea3055000000572d3ccdcd010000000000d3b0a900000000a8ed3232260000000000d3b0a900806"
+            "9d85490b1ca102700000000000004454f5300000000056d756c747900\",\"compression\":\"none\",\"packed_context_free_data\":\"\"}"), std::string(signatures.get()));
 }
