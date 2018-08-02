@@ -8,6 +8,7 @@
 
 #include "multy_core/EOS.h"
 #include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/EOS/eos_name.h"
 
 #include "multy_core/binary_data.h"
 #include "multy_core/blockchain.h"
@@ -54,78 +55,6 @@ namespace multy_core
 namespace internal
 {
 
-// String name in EOS, packed 5-bytes per character into uint64_t, max 12 chars long.
-class EOSTypeName
-{
-public:
-    EOSTypeName(const std::string& name)
-        : m_data(name_string_to_uint64(name))
-    {
-    }
-
-    uint64_t get_data() const
-    {
-        return m_data;
-    }
-
-private:
-
-    static uint64_t name_string_to_uint64(const std::string& name)
-    {
-        if (name.empty())
-        {
-            return 0L;
-        }
-
-        const size_t size = name.size();
-        uint64_t result = 0;
-
-        if (size > EOS_ADDRESS_MAX_SIZE)
-        {
-            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Name is too big.")
-                    << " Max length: " << EOS_ADDRESS_MAX_SIZE << ", "
-                    << " got length: " << size << ".";
-        }
-
-        for (size_t i = 0; i < size; i++)
-        {
-            uint64_t c = 0;
-            c = encode_symbol(static_cast<unsigned char>(name[i]));
-
-            // Look this if https://github.com/OracleChain/chainkit/blob/master/chain/typename.cpp#L56
-            c &= 0x1f;
-            c <<= 64 - 5 * (i + 1);
-
-            result |= c;
-        }
-
-        return result;
-    }
-
-    static uint8_t encode_symbol(const unsigned char value)
-    {
-        if (value == '.')
-        {
-            return 0;
-        }
-
-        if (value >= 'a' && value <= 'z')
-        {
-            return ((value - 'a') + 6);
-        }
-
-        if (value >= '1' && value <= '5')
-        {
-            return ((value - '1') + 1);
-        }
-        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unsupported symbol in name.")
-                << " Symbol: '" << static_cast<char>(value) << "'.";
-    }
-
-private:
-    const uint64_t m_data;
-};
-
 class EOSAuthorization
 {
 public:
@@ -134,21 +63,20 @@ public:
     {
     }
 
-    EOSTypeName get_actor() const
+    EosName get_actor() const
     {
         return m_actor;
     }
 
-    EOSTypeName get_permission() const
+    EosName get_permission() const
     {
         return m_permission;
     }
 
 private:
-    const EOSTypeName m_actor;
-    const EOSTypeName m_permission;
+    const EosName m_actor;
+    const EosName m_permission;
 };
-
 
 class EOSBinaryStream
 {
@@ -248,7 +176,7 @@ EOSBinaryStream& operator<<(EOSBinaryStream& stream, const uint64_t& value)
     return write_as_data(htole64(value), stream);
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EOSTypeName& value)
+EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EosName& value)
 {
     stream << value.get_data();
 
@@ -294,8 +222,8 @@ public:
 
     void write_to_stream(EOSBinaryStream* stream) const override
     {
-        *stream << EOSTypeName("eosio.token");
-        *stream << EOSTypeName("transfer");
+        *stream << EosName("eosio.token");
+        *stream << EosName("transfer");
         *stream << static_cast<uint8_t>(m_authorizations.size());
         for (const auto& authorization: m_authorizations)
         {
@@ -326,8 +254,8 @@ public:
 
 
 public:
-    EOSTypeName m_from;
-    EOSTypeName m_to;
+    EosName m_from;
+    EosName m_to;
     BigInt m_amount;
     BinaryDataPtr m_memo;
     std::vector<EOSAuthorization> m_authorizations;

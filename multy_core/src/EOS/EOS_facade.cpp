@@ -7,11 +7,14 @@
 #include "multy_core/src/EOS/EOS_facade.h"
 
 #include "multy_core/EOS.h"
+#include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/EOS/eos_name.h"
+#include "multy_core/src/EOS/EOS_transaction.h"
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
-#include "multy_core/src/EOS/EOS_account.h"
-#include "multy_core/src/EOS/EOS_transaction.h"
+
+#include <cstring>
 
 namespace
 {
@@ -68,9 +71,26 @@ TransactionPtr EOSFacade::make_transaction(const Account& account) const
 }
 
 void EOSFacade::validate_address(
-        BlockchainType /*blockchain_type*/, const char* /*address*/) const
+        BlockchainType blockchain_type, const char* address) const
 {
-    //  TODO: add logic to validate address
+    INVARIANT(address != nullptr);
+    INVARIANT(blockchain_type.blockchain == BLOCKCHAIN_EOS);
+
+    if (strlen(address) == 0)
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "EOS Address is to short.")
+                << " Address expected to be at least 1 character long, got 0.";
+    }
+
+    try
+    {
+        EosName::from_string(address);
+    }
+    catch (const std::exception& e)
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Invalid EOS address.")
+                << " " << e.what() << ".";
+    }
 }
 
 std::string EOSFacade::encode_serialized_transaction(
