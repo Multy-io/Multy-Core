@@ -90,6 +90,7 @@ enum ErrorCode
 
     ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
     ERROR_INVALID_TIME_STRING,
+
     // NOTE: ^^^ Add new generic error codes above this line. ^^^
 
     // Scope-specific error codes

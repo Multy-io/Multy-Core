@@ -137,7 +137,14 @@ struct TransactionBuilderSmokeTestCase
     const char* action;
 };
 
-const TransactionBuilderSmokeTestCase SUPPORTED_TX_BUILDERS[] =
+std::ostream& operator<<(std::ostream& ostr, const TransactionBuilderSmokeTestCase& test_case)
+{
+    return ostr << "TransactionBuilderSmokeTestCase{ "
+            << test_case.transaction_builder_type << ", \""
+            << test_case.action << "\" }";
+}
+
+const TransactionBuilderSmokeTestCase ETHEREUM_SUPPORTED_TX_BUILDERS[] =
 {
     {
         ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
@@ -153,15 +160,32 @@ const TransactionBuilderSmokeTestCase SUPPORTED_TX_BUILDERS[] =
     },
 };
 
+const TransactionBuilderSmokeTestCase EOS_SUPPORTED_TX_BUILDERS[] =
+{
+    {
+        EOS_TRANSACTION_BUILDER_UPDATEAUTH,
+        ""
+    }
+};
+
 class TransactionBuilderSmokeTestP : public ::testing::TestWithParam<std::tuple<BlockchainType, TransactionBuilderSmokeTestCase>>
 {};
 
 INSTANTIATE_TEST_CASE_P(
-        Smoke,
+        EthereumTxBuilderSmokeTest,
         TransactionBuilderSmokeTestP,
         ::testing::Combine(
             ::testing::Values(ETHEREUM_MAIN_NET, ETHEREUM_TEST_NET),
-            ::testing::ValuesIn(SUPPORTED_TX_BUILDERS)
+            ::testing::ValuesIn(ETHEREUM_SUPPORTED_TX_BUILDERS)
+       )
+);
+
+INSTANTIATE_TEST_CASE_P(
+        EosTxBuilderSmokeTest,
+        TransactionBuilderSmokeTestP,
+        ::testing::Combine(
+            ::testing::Values(EOS_MAIN_NET, EOS_TEST_NET),
+            ::testing::ValuesIn(EOS_SUPPORTED_TX_BUILDERS)
        )
 );
 

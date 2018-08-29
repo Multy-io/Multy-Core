@@ -109,7 +109,7 @@ matrix:
         - mkdir ${BUILD_DIR} && pushd ${BUILD_DIR}
 
         # Prepare && build
-        - cmake ..  -G'Unix Makefiles' -DCCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=9.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DMULTY_WITH_TESTS=1
+        - cmake ..  -G'Unix Makefiles' -DCCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../tools/ios-cmake/ios.toolchain.cmake -DIOS_PLATFORM=OS -DIOS_DEPLOYMENT_TARGET=9.0 -DCMAKE_OSX_ARCHITECTURES=arm64 -DMULTY_WITH_TESTS=1 -DMULTY_WITH_ALL_BLOCKCHAINS=ON
         - cmake --build .
 
         # Copy build artifacts to the sample app

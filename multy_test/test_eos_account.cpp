@@ -62,7 +62,7 @@ INSTANTIATE_TEST_CASE_P(
                 ::testing::Values(ACCOUNT_TYPE_DEFAULT),
                 ::testing::ValuesIn(EOS_KEYS)));
 
-GTEST_TEST(EOSAccountTest, TestPrivateKey)
+GTEST_TEST(EosAccountTest, TestPrivateKey)
 {
     AccountPtr account;
     EXPECT_ERROR(

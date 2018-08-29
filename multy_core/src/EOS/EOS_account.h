@@ -17,16 +17,16 @@ namespace multy_core
 namespace internal
 {
 
-class EOSPublicKey;
-class EOSPrivateKey;
-typedef UPtr<EOSPrivateKey> EOSPrivateKeyPtr;
-typedef UPtr<EOSPublicKey> EOSPublicKeyPtr;
+class EosPublicKey;
+class EosPrivateKey;
+typedef UPtr<EosPrivateKey> EosPrivateKeyPtr;
+typedef UPtr<EosPublicKey> EosPublicKeyPtr;
 
-class MULTY_CORE_API EOSHDAccount : public HDAccountBase
+class MULTY_CORE_API EosHDAccount : public HDAccountBase
 {
 public:
-    EOSHDAccount(BlockchainType blockchain_type, const ExtendedKey& bip44_master_key, uint32_t index);
-    ~EOSHDAccount();
+    EosHDAccount(BlockchainType blockchain_type, const ExtendedKey& bip44_master_key, uint32_t index);
+    ~EosHDAccount();
 
     AccountPtr make_account(
             const ExtendedKey& parent_key,
@@ -37,15 +37,15 @@ public:
 AccountPtr make_EOS_account(BlockchainType blockchain_type,
         const char* serialized_private_key);
 
-class MULTY_CORE_API EOSAccount : public AccountBase
+class MULTY_CORE_API EosAccount : public AccountBase
 {
 public:
-    EOSAccount(BlockchainType blockchain_type, EOSPrivateKeyPtr key, HDPath path);
+    EosAccount(BlockchainType blockchain_type, EosPrivateKeyPtr key, HDPath path);
     std::string get_address() const override;
     bool is_testnet() const;
 
 private:
-    const EOSPrivateKeyPtr m_private_key;
+    const EosPrivateKeyPtr m_private_key;
 };
 
 } // namespace wallet_core

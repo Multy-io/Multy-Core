@@ -9,6 +9,8 @@
 #include "multy_core/EOS.h"
 #include "multy_core/src/EOS/EOS_account.h"
 #include "multy_core/src/EOS/eos_name.h"
+#include "multy_core/src/EOS/eos_binary_stream.h"
+#include "multy_core/src/EOS/eos_transaction_action.h"
 
 #include "multy_core/binary_data.h"
 #include "multy_core/blockchain.h"
@@ -35,14 +37,14 @@
 namespace {
 using namespace multy_core::internal;
 
-typedef std::array<uint8_t, 32> EOSChainId;
+typedef std::array<uint8_t, 32> EosChainId;
 
 const uint8_t EOS_PRECISION = 4;
 const std::array<uint8_t, 7> EOS_TOKEN_NAME = {0x45, 0x4f, 0x53, 0x00, 0x00, 0x00, 0x00};
 const uint32_t EOS_TIME_CONFIRM_TRANSACTION = 30; // seconds
-const EOSChainId EOS_TESTNET_CHAIN_ID = {0x03, 0x8f, 0x4b, 0x0f, 0xc8, 0xff, 0x18, 0xa4, 0xf0, 0x84, 0x2a, 0x8f, 0x05, 0x64, 0x61, 0x1f,
+const EosChainId EOS_TESTNET_CHAIN_ID = {0x03, 0x8f, 0x4b, 0x0f, 0xc8, 0xff, 0x18, 0xa4, 0xf0, 0x84, 0x2a, 0x8f, 0x05, 0x64, 0x61, 0x1f,
                                                       0x6e, 0x96, 0xe8, 0x53, 0x59, 0x01, 0xdd, 0x45, 0xe4, 0x3a, 0xc8, 0x69, 0x1a, 0x1c, 0x4d, 0xca};
-const EOSChainId EOS_MAINNET_CHAIN_ID = {0xac, 0xa3, 0x76, 0xf2, 0x06, 0xb8, 0xfc, 0x25, 0xa6, 0xed, 0x44, 0xdb, 0xdc, 0x66, 0x54, 0x7c,
+const EosChainId EOS_MAINNET_CHAIN_ID = {0xac, 0xa3, 0x76, 0xf2, 0x06, 0xb8, 0xfc, 0x25, 0xa6, 0xed, 0x44, 0xdb, 0xdc, 0x66, 0x54, 0x7c,
                                                       0x36, 0xc6, 0xc3, 0x3e, 0x3a, 0x11, 0x9f, 0xfb, 0xea, 0xef, 0x94, 0x36, 0x42, 0xf0, 0xe9, 0x06};
 const std::array<uint8_t, 32> EOS_ZERO_SHA256 = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -55,10 +57,10 @@ namespace multy_core
 namespace internal
 {
 
-class EOSAuthorization
+class EosAuthorization
 {
 public:
-    EOSAuthorization(const std::string& actor, const std::string& permission)
+    EosAuthorization(const std::string& actor, const std::string& permission)
         : m_actor(actor), m_permission(permission)
     {
     }
@@ -78,74 +80,22 @@ private:
     const EosName m_permission;
 };
 
-class EOSBinaryStream
-{
-public:
-    EOSBinaryStream()
-        : m_data()
-    {}
-
-    void write_data(const uint8_t* data, const size_t len)
-    {
-        INVARIANT(data != nullptr);
-
-        m_data.insert(m_data.end(), data, data + len);
-    }
-
-    BinaryData get_content() const
-    {
-        return as_binary_data(m_data);
-    }
-
-private:
-    std::vector<unsigned char> m_data;
-};
-
-class EOSTransactionAction
-{
-public:
-    virtual ~EOSTransactionAction() = default;
-
-    enum ActionType
-    {
-        TRANSFER
-    };
-
-    virtual ActionType get_type() const = 0;
-    virtual void write_to_stream(EOSBinaryStream* /*stream*/) const = 0;
-    virtual BinaryDataPtr make_data() const = 0;
-
-    std::string get_type_name() const
-    {
-        static const std::unordered_map<size_t, std::string> NAMES =
-        {
-            {TRANSFER, "transfer"},
-        };
-
-        const ActionType type = get_type();
-        auto p = NAMES.find(type);
-        INVARIANT(p != NAMES.end());
-
-        return p->second;
-    }
-};
-
 template <typename T>
-EOSBinaryStream& write_as_data(const T& data, EOSBinaryStream& stream)
+EosBinaryStream& write_as_data(const T& data, EosBinaryStream& stream)
 {
     stream.write_data(
                 reinterpret_cast<const uint8_t*>(&data), sizeof(data));
     return stream;
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EOSTransactionAction& op)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const EosTransactionAction& op)
 {
     op.write_to_stream(&stream);
 
     return stream;
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const BinaryData& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const BinaryData& value)
 {
     INVARIANT(value.data !=  nullptr);
     stream.write_data(value.data, value.len);
@@ -153,37 +103,37 @@ EOSBinaryStream& operator<<(EOSBinaryStream& stream, const BinaryData& value)
     return stream;
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const uint8_t& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const uint8_t& value)
 {
     stream.write_data(&value, 1);
 
     return stream;
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const uint16_t& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const uint16_t& value)
 {
     return write_as_data(htole16(value), stream);
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const uint32_t& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const uint32_t& value)
 {
     return write_as_data(htole32(value), stream);
 }
 
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const uint64_t& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const uint64_t& value)
 {
     return write_as_data(htole64(value), stream);
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EosName& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const EosName& value)
 {
     stream << value.get_data();
 
     return stream;
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EOSAuthorization& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const EosAuthorization& value)
 {
     stream << value.get_actor();
     stream << value.get_permission();
@@ -191,17 +141,17 @@ EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EOSAuthorization& val
     return stream;
 }
 
-EOSBinaryStream& operator<<(EOSBinaryStream& stream, const EOSChainId& value)
+EosBinaryStream& operator<<(EosBinaryStream& stream, const EosChainId& value)
 {
     stream.write_data(value.data(), value.size());
 
     return stream;
 }
 
-class EOSTransactionTransferAction : public EOSTransactionAction
+class EosTransactionTransferAction : public EosTransactionAction
 {
 public:
-    EOSTransactionTransferAction(
+    EosTransactionTransferAction(
             const std::string& from,
             const std::string& to,
             const BigInt amount,
@@ -212,7 +162,7 @@ public:
           m_memo()
     {
         m_memo = make_clone(memo);
-        m_authorizations.push_back(EOSAuthorization(from, "active"));
+        m_authorizations.push_back(EosAuthorization(from, "active"));
     }
 
     ActionType get_type() const override
@@ -220,7 +170,7 @@ public:
         return TRANSFER;
     }
 
-    void write_to_stream(EOSBinaryStream* stream) const override
+    void write_to_stream(EosBinaryStream* stream) const override
     {
         *stream << EosName("eosio.token");
         *stream << EosName("transfer");
@@ -237,7 +187,7 @@ public:
 
     BinaryDataPtr make_data() const override
     {
-        EOSBinaryStream data;
+        EosBinaryStream data;
         data << m_from;
         data << m_to;
         data << m_amount.get_value_as_uint64();
@@ -252,19 +202,18 @@ public:
         return make_clone(data.get_content());
     }
 
-
 public:
     EosName m_from;
     EosName m_to;
     BigInt m_amount;
     BinaryDataPtr m_memo;
-    std::vector<EOSAuthorization> m_authorizations;
+    std::vector<EosAuthorization> m_authorizations;
 };
 
-class EOSTransactionSource : public TransactionSourceBase
+class EosTransactionSource : public TransactionSourceBase
 {
 public:
-    explicit EOSTransactionSource(BlockchainType blockchain_type)
+    explicit EosTransactionSource(BlockchainType blockchain_type)
         : address(m_properties, "address", Property::REQUIRED,
                 [blockchain_type](const std::string& new_address) {
                     get_blockchain(BLOCKCHAIN_EOS)
@@ -280,10 +229,10 @@ public:
     PropertyT<BigInt> amount;
 };
 
-class EOSTransactionDestination : public TransactionDestinationBase
+class EosTransactionDestination : public TransactionDestinationBase
 {
 public:
-    explicit EOSTransactionDestination(BlockchainType blockchain_type)
+    explicit EosTransactionDestination(BlockchainType blockchain_type)
         : address(m_properties, "address", Property::REQUIRED,
                 [blockchain_type](const std::string& new_address) {
                     get_blockchain(BLOCKCHAIN_EOS)
@@ -299,7 +248,7 @@ public:
     PropertyT<BigInt> amount;
 };
 
-EOSTransaction::EOSTransaction(const Account& account)
+EosTransaction::EosTransaction(const Account& account)
     : TransactionBase(account.get_blockchain_type()),
       m_account(account),
       m_message(new BinaryData{nullptr, 0}),
@@ -325,46 +274,49 @@ EOSTransaction::EOSTransaction(const Account& account)
 {
 }
 
-EOSTransaction::~EOSTransaction()
+EosTransaction::~EosTransaction()
 {
 }
 
-void EOSTransaction::set_expiration(const std::string& new_expiration)
+void EosTransaction::set_expiration(const std::string& new_expiration)
 {
      m_expiration = parse_iso8601_string(new_expiration) + EOS_TIME_CONFIRM_TRANSACTION;
 }
 
-void EOSTransaction::verify()
+void EosTransaction::verify()
 {
-    if (!m_source)
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_SOURCES,
-                "EOS transaction should have one source.");
-    }
-
-    if (!m_destination)
-    {
-        THROW_EXCEPTION2(ERROR_TRANSACTION_NO_DESTINATIONS,
-                "EOS transaction should have one destination.");
-    }
-
 }
 
-void EOSTransaction::update()
+void EosTransaction::update()
 {
-    verify();
-    m_actions.clear();
-    m_actions.push_back(EOSTransactionActionPtr(new EOSTransactionTransferAction(
-            *m_source->address,
-            *m_destination->address,
-            *m_destination->amount,
-            *m_message)));
+    if (m_external_actions.empty())
+    {
+        if (!m_source)
+        {
+            THROW_EXCEPTION2(ERROR_TRANSACTION_NO_SOURCES,
+                    "EOS transaction should have one source.");
+        }
+
+        if (!m_destination)
+        {
+            THROW_EXCEPTION2(ERROR_TRANSACTION_NO_DESTINATIONS,
+                    "EOS transaction should have one destination.");
+        }
+
+        m_actions.clear();
+        m_actions.push_back(EosTransactionActionPtr(new EosTransactionTransferAction(
+                *m_source->address,
+                *m_destination->address,
+                *m_destination->amount,
+                *m_message)));
+    }
+
     sign();
 }
 
-void EOSTransaction::sign()
+void EosTransaction::sign()
 {
-    EOSBinaryStream stream;
+    EosBinaryStream stream;
 
     serialize_to_stream(stream, SERIALIZE_FOR_SIGN);
 
@@ -373,18 +325,18 @@ void EOSTransaction::sign()
 
 }
 
-BinaryDataPtr EOSTransaction::serialize()
+BinaryDataPtr EosTransaction::serialize()
 {
     update();
 
-    EOSBinaryStream data_stream;
+    EosBinaryStream data_stream;
     serialize_to_stream(data_stream, SERIALIZE);
 
 
     return make_clone(data_stream.get_content());
 }
 
-std::string EOSTransaction::encode_serialized()
+std::string EosTransaction::encode_serialized()
 {
     update();
 
@@ -397,7 +349,7 @@ std::string EOSTransaction::encode_serialized()
     std::string sig_base58 = "SIG_K1_";
     sig_base58 += out_str.get();
 
-    EOSBinaryStream data_stream;
+    EosBinaryStream data_stream;
     serialize_to_stream(data_stream, SERIALIZE);
 
     std::string result = "{\"signatures\":[\"";
@@ -409,10 +361,9 @@ std::string EOSTransaction::encode_serialized()
     return result;
 }
 
-
-void EOSTransaction::serialize_to_stream(EOSBinaryStream& stream, SerializationMode mode) const
+void EosTransaction::serialize_to_stream(EosBinaryStream& stream, SerializationMode mode) const
 {
-    EOSBinaryStream list;
+    EosBinaryStream list;
     if (mode == SERIALIZE_FOR_SIGN)
     {
         if (m_account.get_blockchain_type().net_type == EOS_NET_TYPE_MAINNET)
@@ -435,8 +386,12 @@ void EOSTransaction::serialize_to_stream(EOSBinaryStream& stream, SerializationM
     list << static_cast<uint8_t>(0x00); // delay_seconds, we set zero byte
     list << static_cast<uint8_t>(0x00); // size array context_free_actions and context_free_actions
 
-    list << static_cast<uint8_t>(m_actions.size());
-    list << *m_actions.at(0);
+    const auto& actions = m_external_actions.empty() ? m_actions : m_external_actions;
+    list << static_cast<uint8_t>(actions.size());
+    for (const auto& action : actions)
+    {
+        list << *action;
+    }
 
     list << static_cast<uint8_t>(0x00);
 
@@ -448,12 +403,12 @@ void EOSTransaction::serialize_to_stream(EOSBinaryStream& stream, SerializationM
     stream << list.get_content();
 }
 
-BigInt EOSTransaction::get_total_fee() const
+BigInt EosTransaction::get_total_fee() const
 {
     return BigInt(0);
 }
 
-BigInt EOSTransaction::get_total_spent() const
+BigInt EosTransaction::get_total_spent() const
 {
     if (!m_destination)
     {
@@ -464,14 +419,14 @@ BigInt EOSTransaction::get_total_spent() const
     return *m_destination->amount;
 }
 
-BigInt EOSTransaction::estimate_total_fee(
+BigInt EosTransaction::estimate_total_fee(
         size_t /*sources_count*/,
         size_t /*destinations_count*/) const
 {
     return BigInt(0);
 }
 
-Properties& EOSTransaction::add_source()
+Properties& EosTransaction::add_source()
 {
     if (m_source)
     {
@@ -479,13 +434,13 @@ Properties& EOSTransaction::add_source()
                 "EOS transaction can have only one source.");
     }
 
-    m_source = EOSTransactionSourcePtr(new EOSTransactionSource(
+    m_source = EosTransactionSourcePtr(new EosTransactionSource(
             get_blockchain_type()));
 
     return m_source->get_properties();
 }
 
-Properties& EOSTransaction::add_destination()
+Properties& EosTransaction::add_destination()
 {
     if (m_destination)
     {
@@ -493,28 +448,36 @@ Properties& EOSTransaction::add_destination()
                 "EOS transaction can have only one destination.");
     }
 
-    m_destination = EOSTransactionDestinationPtr(
-            new EOSTransactionDestination(get_blockchain_type()));
+    m_destination = EosTransactionDestinationPtr(
+            new EosTransactionDestination(get_blockchain_type()));
 
     return m_destination->get_properties();
 }
 
-Properties& EOSTransaction::get_fee()
+Properties& EosTransaction::get_fee()
 {
     THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
             "EOS transaction fee is not customizable.");
 }
 
-void EOSTransaction::set_message(const BinaryData& value)
+void EosTransaction::set_message(const BinaryData& payload)
 {
-    if (value.len > 255)
+    INVARIANT(payload.data != nullptr);
+    if (payload.len > 255)
     {
         THROW_EXCEPTION2(ERROR_TRANSACTION_PAYLOAD_TO_BIG, "Message is to big.")
                 << " Max message size is 255 bytes,"
-                << " got: " << value.len << " bytes.";
+                << " got: " << payload.len << " bytes.";
     }
 
-    m_message = make_clone(value);
+    m_message = make_clone(payload);
+}
+
+void EosTransaction::set_action(EosTransactionActionPtr action)
+{
+    INVARIANT(action != nullptr);
+
+    m_external_actions.emplace_back(std::move(action));
 }
 
 } // namespace internal

@@ -24,21 +24,22 @@ namespace multy_core
 namespace internal
 {
 
-class EOSAccount;
-class EOSTransactionSource;
-class EOSTransactionDestination;
-class EOSTransactionAction;
-class EOSBinaryStream;
+class EosAccount;
+class EosTransactionSource;
+class EosTransactionDestination;
+class EosTransactionAction;
+class EosBinaryStream;
+class EosTransactionAction;
 
-typedef std::unique_ptr<EOSTransactionSource> EOSTransactionSourcePtr;
-typedef std::unique_ptr<EOSTransactionDestination> EOSTransactionDestinationPtr;
-typedef std::unique_ptr<EOSTransactionAction> EOSTransactionActionPtr;
+typedef std::unique_ptr<EosTransactionSource> EosTransactionSourcePtr;
+typedef std::unique_ptr<EosTransactionDestination> EosTransactionDestinationPtr;
+typedef std::unique_ptr<EosTransactionAction> EosTransactionActionPtr;
 
-class EOSTransaction : public TransactionBase
+class EosTransaction : public TransactionBase
 {
 public:
-    EOSTransaction(const Account& account);
-    ~EOSTransaction();
+    EosTransaction(const Account& account);
+    ~EosTransaction();
 
     void sign();
     void update() override;
@@ -50,7 +51,10 @@ public:
     Properties& add_source() override;
     Properties& add_destination() override;
     Properties& get_fee() override;
-    void set_message(const BinaryData& value) override;
+    void set_message(const BinaryData& payload) override;
+
+    // Ownership is transferred from caller to EosTransaction.
+    void set_action(EosTransactionActionPtr action);
 
 private:
     enum SerializationMode
@@ -60,15 +64,18 @@ private:
     };
     void verify();
     void set_expiration(const std::string&);
-    void serialize_to_stream(EOSBinaryStream& stream, SerializationMode mode) const;
+    void serialize_to_stream(EosBinaryStream& stream, SerializationMode mode) const;
 
 private:
     const Account& m_account;
 
     BinaryDataPtr m_message;
-    EOSTransactionSourcePtr m_source;
-    EOSTransactionDestinationPtr m_destination;
-    std::vector<EOSTransactionActionPtr> m_actions;
+    EosTransactionSourcePtr m_source;
+    EosTransactionDestinationPtr m_destination;
+    std::vector<EosTransactionActionPtr> m_external_actions;
+    // TODO: make a TxBuilder for transfer operation and get rid of this,
+    // since it is going to be set from TX builder as external_action.
+    std::vector<EosTransactionActionPtr> m_actions;
 
     PropertyT<std::string> m_explicit_expiration;
     PropertyT<int32_t> m_ref_block_num;
