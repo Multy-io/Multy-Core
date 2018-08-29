@@ -83,6 +83,7 @@ set(MULTY_CORE_SOURCES
     src/transaction_base.cpp
     src/u_ptr.cpp
     src/utility.cpp
+    src/json_helpers.cpp
 
     # Bitcoin
     bitcoin.h
@@ -148,6 +149,7 @@ target_include_directories(multy_core PRIVATE
     ..
     ../third-party/libwally-core/include/
     ../third-party
+    ../third-party/jsoncpp/include/
     ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
@@ -157,6 +159,7 @@ target_link_libraries(multy_core
     keccak-tiny
     mini-gmp
     ccan
+    jsoncpp_lib
 )
 add_dependencies(multy_core multy_core_generate_version)
 
@@ -165,3 +168,10 @@ set_target_properties(multy_core PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set(GIT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(${CMAKE_CURRENT_SOURCE_DIR}/version_from_git.cmake)
 message("Multy Core version: ${MULTY_CORE_VERSION}")
+
+add_custom_command(TARGET multy_core POST_BUILD
+    COMMENT "Size of multy_core:"
+    COMMAND ls -la $<TARGET_FILE:multy_core>
+    VERBATIM
+    USES_TERMINAL)
+

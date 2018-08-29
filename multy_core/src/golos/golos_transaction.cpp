@@ -19,6 +19,9 @@
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/utility.h"
 #include "multy_core/src/property_predicates.h"
+#include "multy_core/src/json_helpers.h"
+
+#include "json/json.h"
 
 #include <chrono>
 #include <cstddef>
@@ -180,25 +183,34 @@ public:
         amount_value.insert(amount_value.end() - GOLOS_VALUE_DECIMAL_PLACES, '.');
         //TODO: should we remove all trailing zeroes?
 
-        char buf[1024];
-        const int len = snprintf(buf, sizeof(buf),
-                R"transfer(
-    "from": "%s",
-    "to": "%s",
-    "amount": "%s %s",
-    "memo": "%s"
-)transfer",
-                 from.c_str(),
-                 to.c_str(),
-                 amount_value.c_str(),
-                 token_name.c_str(),
-                 memo.c_str());
-        if (len < 0 || static_cast<size_t>(len) == sizeof(buf))
-        {
-            THROW_EXCEPTION("Failed to format transfer operation as JSON.");
-        }
+        const Json::Value v = make_json_object({
+            {"from", from},
+            {"to", to},
+            {"amount", amount_value + " " + token_name},
+            {"memo", memo},
+            {"foo", make_json_array(1, 2, "foo", make_json_array(9, 10, 1.0))}
+        });
 
-        *stream << buf;
+        *stream << to_string(v);
+
+//        char buf[1024];
+//        const int len = snprintf(buf, sizeof(buf),
+//                R"transfer(
+//    "from": "%s",
+//    "to": "%s",
+//    "amount": "%s %s",
+//    "memo": "%s"
+//)transfer",
+//                 from.c_str(),
+//                 to.c_str(),
+//                 amount_value.c_str(),
+//                 token_name.c_str(),
+//                 memo.c_str());
+//        if (len < 0 || static_cast<size_t>(len) == sizeof(buf))
+//        {
+//            THROW_EXCEPTION("Failed to format transfer operation as JSON.");
+//        }
+//        *stream << buf;
     }
 
 public:
@@ -359,7 +371,7 @@ BinaryDataPtr GolosTransaction::serialize()
 
     GolosJsonStream operations_stream;
     operations_stream << "[\""
-            << m_operation->get_type_name() << "\","
+            << m_operation->get_type_name() << "\":"
             << *m_operation << "]";
 
     char buffer[1024] = {'\0'};

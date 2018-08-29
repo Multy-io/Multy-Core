@@ -69,6 +69,12 @@ if(MULTY_WITH_TEST_APP)
     )
     target_link_libraries(multy PRIVATE multy_core)
     target_include_directories(multy PRIVATE .)
+
+    add_custom_command(TARGET multy POST_BUILD
+        COMMENT "Size of multy:"
+        COMMAND ls -la $<TARGET_FILE:multy>
+        VERBATIM
+        USES_TERMINAL)
 endif()
 
 add_subdirectory(multy_core)
