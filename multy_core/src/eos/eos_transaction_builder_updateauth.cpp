@@ -4,11 +4,11 @@
  * See LICENSE for details
  */
 
-#include "multy_core/src/EOS/eos_transaction_builder_updateauth.h"
+#include "multy_core/src/eos/eos_transaction_builder_updateauth.h"
 
 #include "multy_core/error.h"
 
-#include "multy_core/src/EOS/eos_name.h"
+#include "multy_core/src/eos/eos_name.h"
 
 #include "multy_core/src/api/transaction_builder_impl.h"
 #include "multy_core/src/api/account_impl.h"

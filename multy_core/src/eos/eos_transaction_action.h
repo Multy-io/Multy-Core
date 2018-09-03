@@ -8,15 +8,17 @@
 #define MULTY_CORE_SRC_EOS_TRANSACTION_ACTION_H
 
 #include "multy_core/src/u_ptr.h"
+#include "multy_core/src/eos/eos_name.h"
+#include "multy_core/src/api/big_int_impl.h"
 
 #include <string>
 #include <stdint.h>
+#include <vector>
 
 namespace multy_core
 {
 namespace internal
 {
-
 class EosBinaryStream;
 
 class EosTransactionAction
@@ -35,6 +37,20 @@ public:
 
     std::string get_type_name() const;
 };
+
+class EosAuthorization
+{
+public:
+    EosAuthorization(const std::string& actor, const std::string& permission);
+
+    EosName get_actor() const;
+    EosName get_permission() const;
+
+private:
+    const EosName m_actor;
+    const EosName m_permission;
+};
+
 
 } // namespace internal
 } // namespace multy_core

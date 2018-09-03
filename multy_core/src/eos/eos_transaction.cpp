@@ -4,13 +4,14 @@
  * See LICENSE for details
  */
 
-#include "multy_core/src/EOS/EOS_transaction.h"
+#include "multy_core/src/eos/eos_transaction.h"
 
-#include "multy_core/EOS.h"
-#include "multy_core/src/EOS/EOS_account.h"
-#include "multy_core/src/EOS/eos_name.h"
-#include "multy_core/src/EOS/eos_binary_stream.h"
-#include "multy_core/src/EOS/eos_transaction_action.h"
+#include "multy_core/eos.h"
+#include "multy_core/src/eos/eos_account.h"
+#include "multy_core/src/eos/eos_name.h"
+#include "multy_core/src/eos/eos_binary_stream.h"
+#include "multy_core/src/eos/eos_transaction_action.h"
+#include "multy_core/src/eos/eos_transaction_transfer_action.h"
 
 #include "multy_core/binary_data.h"
 #include "multy_core/blockchain.h"
@@ -37,10 +38,6 @@
 namespace {
 using namespace multy_core::internal;
 
-typedef std::array<uint8_t, 32> EosChainId;
-
-const uint8_t EOS_PRECISION = 4;
-const std::array<uint8_t, 7> EOS_TOKEN_NAME = {0x45, 0x4f, 0x53, 0x00, 0x00, 0x00, 0x00};
 const uint32_t EOS_TIME_CONFIRM_TRANSACTION = 30; // seconds
 const EosChainId EOS_TESTNET_CHAIN_ID = {0x03, 0x8f, 0x4b, 0x0f, 0xc8, 0xff, 0x18, 0xa4, 0xf0, 0x84, 0x2a, 0x8f, 0x05, 0x64, 0x61, 0x1f,
                                                       0x6e, 0x96, 0xe8, 0x53, 0x59, 0x01, 0xdd, 0x45, 0xe4, 0x3a, 0xc8, 0x69, 0x1a, 0x1c, 0x4d, 0xca};
@@ -56,159 +53,6 @@ namespace multy_core
 {
 namespace internal
 {
-
-class EosAuthorization
-{
-public:
-    EosAuthorization(const std::string& actor, const std::string& permission)
-        : m_actor(actor), m_permission(permission)
-    {
-    }
-
-    EosName get_actor() const
-    {
-        return m_actor;
-    }
-
-    EosName get_permission() const
-    {
-        return m_permission;
-    }
-
-private:
-    const EosName m_actor;
-    const EosName m_permission;
-};
-
-template <typename T>
-EosBinaryStream& write_as_data(const T& data, EosBinaryStream& stream)
-{
-    stream.write_data(
-                reinterpret_cast<const uint8_t*>(&data), sizeof(data));
-    return stream;
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const EosTransactionAction& op)
-{
-    op.write_to_stream(&stream);
-
-    return stream;
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const BinaryData& value)
-{
-    INVARIANT(value.data !=  nullptr);
-    stream.write_data(value.data, value.len);
-
-    return stream;
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const uint8_t& value)
-{
-    stream.write_data(&value, 1);
-
-    return stream;
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const uint16_t& value)
-{
-    return write_as_data(htole16(value), stream);
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const uint32_t& value)
-{
-    return write_as_data(htole32(value), stream);
-}
-
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const uint64_t& value)
-{
-    return write_as_data(htole64(value), stream);
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const EosName& value)
-{
-    stream << value.get_data();
-
-    return stream;
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const EosAuthorization& value)
-{
-    stream << value.get_actor();
-    stream << value.get_permission();
-
-    return stream;
-}
-
-EosBinaryStream& operator<<(EosBinaryStream& stream, const EosChainId& value)
-{
-    stream.write_data(value.data(), value.size());
-
-    return stream;
-}
-
-class EosTransactionTransferAction : public EosTransactionAction
-{
-public:
-    EosTransactionTransferAction(
-            const std::string& from,
-            const std::string& to,
-            const BigInt amount,
-            const BinaryData& memo)
-        : m_from(from),
-          m_to(to),
-          m_amount(std::move(amount)),
-          m_memo()
-    {
-        m_memo = make_clone(memo);
-        m_authorizations.push_back(EosAuthorization(from, "active"));
-    }
-
-    ActionType get_type() const override
-    {
-        return TRANSFER;
-    }
-
-    void write_to_stream(EosBinaryStream* stream) const override
-    {
-        *stream << EosName("eosio.token");
-        *stream << EosName("transfer");
-        *stream << static_cast<uint8_t>(m_authorizations.size());
-        for (const auto& authorization: m_authorizations)
-        {
-            *stream << authorization;
-        }
-        const auto& data = make_data();
-        *stream << static_cast<uint8_t>(data->len);
-        *stream << *data;
-    }
-
-
-    BinaryDataPtr make_data() const override
-    {
-        EosBinaryStream data;
-        data << m_from;
-        data << m_to;
-        data << m_amount.get_value_as_uint64();
-        data << EOS_PRECISION;
-        data << as_binary_data(EOS_TOKEN_NAME);
-        data << static_cast<uint8_t>(m_memo->len);
-        if (m_memo->len > 0)
-        {
-            data << *m_memo;
-        }
-
-        return make_clone(data.get_content());
-    }
-
-public:
-    EosName m_from;
-    EosName m_to;
-    BigInt m_amount;
-    BinaryDataPtr m_memo;
-    std::vector<EosAuthorization> m_authorizations;
-};
 
 class EosTransactionSource : public TransactionSourceBase
 {

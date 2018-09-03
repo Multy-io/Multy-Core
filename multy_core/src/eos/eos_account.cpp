@@ -4,9 +4,9 @@
  * See LICENSE for details
  */
 
-#include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/eos/eos_account.h"
 
-#include "multy_core/EOS.h"
+#include "multy_core/eos.h"
 
 #include "multy_core/common.h"
 #include "multy_core/src/api/key_impl.h"

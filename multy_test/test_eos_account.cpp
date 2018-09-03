@@ -8,9 +8,9 @@
 #include "multy_core/account.h"
 #include "multy_core/blockchain.h"
 
-#include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/eos/eos_account.h"
 #include "multy_core/src/api/key_impl.h"
-#include "multy_core/EOS.h"
+#include "multy_core/eos.h"
 
 #include "multy_test/supported_blockchains.h"
 #include "multy_test/utility.h"

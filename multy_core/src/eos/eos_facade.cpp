@@ -4,19 +4,19 @@
  * See LICENSE for details
  */
 
-#include "multy_core/src/EOS/EOS_facade.h"
+#include "multy_core/src/eos/eos_facade.h"
 
-#include "multy_core/EOS.h"
-#include "multy_core/src/EOS/EOS_account.h"
-#include "multy_core/src/EOS/eos_name.h"
-#include "multy_core/src/EOS/EOS_transaction.h"
+#include "multy_core/eos.h"
+#include "multy_core/src/eos/eos_account.h"
+#include "multy_core/src/eos/eos_name.h"
+#include "multy_core/src/eos/eos_transaction.h"
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
 
-#include "multy_core/src/EOS/EOS_account.h"
-#include "multy_core/src/EOS/EOS_transaction.h"
-#include "multy_core/src/EOS/eos_transaction_builder_updateauth.h"
+#include "multy_core/src/eos/eos_account.h"
+#include "multy_core/src/eos/eos_transaction.h"
+#include "multy_core/src/eos/eos_transaction_builder_updateauth.h"
 
 #include <cstring>
 
