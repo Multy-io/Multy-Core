@@ -28,6 +28,14 @@ public:
     ~EosBinaryStream();
 };
 
+template <typename T>
+EosBinaryStream& write_as_data(const T& data, EosBinaryStream& stream)
+{
+    stream.write_data(
+                reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+    return stream;
+}
+
 EosBinaryStream& operator<<(EosBinaryStream& stream, const EosTransactionAction& op);
 EosBinaryStream& operator<<(EosBinaryStream& stream, const BinaryData& value);
 EosBinaryStream& operator<<(EosBinaryStream& stream, const uint8_t& value);
