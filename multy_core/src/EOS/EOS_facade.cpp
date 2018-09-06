@@ -7,10 +7,18 @@
 #include "multy_core/src/EOS/EOS_facade.h"
 
 #include "multy_core/EOS.h"
+#include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/EOS/eos_name.h"
+#include "multy_core/src/EOS/EOS_transaction.h"
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
+
 #include "multy_core/src/EOS/EOS_account.h"
+#include "multy_core/src/EOS/EOS_transaction.h"
+#include "multy_core/src/EOS/eos_transaction_builder_updateauth.h"
+
+#include <cstring>
 
 namespace
 {
@@ -32,15 +40,15 @@ namespace multy_core
 namespace internal
 {
 
-EOSFacade::EOSFacade()
+EosFacade::EosFacade()
 {
 }
 
-EOSFacade::~EOSFacade()
+EosFacade::~EosFacade()
 {
 }
 
-HDAccountPtr EOSFacade::make_hd_account(
+HDAccountPtr EosFacade::make_hd_account(
         BlockchainType blockchain_type,
         uint32_t account_type,
         const ExtendedKey& master_key,
@@ -48,10 +56,10 @@ HDAccountPtr EOSFacade::make_hd_account(
 {
     validate_EOS_account_type(account_type);
 
-    return HDAccountPtr(new EOSHDAccount(blockchain_type, master_key, index));
+    return HDAccountPtr(new EosHDAccount(blockchain_type, master_key, index));
 }
 
-AccountPtr EOSFacade::make_account(
+AccountPtr EosFacade::make_account(
         BlockchainType blockchain_type,
         uint32_t account_type,
         const char* serialized_private_key) const
@@ -61,21 +69,65 @@ AccountPtr EOSFacade::make_account(
     return make_EOS_account(blockchain_type, serialized_private_key);
 }
 
-TransactionPtr EOSFacade::make_transaction(const Account& /*account*/) const
+TransactionPtr EosFacade::make_transaction(const Account& account) const
 {
-    THROW_EXCEPTION("Not implimented yet");
+    return TransactionPtr(new EosTransaction(account));
 }
 
-void EOSFacade::validate_address(
-        BlockchainType /*blockchain_type*/, const char* /*address*/) const
+TransactionBuilderPtr EosFacade::make_transaction_builder(
+        const Account& account,
+        uint32_t type,
+        const char* action) const
 {
-    THROW_EXCEPTION("Not implimented yet");
+    typedef TransactionBuilderPtr (*BuilderFactoryFunction)(const Account&, const std::string&);
+    static const std::unordered_map<size_t, BuilderFactoryFunction> BUILDERS =
+    {
+        {
+            EOS_TRANSACTION_BUILDER_UPDATEAUTH,
+            &make_eos_transaction_builder_updateauth
+        },
+    };
+
+    const auto builder = BUILDERS.find(type);
+    if (builder == BUILDERS.end())
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                "Invalid TransactionBuilder type.")
+                << " Type: " << type
+                << ", action: \"" << (action ? action : "") << "\".";
+    }
+
+    return builder->second(account, std::string(action ? action : ""));
 }
 
-std::string EOSFacade::encode_serialized_transaction(
-        const BinaryData& /*serialized_transaction*/) const
+void EosFacade::validate_address(
+        BlockchainType blockchain_type, const char* address) const
 {
-    THROW_EXCEPTION("Not implimented yet");
+    INVARIANT(address != nullptr);
+    INVARIANT(blockchain_type.blockchain == BLOCKCHAIN_EOS);
+
+    if (strlen(address) == 0)
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "EOS Address is to short.")
+                << " Address expected to be at least 1 character long, got 0.";
+    }
+
+    try
+    {
+        EosName::from_string(address);
+    }
+    catch (const std::exception& e)
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ADDRESS, "Invalid EOS address.")
+                << " " << e.what() << ".";
+    }
+}
+
+std::string EosFacade::encode_serialized_transaction(
+        Transaction* transaction) const
+{
+    INVARIANT(transaction != nullptr);
+    return transaction->encode_serialized();
 }
 
 } // namespace internal

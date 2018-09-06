@@ -89,6 +89,9 @@ enum ErrorCode
     ERROR_INVALID_ADDRESS,                      // blockhain account address is invalid
 
     ERROR_NOT_ALL_REQUIRED_PROPERTIES_SET,
+    ERROR_INVALID_TIME_STRING,
+
+    // NOTE: ^^^ Add new generic error codes above this line. ^^^
 
     // Scope-specific error codes
 

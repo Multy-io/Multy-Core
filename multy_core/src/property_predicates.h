@@ -33,6 +33,16 @@ void verify_bigger_than(const T& new_value)
     }
 }
 
+template <typename T, int64_t L, ErrorCode error_code = ERROR_INVALID_ARGUMENT>
+void verify_smaller_than(const T& new_value)
+{
+    if (new_value > L)
+    {
+        THROW_EXCEPTION2(error_code, "Value is too big.")
+                << " Expected to be >" << L << ", "
+                << "actual : " << new_value << ".";
+    }
+}
 } // namespace internal
 } // namespace multy_core
 

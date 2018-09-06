@@ -68,6 +68,7 @@ set(MULTY_CORE_SOURCES
     # Common stuff
     src/codec.cpp
     src/account_base.cpp
+    src/binary_stream.cpp
     src/ec_key_utils.cpp
     src/hash.cpp
     src/blockchain_facade_base.cpp
@@ -119,6 +120,11 @@ if (MULTY_WITH_EOS)
         EOS.h
         src/EOS/EOS_facade.cpp
         src/EOS/EOS_account.cpp
+        src/EOS/eos_binary_stream.cpp
+        src/EOS/eos_name.cpp
+        src/EOS/EOS_transaction.cpp
+        src/EOS/eos_transaction_action.cpp
+        src/EOS/eos_transaction_builder_updateauth.cpp
     )
 endif()
 

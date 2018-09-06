@@ -264,6 +264,25 @@ GTEST_TEST(BigIntTest, CreateFromDouble)
     EXPECT_EQ(1, BigInt(1.1).get_value_as_int64());
 }
 
+GTEST_TEST(BigIntTest, get_exported_size_in_bytes)
+{
+    BigInt a(std::numeric_limits<uint64_t>::max());
+    EXPECT_EQ(8, a.get_exported_size_in_bytes());
+    a += 1;
+    EXPECT_EQ(9, a.get_exported_size_in_bytes());
+    EXPECT_EQ(1, BigInt(0).get_exported_size_in_bytes());
+    BigInt step(1);
+    for (size_t i = 2; i < 255; i++)
+    {
+        step *= 256;
+        step += 1;
+        EXPECT_EQ(i, step.get_exported_size_in_bytes());
+        step -= 1;
+    }
+}
+
+
+
 GTEST_TEST(BigIntTest_Math, BasicArithmeticAPI)
 {
     for (BigIntArithmeticTestCase test_case: TEST_CASES)

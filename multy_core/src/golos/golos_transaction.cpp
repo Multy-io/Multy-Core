@@ -23,52 +23,12 @@
 #include <chrono>
 #include <cstddef>
 #include <cstring>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
 #include <unordered_map>
 
 namespace multy_core
 {
 namespace internal
 {
-
-const char* ISO8601_TIME_FORMAT="%FT%T%z";
-
-std::string format_iso8601_string(const std::time_t& time)
-{
-    std::ostringstream ss;
-    ss << std::put_time(std::gmtime(&time), ISO8601_TIME_FORMAT);
-
-    return ss.str();
-}
-
-std::time_t parse_iso8601_string(const std::string& str)
-{
-    std::tm tm;
-    std::istringstream ss(str);
-    ss >> std::get_time(&tm, ISO8601_TIME_FORMAT);
-    const auto result = std::mktime(&tm);
-    if (result < 0)
-    {
-        THROW_EXCEPTION("Invalid ISO8601 date/time value.");
-    }
-
-    return result;
-}
-
-std::time_t to_system_seconds(size_t seconds)
-{
-    return std::chrono::system_clock::to_time_t(
-            std::chrono::system_clock::from_time_t(0)
-            + std::chrono::seconds(seconds));
-}
-
-std::time_t get_system_time_now()
-{
-    return std::chrono::system_clock::to_time_t(
-            std::chrono::system_clock::now());
-}
 
 class GolosBinaryStream
 {

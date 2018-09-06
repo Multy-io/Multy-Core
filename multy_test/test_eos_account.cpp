@@ -6,6 +6,7 @@
 
 #include "multy_test/serialized_keys_test_base.h"
 #include "multy_core/account.h"
+#include "multy_core/blockchain.h"
 
 #include "multy_core/src/EOS/EOS_account.h"
 #include "multy_core/src/api/key_impl.h"
@@ -15,6 +16,8 @@
 #include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
+
+#include <tuple>
 
 namespace
 {
@@ -59,7 +62,7 @@ INSTANTIATE_TEST_CASE_P(
                 ::testing::Values(ACCOUNT_TYPE_DEFAULT),
                 ::testing::ValuesIn(EOS_KEYS)));
 
-GTEST_TEST(EOSAccountTest, TestPrivateKey)
+GTEST_TEST(EosAccountTest, TestPrivateKey)
 {
     AccountPtr account;
     EXPECT_ERROR(
@@ -69,5 +72,68 @@ GTEST_TEST(EOSAccountTest, TestPrivateKey)
                     "",
                     reset_sp(account)));
 }
+
+const char* EOS_VALID_ADDRESSES[] =
+{
+    ".",
+    "abcdefghijkl",
+    "mnopqrstuvwx",
+    "yz12345.",
+    "123abc",
+};
+
+const char* EOS_INVALID_ADDRESSES[] =
+{
+    // nullptr
+    nullptr,
+    // empty
+    "",
+     // invalid char 'A'
+    "Abcdefghijkl",
+     // too long
+    "aabcdefghijkl",
+    // way too long
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcdefghijkl",
+     // invalid char '_'
+    "mnopqrstuvw_",
+    // digits bigger than 5
+    "yz12346789..",
+};
+
+struct EosNameTestP : public ::testing::TestWithParam<std::tuple<BlockchainType, const char*>>
+{};
+
+TEST_P(EosNameTestP, validate_address)
+{
+    const auto blockchain = std::get<0>(GetParam());
+    const auto address = std::get<1>(GetParam());
+
+    HANDLE_ERROR(validate_address(blockchain, address));
+}
+
+struct EosNameTestInvalidP : public ::testing::TestWithParam<std::tuple<BlockchainType, const char*>>
+{};
+
+TEST_P(EosNameTestInvalidP, validate_address)
+{
+    const auto blockchain = std::get<0>(GetParam());
+    const auto address = std::get<1>(GetParam());
+
+    EXPECT_ERROR(validate_address(blockchain, address));
+}
+
+INSTANTIATE_TEST_CASE_P(
+        eos_account,
+        EosNameTestP,
+        ::testing::Combine(
+                ::testing::Values(EOS_MAIN_NET, EOS_TEST_NET),
+                ::testing::ValuesIn(EOS_VALID_ADDRESSES)));
+
+INSTANTIATE_TEST_CASE_P(
+        eos_account,
+        EosNameTestInvalidP,
+        ::testing::Combine(
+                ::testing::Values(EOS_MAIN_NET, EOS_TEST_NET),
+                ::testing::ValuesIn(EOS_INVALID_ADDRESSES)));
 
 } // namespace

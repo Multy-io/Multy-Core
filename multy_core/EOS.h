@@ -13,10 +13,17 @@
 extern "C" {
 #endif
 
-enum EOSNetType
+enum EosNetType
 {
     EOS_NET_TYPE_MAINNET = 0,
     EOS_NET_TYPE_TESTNET = 1,
+};
+
+const size_t EOS_ADDRESS_MAX_SIZE = 12;
+
+enum EosTransactionBuilderType
+{
+    EOS_TRANSACTION_BUILDER_UPDATEAUTH,
 };
 
 #ifdef __cplusplus

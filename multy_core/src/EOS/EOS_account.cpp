@@ -18,9 +18,18 @@
 
 #include "wally_crypto.h"
 
+extern "C" {
+#include "libwally-core/src/internal.h"
+}
+#include "libwally-core/src/secp256k1/include/secp256k1.h"
+
 #include <cassert>
 
 #include <string.h>
+
+#define EOS_RECOVERY_PARAM_COMPRESSED 4
+#define EOS_RECOVERY_PARAM_COMPACT 27
+#define EOS_SIGNATURE_SIZE  65
 
 
 namespace
@@ -30,6 +39,7 @@ using namespace multy_core::internal;
 const size_t EOS_KEY_HASH_SIZE = 4;
 const char EOS_PUBLIC_KEY_STRING_PREFIX[] = "EOS";
 const uint8_t EOS_KEY_PREFIX[] = {0x80};
+typedef std::array<unsigned char, EOS_SIGNATURE_SIZE + 4> EOS_SIGNATURE_ARRAY;  // 4 bytes using for hashsum
 
 uint32_t get_chain_index(BlockchainType blockchain_type)
 {
@@ -41,6 +51,26 @@ uint32_t get_chain_index(BlockchainType blockchain_type)
 
     return blockchain_type.blockchain;
 }
+
+// Check that signature is in canonical format
+// For details please see: bitshares/bitshares1-core#1129
+bool is_canonical_signature(const EOS_SIGNATURE_ARRAY& c )
+{
+    return !(c[1] & 0x80)
+           && !(c[1] == 0 && !(c[2] & 0x80))
+           && !(c[33] & 0x80)
+           && !(c[33] == 0 && !(c[34] & 0x80));
+}
+
+// This extended nonce function is based on Golos implementation
+static int extended_nonce_function( unsigned char *nonce32, const unsigned char *msg32,
+        const unsigned char *key32, const unsigned char* /*algo16*/,
+        void *data, unsigned int /*attempt*/)
+{
+    unsigned int* extra = static_cast<unsigned int*>(data);
+    (*extra)++;
+    return secp256k1_nonce_function_default(nonce32, msg32, key32, nullptr, nullptr, *extra);
+}
 } // namespace
 
 namespace multy_core
@@ -48,15 +78,15 @@ namespace multy_core
 namespace internal
 {
 
-class EOSPublicKey : public PublicKey
+class EosPublicKey : public PublicKey
 {
 public:
     typedef std::vector<uint8_t> KeyData;
-    explicit EOSPublicKey(KeyData data)
+    explicit EosPublicKey(KeyData data)
         : m_data(std::move(data))
     {}
 
-    ~EOSPublicKey()
+    ~EosPublicKey()
     {
     }
 
@@ -91,28 +121,28 @@ private:
     KeyData m_data;
 };
 
-class EOSPrivateKey : public PrivateKey
+class EosPrivateKey : public PrivateKey
 {
 public:
     typedef std::vector<uint8_t> KeyData;
-    explicit EOSPrivateKey(const KeyData& data)
+    explicit EosPrivateKey(const KeyData& data)
         : m_data(data)
     {}
 
-    explicit EOSPrivateKey(const BinaryData& data)
+    explicit EosPrivateKey(const BinaryData& data)
         : m_data(data.data, data.data + data.len)
     {}
 
     PublicKeyPtr make_public_key() const override
     {
-        EOSPublicKey::KeyData key_data(EC_PUBLIC_KEY_LEN, 0);
+        EosPublicKey::KeyData key_data(EC_PUBLIC_KEY_LEN, 0);
         BinaryData public_key_data = as_binary_data(key_data);
 
         ec_private_to_public_key(as_binary_data(m_data),
                 EC_PUBLIC_KEY_COMPRESSED,
                 &public_key_data);
 
-        return PublicKeyPtr(new EOSPublicKey(std::move(key_data)));
+        return PublicKeyPtr(new EosPublicKey(std::move(key_data)));
     }
 
     PrivateKeyPtr clone() const override
@@ -120,9 +150,43 @@ public:
         return make_clone(*this);
     }
 
-    BinaryDataPtr sign(const BinaryData& /*data*/) const override
+    BinaryDataPtr sign(const BinaryData& data) const override
     {
-        THROW_EXCEPTION("Not implemented yet");
+        auto data_hash = do_hash<SHA2, 256>(data);
+
+        EOS_SIGNATURE_ARRAY result;
+        int recovery_id = 0;
+        unsigned int counter = 0;
+        do
+        {
+            secp256k1_ecdsa_signature signature;
+            if (!secp256k1_ecdsa_sign(secp_ctx(), &signature,
+                    data_hash.data(), m_data.data(), extended_nonce_function, &counter, &recovery_id))
+            {
+                THROW_EXCEPTION2(ERROR_KEY_CANT_SIGN_WITH_PRIVATE_KEY,
+                        "Failed to sign with private key.");
+            }
+
+            if (!secp256k1_ecdsa_signature_serialize_compact(secp_ctx(), result.data() + 1, &signature))
+            {
+                THROW_EXCEPTION2(ERROR_KEY_CANT_SIGN_WITH_PRIVATE_KEY,
+                        "Failed serialize signature in compact format.");
+            }
+        } while(!is_canonical_signature(result));
+
+        result.begin()[0] = EOS_RECOVERY_PARAM_COMPRESSED + EOS_RECOVERY_PARAM_COMPACT + recovery_id;
+
+        std::vector<unsigned char> temp(result.begin(), result.end()-4);
+        temp.push_back(0x4b);  // K
+        temp.push_back(0x31);  // 1
+        auto hash = do_hash<RIPEMD, 160>(as_binary_data(temp));
+
+        // write hashsum
+        for (int i = 0; i < 4; ++i) {
+            result[EOS_SIGNATURE_SIZE + i] = hash[i];
+        }
+
+        return make_clone(as_binary_data(result));
     }
 
     std::string to_string() const override
@@ -147,17 +211,17 @@ private:
     KeyData m_data;
 };
 
-EOSHDAccount::EOSHDAccount(
+EosHDAccount::EosHDAccount(
         BlockchainType blockchain_type,
         const ExtendedKey& bip44_master_key,
         uint32_t index)
     : HDAccountBase(blockchain_type, get_chain_index(blockchain_type), bip44_master_key, index)
 {}
 
-EOSHDAccount::~EOSHDAccount()
+EosHDAccount::~EosHDAccount()
 {}
 
-AccountPtr EOSHDAccount::make_account(
+AccountPtr EosHDAccount::make_account(
         const ExtendedKey& parent_key,
         AddressType type,
         uint32_t index) const
@@ -166,12 +230,12 @@ AccountPtr EOSHDAccount::make_account(
     throw_if_error(make_child_key(&parent_key, index, reset_sp(address_key)));
 
     const BinaryData priv_key_data = as_binary_data(address_key->key.priv_key);
-    EOSPrivateKeyPtr private_key(
-            new EOSPrivateKey(
+    EosPrivateKeyPtr private_key(
+            new EosPrivateKey(
                     slice(priv_key_data, 1, priv_key_data.len - 1)));
 
     return AccountPtr(
-            new EOSAccount(
+            new EosAccount(
                     get_blockchain_type(),
                     std::move(private_key),
                     make_child_path(get_path(),{type, index})));
@@ -183,7 +247,7 @@ AccountPtr make_EOS_account(BlockchainType blockchain_type,
     // serialized key structure like: BASE58("EOS" + DATA + HASH(DATA))
     INVARIANT(serialized_private_key);
 
-    EOSPrivateKey::KeyData private_key_bytes(strlen(serialized_private_key), 0);
+    EosPrivateKey::KeyData private_key_bytes(strlen(serialized_private_key), 0);
     BinaryData private_key_bytes_data = as_binary_data(private_key_bytes);
     size_t private_key_size = 0;
     THROW_IF_WALLY_ERROR(
@@ -227,20 +291,20 @@ AccountPtr make_EOS_account(BlockchainType blockchain_type,
     // skipping prefix
     key_data = slice(key_data, sizeof(EOS_KEY_PREFIX), key_data.len - sizeof(EOS_KEY_PREFIX));
 
-    EOSPrivateKeyPtr private_key(new EOSPrivateKey(key_data));
+    EosPrivateKeyPtr private_key(new EosPrivateKey(key_data));
 
-    return AccountPtr(new EOSAccount(
+    return AccountPtr(new EosAccount(
             blockchain_type,
             std::move(private_key),
             HDPath{}));
 }
 
-EOSAccount::EOSAccount(BlockchainType blockchain_type, EOSPrivateKeyPtr key, HDPath path)
+EosAccount::EosAccount(BlockchainType blockchain_type, EosPrivateKeyPtr key, HDPath path)
     : AccountBase(blockchain_type, *key, std::move(path)),
       m_private_key(std::move(key))
 {}
 
-std::string EOSAccount::get_address() const
+std::string EosAccount::get_address() const
 {
     THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
             "Not supported: can't derive address from private key "

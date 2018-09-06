@@ -24,6 +24,7 @@ android {
                 arguments "-DANDROID_STL=c++_shared"
                 arguments "-DMULTY_WITH_TESTS=ON"
                 arguments "-DCMAKE_CONFIGURATION_TYPES=Release"
+                arguments "-DMULTY_WITH_ALL_BLOCKCHAINS=ON"
             }
         }
         ndk {
