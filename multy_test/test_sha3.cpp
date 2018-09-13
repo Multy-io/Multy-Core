@@ -16,8 +16,6 @@
 #include "gtest/gtest.h"
 
 #include <array>
-#include <iostream>
-
 #include <string.h>
 
 namespace

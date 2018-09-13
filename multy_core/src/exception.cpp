@@ -11,8 +11,6 @@
 #include "multy_core/src/utility.h"
 #include "multy_core/src/error_utility.h"
 
-#include <iostream>
-
 namespace multy_core
 {
 namespace internal
@@ -77,6 +75,11 @@ std::string Exception::get_message() const
 CodeLocation Exception::get_location() const
 {
     return m_location;
+}
+
+std::string Exception::get_backtrace() const
+{
+    return m_backtrace;
 }
 
 } // namespace internal

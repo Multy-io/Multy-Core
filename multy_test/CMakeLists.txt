@@ -32,6 +32,7 @@ set(MULTY_TEST_SOURCES
     test_deletion.cpp
     test_ethereum_account.cpp
     test_ethereum_transaction.cpp
+    test_json_api_transaction.cpp
     test_keys.cpp
     test_mnemonic.cpp
     test_object.cpp

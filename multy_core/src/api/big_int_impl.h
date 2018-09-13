@@ -52,7 +52,6 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     ~BigInt();
 
     void set_value(const char* value);
-    void set_value_int64(int64_t value);
 
     std::string get_value() const;
 

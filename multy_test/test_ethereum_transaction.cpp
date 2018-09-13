@@ -959,7 +959,6 @@ GTEST_TEST(EthereumTransactionBuilderTest, Confirm_multisig_transaction)
         HANDLE_ERROR(properties_set_string_value(builder_propertie, "wallet_address", "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F"));
         HANDLE_ERROR(properties_set_string_value(builder_propertie, "action", "confirm"));
         HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "request_id", request.get()));
-
     }
 
     TransactionPtr transaction = builder->make_transaction();

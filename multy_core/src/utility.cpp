@@ -31,6 +31,52 @@
 namespace
 {
 using namespace multy_core::internal;
+
+const EnumNameMap<Blockchain> BLOCKCHAIN_NAMES =
+{
+    "Blockchain",
+    {
+        {BLOCKCHAIN_BITCOIN, "Bitcoin"},
+        {BLOCKCHAIN_ETHEREUM, "Ethereum"},
+        {BLOCKCHAIN_GOLOS, "Golos"}
+    }
+};
+
+const EnumNameMap<BitcoinNetType> BITCOIN_NET_TYPE_NAMES =
+{
+    "BitcoinNetType",
+    {
+        {BITCOIN_NET_TYPE_MAINNET, "MainNet"},
+        {BITCOIN_NET_TYPE_TESTNET, "TestNet"},
+    }
+};
+
+const EnumNameMap<EthereumChainId> ETHEREUM_NET_TYPE_NAMES =
+{
+    "EthereumChainId",
+    {
+        {ETHEREUM_CHAIN_ID_PRE_EIP155, "PRE-EIP115_DEFAULT"},
+        {ETHEREUM_CHAIN_ID_MAINNET, "MainNet"},
+        {ETHEREUM_CHAIN_ID_MORDEN, "Morden"},
+        {ETHEREUM_CHAIN_ID_ROPSTEN, "Ropsten"},
+        {ETHEREUM_CHAIN_ID_RINKEBY, "Rinkeby"},
+        {ETHEREUM_CHAIN_ID_ROOTSTOCK_MAINNET, "RootstockMainNet"},
+        {ETHEREUM_CHAIN_ID_ROOTSTOCK_TESTNET, "RootstockTestNet"},
+        {ETHEREUM_CHAIN_ID_KOVAN, "Kovan"},
+        {ETHEREUM_CHAIN_ID_ETC_MAINNET, "ETCMainNet"},
+        {ETHEREUM_CHAIN_ID_ETC_TESTNET, "ETCTestNet"},
+    }
+};
+
+const EnumNameMap<GolosNetType> GOLOS_NET_TYPE_NAMES =
+{
+    "GolosNetType",
+    {
+        {GOLOS_NET_TYPE_MAINNET, "MainNet"},
+        {GOLOS_NET_TYPE_TESTNET, "TestNet"},
+    }
+};
+
 } // namespace
 
 namespace multy_core
@@ -101,30 +147,11 @@ std::string to_string(const BlockchainType& blockchain_type)
 
 std::string to_string(Blockchain blockchain)
 {
-    static const EnumNameMap<Blockchain> BLOCKCHAIN_NAMES =
-    {
-        "BlockchainNames",
-        {
-            {BLOCKCHAIN_BITCOIN, "Bitcoin"},
-            {BLOCKCHAIN_ETHEREUM, "Ethereum"},
-            {BLOCKCHAIN_GOLOS, "Golos"}
-        }
-    };
-
     return BLOCKCHAIN_NAMES.get_name_or_dummy(blockchain);
 }
 
 std::string to_string(BitcoinNetType net_type)
 {
-    static const EnumNameMap<BitcoinNetType> BITCOIN_NET_TYPE_NAMES =
-    {
-        "BitcoinNetType",
-        {
-            {BITCOIN_NET_TYPE_MAINNET, "MainNet"},
-            {BITCOIN_NET_TYPE_TESTNET, "TestNet"},
-        }
-    };
-
     return BITCOIN_NET_TYPE_NAMES.get_name_or_dummy(net_type);
 }
 
@@ -137,38 +164,49 @@ std::string to_hex_string(const BinaryData& data)
 
 std::string to_string(EthereumChainId net_type)
 {
-    static const EnumNameMap<EthereumChainId> ETHEREUM_NET_TYPE_NAMES =
-    {
-        "EthereumChainId",
-        {
-            {ETHEREUM_CHAIN_ID_PRE_EIP155, "PRE-EIP115_DEFAULT"},
-            {ETHEREUM_CHAIN_ID_MAINNET, "MainNet"},
-            {ETHEREUM_CHAIN_ID_MORDEN, "Morden"},
-            {ETHEREUM_CHAIN_ID_ROPSTEN, "Ropsten"},
-            {ETHEREUM_CHAIN_ID_RINKEBY, "Rinkeby"},
-            {ETHEREUM_CHAIN_ID_ROOTSTOCK_MAINNET, "RootstockMainNet"},
-            {ETHEREUM_CHAIN_ID_ROOTSTOCK_TESTNET, "RootstockTestNet"},
-            {ETHEREUM_CHAIN_ID_KOVAN, "Kovan"},
-            {ETHEREUM_CHAIN_ID_ETC_MAINNET, "ETCMainNet"},
-            {ETHEREUM_CHAIN_ID_ETC_TESTNET, "ETCTestNet"},
-        }
-    };
-
     return ETHEREUM_NET_TYPE_NAMES.get_name_or_dummy(net_type);
 }
 
 std::string to_string(GolosNetType net_type)
 {
-    static const EnumNameMap<GolosNetType> GOLOS_NET_TYPE_NAMES =
-    {
-        "GolosNetType",
-        {
-            {GOLOS_NET_TYPE_MAINNET, "MainNet"},
-            {GOLOS_NET_TYPE_TESTNET, "TestNet"},
-        }
-    };
-
     return GOLOS_NET_TYPE_NAMES.get_name_or_dummy(net_type);
+}
+
+std::string to_capital_case(std::string string)
+{
+    std::string result = std::move(string);
+
+    std::for_each(result.begin(), result.end(), ::tolower);
+    if (!result.empty())
+    {
+        result[0] = toupper(result[0]);
+    }
+
+    return result;
+}
+
+template <>
+Blockchain from_string(const std::string& str)
+{
+    return BLOCKCHAIN_NAMES.get_value(str);
+}
+
+template <>
+BitcoinNetType from_string(const std::string& str)
+{
+    return BITCOIN_NET_TYPE_NAMES.get_value(str);
+}
+
+template <>
+EthereumChainId from_string(const std::string& str)
+{
+    return ETHEREUM_NET_TYPE_NAMES.get_value(str);
+}
+
+template <>
+GolosNetType from_string(const std::string& str)
+{
+    return GOLOS_NET_TYPE_NAMES.get_value(str);
 }
 
 namespace

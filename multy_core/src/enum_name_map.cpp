@@ -59,8 +59,8 @@ const char* EnumNameMapBase::get_name(const value_type value) const
     }
 
     THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unknown enum value.")
-            << " Enum type: " << m_type_name
-            << " Value: \"" << static_cast<uint64_t>(value) << ".";
+            << " Invalid value for " << m_type_name
+            << " : \"" << static_cast<uint64_t>(value) << ".";
 }
 
 std::string EnumNameMapBase::get_name_or_dummy(const value_type value) const
@@ -90,13 +90,26 @@ value_type EnumNameMapBase::get_value(const char* name) const
     }
 
     THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unknown enum name.")
-            << " Enum type: " << m_type_name
-            << " Name: \"" << (name ? name : "") << "\".";
+            << " Invalid name for " << m_type_name
+            << " : \"" << (name ? name : "") << "\".";
 }
 
 value_type EnumNameMapBase::get_value(const std::string& name) const
 {
     return get_value(name.c_str());
+}
+
+std::vector<const char*> EnumNameMapBase::get_all_names() const
+{
+    std::vector<const char*> result;
+    result.reserve(m_values.size());
+
+    for (size_t i = 0; i < m_values.size(); ++i)
+    {
+        result.push_back(m_values[i].second);
+    }
+
+    return result;
 }
 
 const char* EnumNameMapBase::find_name(const value_type value) const

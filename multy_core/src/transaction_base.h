@@ -68,7 +68,7 @@ public:
     Properties& get_transaction_properties() override;
 
 protected:
-    bool validate_all_properties(std::string* not_set_properties) const;
+    bool validate_all_properties(std::string* not_set_properties) const override;
     Properties& register_properties(const std::string& name, Properties&);
     Properties m_properties;
     const BlockchainType m_blockchain_type;

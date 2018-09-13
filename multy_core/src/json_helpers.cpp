@@ -6,9 +6,13 @@
 
 #include "multy_core/src/json_helpers.h"
 
+#include "multy_core/src/exception.h"
+#include "multy_core/src/exception_stream.h"
+
 #include "json/json.h"
 
 #include <sstream>
+#include <memory>
 
 namespace multy_core
 {
@@ -21,6 +25,22 @@ std::string to_string(const Json::Value& value)
     Json::StreamWriterBuilder().newStreamWriter()->write(value, &sstr);
 
     return sstr.str();
+}
+
+Json::Value parse_json(const std::string& str)
+{
+    Json::Value result;
+
+    std::unique_ptr<Json::CharReader> reader(Json::CharReaderBuilder().newCharReader());
+    std::string errors;
+
+    if (!reader->parse(str.data(), str.data() + str.size(), &result, &errors))
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Failed to parse JSON document.")
+                << " Errors: " << errors;
+    }
+
+    return result;
 }
 
 typedef std::initializer_list<std::pair<const char*, Json::Value>> ObjectValues;

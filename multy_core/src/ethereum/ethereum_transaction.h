@@ -66,6 +66,7 @@ private:
     PropertyT<BigInt> m_nonce;
     const EthereumChainId m_chain_id;
     PropertyT<std::string> m_token_transfer;
+    PropertyT<BinaryDataPtr> m_payload;
 
     EthereumTransactionFeePtr m_fee;
     EthereumTransactionSourcePtr m_source;
@@ -77,7 +78,7 @@ private:
     EthereumTransactionDestinationPtr m_internal_destination;
     EthereumSmartContractPayloadPtr m_token_transfer_data;
     EthereumTransactionSignaturePtr m_signature;
-    BinaryDataPtr m_payload;
+//    BinaryDataPtr m_payload;
 };
 
 } // namespace internal

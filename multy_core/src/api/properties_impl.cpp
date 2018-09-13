@@ -25,15 +25,7 @@ namespace
 {
 using namespace multy_core::internal;
 typedef Properties::Binder Binder;
-
-enum ValueType
-{
-    VALUE_TYPE_INT32,
-    VALUE_TYPE_BIG_INT,
-    VALUE_TYPE_STRING,
-    VALUE_TYPE_BINARY_DATA,
-    VALUE_TYPE_PRIVATE_KEY,
-};
+using ValueType = Binder::ValueType;
 
 // If you find that compilation fails du to this function definition missing,
 // you should add a new template specialization for your type.
@@ -43,31 +35,31 @@ constexpr ValueType deduce_value_type();
 template <>
 constexpr ValueType deduce_value_type<int32_t>()
 {
-    return VALUE_TYPE_INT32;
+    return Properties::Binder::ValueType::VALUE_TYPE_INT32;
 }
 
 template <>
 constexpr ValueType deduce_value_type<std::string>()
 {
-    return VALUE_TYPE_STRING;
+    return Properties::Binder::ValueType::VALUE_TYPE_STRING;
 }
 
 template <>
 constexpr ValueType deduce_value_type<BigInt>()
 {
-    return VALUE_TYPE_BIG_INT;
+    return Properties::Binder::ValueType::VALUE_TYPE_BIG_INT;
 }
 
 template <>
 constexpr ValueType deduce_value_type<BinaryData>()
 {
-    return VALUE_TYPE_BINARY_DATA;
+    return Properties::Binder::ValueType::VALUE_TYPE_BINARY_DATA;
 }
 
 template <>
 constexpr ValueType deduce_value_type<PrivateKey>()
 {
-    return VALUE_TYPE_PRIVATE_KEY;
+    return Properties::Binder::ValueType::VALUE_TYPE_PRIVATE_KEY;
 }
 
 template <typename T>
@@ -81,15 +73,15 @@ std::string get_value_type_string(ValueType type)
 {
     switch (type)
     {
-        case VALUE_TYPE_INT32:
+        case Properties::Binder::ValueType::VALUE_TYPE_INT32:
             return "int32";
-        case VALUE_TYPE_STRING:
+        case Properties::Binder::ValueType::VALUE_TYPE_STRING:
             return "string";
-        case VALUE_TYPE_BIG_INT:
+        case Properties::Binder::ValueType::VALUE_TYPE_BIG_INT:
             return "BigInt";
-        case VALUE_TYPE_BINARY_DATA:
+        case Properties::Binder::ValueType::VALUE_TYPE_BINARY_DATA:
             return "BinaryData";
-        case VALUE_TYPE_PRIVATE_KEY:
+        case Properties::Binder::ValueType::VALUE_TYPE_PRIVATE_KEY:
             return "PrivateKey";
     }
     return "UNKNOWN TYPE";
@@ -186,7 +178,7 @@ struct BinderBase : public Binder
         return m_name;
     }
 
-    ValueType get_value_type() const
+    ValueType get_value_type() const override
     {
         return m_type;
     }

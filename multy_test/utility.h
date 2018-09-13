@@ -18,7 +18,6 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 #define HANDLE_ERROR(statement)                                                \
     do                                                                         \
