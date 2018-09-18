@@ -12,9 +12,26 @@ extern "C" {
 #include "ccan/str/base32/base32.h"
 } // extern "C"
 
+#include <string.h>
+
 namespace
 {
 using namespace multy_core::internal;
+
+const char* skip_prefix(const char* prefix, const char* str, size_t* str_len)
+{
+    INVARIANT(prefix != nullptr);
+    INVARIANT(str != nullptr);
+
+    const auto prefix_size = strlen(prefix);
+    if (prefix_size <= *str_len && strncmp(str, prefix, prefix_size) == 0)
+    {
+        str += prefix_size;
+        *str_len -= prefix_size;
+    }
+
+    return str;
+}
 
 struct Codec
 {
@@ -42,6 +59,7 @@ std::string encodeHex(const BinaryData& binary)
 BinaryDataPtr decodeHex(const char* hex_str, size_t len)
 {
     BinaryDataPtr result;
+    hex_str = skip_prefix("0x", hex_str, &len);
 
     if (len & 1)
     {

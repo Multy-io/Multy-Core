@@ -13,6 +13,7 @@
 
 #include "multy_core/api.h"
 #include "multy_core/binary_data.h"
+#include "multy_core/src/u_ptr.h"
 
 #include <array>
 #include <string>
@@ -102,6 +103,8 @@ inline const BinaryData& as_binary_data(const BinaryData& binary_data)
 {
     return binary_data;
 }
+
+BinaryDataPtr new_binary_data(size_t bytes);
 
 MULTY_CORE_API bool operator==(const BinaryData& left, const BinaryData& right);
 inline bool operator!=(const BinaryData& left, const BinaryData& right)

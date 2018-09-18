@@ -99,6 +99,29 @@ Error* key_to_string(const Key* key, const char** new_str)
     return nullptr;
 }
 
+Error* sign_with_key(const Key* key, const BinaryData* data,
+        BinaryData** new_signature)
+{
+    ARG_CHECK_OBJECT(key);
+    ARG_CHECK(data != nullptr);
+    ARG_CHECK(new_signature != nullptr);
+
+    try
+    {
+        const PrivateKey* pk = dynamic_cast<const PrivateKey*>(key);
+        if (!pk)
+        {
+            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Key is not a PrivateKey.");
+        }
+
+        *new_signature = pk->sign(*data).release();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_KEY);
+    OUT_CHECK(*new_signature);
+
+    return nullptr;
+}
+
 //Error* sign_with_key(
 //        const Key* key, const BinaryData* data, BinaryData** new_signature)
 //{
