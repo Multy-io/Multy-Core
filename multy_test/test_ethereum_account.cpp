@@ -191,4 +191,54 @@ GTEST_TEST(EthereumBlockchainTest, validate_address)
     EXPECT_ERROR(validate_address(ETH_MAINNET, "0xb826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000"));
 }
 
+struct PersonalSignTestCase
+{
+    const char* private_key;
+    const char* message;
+    const char* expected_signature;
+};
+
+class PersonalSignTestP : public ::testing::TestWithParam<PersonalSignTestCase>
+{};
+
+TEST_P(PersonalSignTestP, sign_with_key)
+{
+    const PersonalSignTestCase& param = GetParam();
+    CharPtr signature;
+    HANDLE_ERROR(ethereum_personal_sign(
+            param.private_key,
+            param.message, reset_sp(signature)));
+
+    ASSERT_STREQ(param.expected_signature, signature.get());
+}
+
+// personal_sign test cases based on test cases from Metamask:
+// https://github.com/MetaMask/eth-sig-util/blob/a8659ff2da34ab31372c812c6d1569b072650269/test/index.js#L252
+static const PersonalSignTestCase META_MASK_PERSONAL_SIGN_TEST_CASES[] = {
+    {
+        "6969696969696969696969696969696969696969696969696969696969696969",
+        // "hello world"
+        "68656c6c6f20776f726c64",
+        "ce909e8ea6851bc36c007a0072d0524b07a3ff8d4e623aca4c71ca8e57250c4d0a3fc38fa8fbaaa81ead4b9f6bd03356b6f8bf18bccad167d78891636e1d69561b"
+    },
+    {
+        "6969696969696969696969696969696969696969696969696969696969696969",
+      // some random binary message from parity's test
+        "0cc175b9c0f1b6a831c399e26977266192eb5ffee6ae2fec3ad71c777531578f",
+        "9ff8350cc7354b80740a3580d0e0fd4f1f02062040bc06b893d70906f8728bb5163837fd376bf77ce03b55e9bd092b32af60e86abce48f7b8d3539988ee5a9be1c",
+    },
+    {
+        "4545454545454545454545454545454545454545454545454545454545454545",
+        // random binary message data and pk from parity's test
+        "0cc175b9c0f1b6a831c399e26977266192eb5ffee6ae2fec3ad71c777531578f",
+        "a2870db1d0c26ef93c7b72d2a0830fa6b841e0593f7186bc6c7cc317af8cf3a42fda03bd589a49949aa05db83300cdb553116274518dbe9d90c65d0213f4af491b"
+    }
+};
+
+INSTANTIATE_TEST_CASE_P(
+        Metamask,
+        PersonalSignTestP,
+        ::testing::ValuesIn(META_MASK_PERSONAL_SIGN_TEST_CASES)
+);
+
 } // namespace

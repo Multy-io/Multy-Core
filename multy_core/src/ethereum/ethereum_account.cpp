@@ -132,13 +132,12 @@ struct EthereumPrivateKey : public PrivateKey
         secp256k1_ecdsa_recoverable_signature_serialize_compact(
                 secp_ctx(), signature_data.data(), &recovery_id, &signature);
 
+        // NOTE: If we are to support pre-EIP155 signatures, we should add 27 to the recovery_id;
+        // Please see Ethereum yellow paper and EIP155
+        // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
         signature_data.back() = static_cast<unsigned char>(recovery_id);
-        BinaryDataPtr result;
-        throw_if_error(
-                make_binary_data_from_bytes(
-                        signature_data.data(), signature_data.size(),
-                        reset_sp(result)));
-        return result;
+
+        return make_clone(as_binary_data(signature_data));
     }
 
     const KeyData& get_data() const
