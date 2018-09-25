@@ -128,8 +128,9 @@ if (MULTY_WITH_EOS)
         src/eos/eos_name.cpp
         src/eos/eos_transaction.cpp
         src/eos/eos_transaction_action.cpp
-        src/eos/eos_transaction_builder_updateauth.cpp
         src/eos/eos_transaction_transfer_action.cpp
+        src/eos/eos_transaction_builder_updateauth.cpp
+        src/eos/eos_transaction_builder_transfer.cpp
     )
 endif()
 

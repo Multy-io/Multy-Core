@@ -27,6 +27,7 @@ const std::array<uint8_t, 7> EOS_TOKEN_NAME = {0x45, 0x4f, 0x53, 0x00, 0x00, 0x0
 enum EosTransactionBuilderType
 {
     EOS_TRANSACTION_BUILDER_UPDATEAUTH,
+    EOS_TRANSACTION_BUILDER_TRANSFER,
 };
 
 #ifdef __cplusplus

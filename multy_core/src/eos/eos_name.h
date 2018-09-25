@@ -32,6 +32,7 @@ public:
 private:
     // Non-const to make it copyable.
     uint64_t m_data;
+    std::string m_data_string;
 };
 
 typedef EosName EosAddress;

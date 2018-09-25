@@ -82,7 +82,8 @@ EosName::EosName()
 }
 
 EosName::EosName(const std::string& name)
-    : m_data(name_string_to_uint64(name))
+    : m_data(name_string_to_uint64(name)),
+      m_data_string(name)
 {
 }
 
@@ -97,7 +98,8 @@ uint64_t EosName::get_data() const
 
 std::string EosName::get_string() const
 {
-    THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET, __FUNCTION__);
+    return m_data_string;
+    //THROW_EXCEPTION2(ERROR_FEATURE_NOT_IMPLEMENTED_YET, __FUNCTION__);
 }
 
 EosName EosName::from_string(const std::string& string)

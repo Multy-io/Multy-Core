@@ -7,6 +7,8 @@
 #include "multy_core/properties.h"
 #include "multy_core/transaction.h"
 #include "multy_core/big_int.h"
+#include "multy_core/transaction_builder.h"
+#include "multy_core/eos.h"
 
 
 #include "multy_test/supported_blockchains.h"
@@ -32,45 +34,41 @@ GTEST_TEST(EosTransactionTest, SmokeTest_testnet_1)
             "5JViCsGPFdFBUxzsLzXyYX4XdSuovADMFdkucEzTkioMSVK9NPG",
             reset_sp(account)));
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(make_transaction_builder(account.get(),
+            EOS_TRANSACTION_BUILDER_TRANSFER,
+            "",
+            reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
 
     {
-        Properties* properties = nullptr;
+        Properties* builder_properties = nullptr;
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_properties));
+
         const int32_t block_num(6432047);
         BigIntPtr ref_block_prefix;
         const std::string expiration("2018-07-19T16:35:07Z"); // + 30s
-
         HANDLE_ERROR(make_big_int("262535889", reset_sp(ref_block_prefix)));
 
-        HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
-        HANDLE_ERROR(properties_set_int32_value(properties, "block_num", block_num));
-        HANDLE_ERROR(properties_set_big_int_value(properties, "ref_block_prefix", ref_block_prefix.get()));
-        HANDLE_ERROR(properties_set_string_value(properties, "expiration", expiration.c_str()));
-    }
+        HANDLE_ERROR(properties_set_int32_value(builder_properties, "block_num", block_num));
+        HANDLE_ERROR(properties_set_big_int_value(builder_properties, "ref_block_prefix", ref_block_prefix.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_properties, "expiration", expiration.c_str()));
 
-    {
-        Properties* source = nullptr;
-        HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
-
-        // Address balance
         BigIntPtr balance;
         HANDLE_ERROR(make_big_int("20000", reset_sp(balance))); // balance = 2.0000 EOS
 
-        HANDLE_ERROR(properties_set_big_int_value(source, "amount", balance.get()));
-        HANDLE_ERROR(properties_set_string_value(source, "address", "pasha"));
-    }
-
-    {
-        Properties* destination = nullptr;
-        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+        HANDLE_ERROR(properties_set_big_int_value(builder_properties, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_properties, "from", "pasha"));
 
         BigIntPtr amount;
         HANDLE_ERROR(make_big_int("10", reset_sp(amount))); // amount = 0.0010 EOS
-        HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
-        HANDLE_ERROR(properties_set_string_value(destination, "address", "test.pasha"));
+
+        HANDLE_ERROR(properties_set_big_int_value(builder_properties, "amount", amount.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_properties, "to", "test.pasha"));
     }
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(transaction_builder_make_transaction(builder.get(), reset_sp(transaction)));
 
     // transaction_id = "6b24ce668ff02ecdd438f799012b83b0e8d1904bfb0cbadfce02fda3e78124ec"
     ConstCharPtr signatures;
@@ -89,51 +87,47 @@ GTEST_TEST(EosTransactionTest, SmokeTest_testnet_2)
             "5JViCsGPFdFBUxzsLzXyYX4XdSuovADMFdkucEzTkioMSVK9NPG",
             reset_sp(account)));
 
-    TransactionPtr transaction;
-    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
-    ASSERT_NE(nullptr, transaction);
+    TransactionBuilderPtr builder;
+    HANDLE_ERROR(make_transaction_builder(account.get(),
+            EOS_TRANSACTION_BUILDER_TRANSFER,
+            "",
+            reset_sp(builder)));
+    EXPECT_NE(nullptr, builder);
 
-    // transfer pasha test.pasha "1 EOS" "multy"
     {
-        Properties* properties = nullptr;
+        Properties* builder_propertie = nullptr;
+        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
+
         const int32_t block_num(13669);
-        const std::string expiration("2018-07-23T08:23:04Z"); // + 30s
         BigIntPtr ref_block_prefix;
+        const std::string expiration("2018-07-23T08:23:04Z"); // + 30s
         HANDLE_ERROR(make_big_int("2845038847", reset_sp(ref_block_prefix)));
 
-        HANDLE_ERROR(transaction_get_properties(transaction.get(), &properties));
-        HANDLE_ERROR(properties_set_int32_value(properties, "block_num", block_num));
-        HANDLE_ERROR(properties_set_big_int_value(properties, "ref_block_prefix", ref_block_prefix.get()));
-        HANDLE_ERROR(properties_set_string_value(properties, "expiration", expiration.c_str()));
-    }
 
-    {
-        Properties* source = nullptr;
-        HANDLE_ERROR(transaction_add_source(transaction.get(), &source));
+        HANDLE_ERROR(properties_set_int32_value(builder_propertie, "block_num", block_num));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "ref_block_prefix", ref_block_prefix.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "expiration", expiration.c_str()));
 
-        // Address balance
         BigIntPtr balance;
         HANDLE_ERROR(make_big_int("20000", reset_sp(balance))); // balance = 2.0000 EOS
 
-        HANDLE_ERROR(properties_set_big_int_value(source, "amount", balance.get()));
-        HANDLE_ERROR(properties_set_string_value(source, "address", "pasha"));
-    }
-
-    {
-        Properties* destination = nullptr;
-        HANDLE_ERROR(transaction_add_destination(transaction.get(), &destination));
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "from", "pasha"));
 
         BigIntPtr amount;
         HANDLE_ERROR(make_big_int("10000", reset_sp(amount))); // amount = 1.0000 EOS
-        HANDLE_ERROR(properties_set_big_int_value(destination, "amount", amount.get()));
-        HANDLE_ERROR(properties_set_string_value(destination, "address", "test.pasha"));
-    }
 
-    {
+        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "amount", amount.get()));
+        HANDLE_ERROR(properties_set_string_value(builder_propertie, "to", "test.pasha"));
+
         BinaryDataPtr message;
         make_binary_data_from_hex("6d756c7479", reset_sp(message));
-        transaction_set_message(transaction.get(), message.get());
+        HANDLE_ERROR(properties_set_binary_data_value(builder_propertie, "memo", message.get()));
     }
+
+
+    TransactionPtr transaction;
+    HANDLE_ERROR(transaction_builder_make_transaction(builder.get(), reset_sp(transaction)));
 
     // transaction_id = "6981ea5ac7da255c24b939216ca13d9348c483334700fdeba6e1539b7827ec39"
     ConstCharPtr signatures;
