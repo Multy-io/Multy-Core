@@ -14,7 +14,7 @@
 #endif // MULTY_WITH_GOLOS
 
 #if MULTY_WITH_EOS
-#include "multy_core/src/EOS/EOS_facade.h"
+#include "multy_core/src/eos/eos_facade.h"
 #endif // MULTY_WITH_EOS
 
 namespace

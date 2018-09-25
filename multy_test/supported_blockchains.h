@@ -11,7 +11,7 @@
 #include "multy_core/bitcoin.h"
 #include "multy_core/ethereum.h"
 #include "multy_core/golos.h"
-#include "multy_core/EOS.h"
+#include "multy_core/eos.h"
 
 const BlockchainType BITCOIN_MAIN_NET {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET};
 const BlockchainType BITCOIN_TEST_NET {BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_TESTNET};

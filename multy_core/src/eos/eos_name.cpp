@@ -4,9 +4,9 @@
  * See LICENSE for details
  */
 
-#include "multy_core/src/EOS/eos_name.h"
+#include "multy_core/src/eos/eos_name.h"
 
-#include "multy_core/EOS.h"
+#include "multy_core/eos.h"
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"

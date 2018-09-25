@@ -118,14 +118,15 @@ endif()
 # EOS
 if (MULTY_WITH_EOS)
     list(APPEND MULTY_CORE_SOURCES
-        EOS.h
-        src/EOS/EOS_facade.cpp
-        src/EOS/EOS_account.cpp
-        src/EOS/eos_binary_stream.cpp
-        src/EOS/eos_name.cpp
-        src/EOS/EOS_transaction.cpp
-        src/EOS/eos_transaction_action.cpp
-        src/EOS/eos_transaction_builder_updateauth.cpp
+        eos.h
+        src/eos/eos_facade.cpp
+        src/eos/eos_account.cpp
+        src/eos/eos_binary_stream.cpp
+        src/eos/eos_name.cpp
+        src/eos/eos_transaction.cpp
+        src/eos/eos_transaction_action.cpp
+        src/eos/eos_transaction_builder_updateauth.cpp
+        src/eos/eos_transaction_transfer_action.cpp
     )
 endif()
 

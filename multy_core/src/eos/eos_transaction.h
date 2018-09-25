@@ -29,7 +29,6 @@ class EosTransactionSource;
 class EosTransactionDestination;
 class EosTransactionAction;
 class EosBinaryStream;
-class EosTransactionAction;
 
 typedef std::unique_ptr<EosTransactionSource> EosTransactionSourcePtr;
 typedef std::unique_ptr<EosTransactionDestination> EosTransactionDestinationPtr;
