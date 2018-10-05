@@ -73,6 +73,21 @@ bool operator==(const BinaryData& left, const BinaryData& right)
             && memcmp(left.data, right.data, left.len) == 0;
 }
 
+BinaryData skip_leading_zeroes(const BinaryData& source)
+{
+    INVARIANT(source.data != nullptr);
+
+    const unsigned char* data = source.data;
+    size_t len = source.len;
+    while(!data && len > 0)
+    {
+        ++data;
+        --len;
+    }
+
+    return BinaryData{data, len};
+}
+
 } // namespace internal
 
 } // namespace multy_core

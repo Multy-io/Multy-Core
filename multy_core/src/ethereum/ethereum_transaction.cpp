@@ -10,6 +10,7 @@
 #include "multy_core/src/ethereum/ethereum_extra_data.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/api/key_impl.h"
+#include "multy_core/src/binary_data_utility.h"
 #include "multy_core/src/utility.h"
 
 namespace
@@ -305,8 +306,8 @@ struct EthereumTransactionSignature
     {
         //(m_signature->v + offset) << (u256)m_vrs->r << (u256)m_vrs->s;
         *stream << uint32_t(offset + recovery_id)
-                << slice(*m_signature_data, 0, 32)
-                << slice(*m_signature_data, 0 + 32, 32);
+                << skip_leading_zeroes(slice(*m_signature_data, 0, 32))
+                << skip_leading_zeroes(slice(*m_signature_data, 0 + 32, 32));
     }
 
 private:
