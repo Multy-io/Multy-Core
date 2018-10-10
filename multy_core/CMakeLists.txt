@@ -6,7 +6,7 @@ if (MULTY_MORE_WARNINGS)
         -Wall -Wpedantic -Wextra -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings
 
         # Disabled warnings:
-         -Wno-missing-braces # false-positive on std::array initialization.
+        -Wno-missing-braces # false-positive on std::array initialization.
     )
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")

@@ -28,6 +28,18 @@ namespace
 using namespace test_utility;
 using namespace multy_core::internal;
 
+} // namespace
+
+namespace std
+{
+
+void PrintTo(const std::nullptr_t&, std::ostream* out)
+{
+    *out << "<nullptr>";
+}
+
+} // namespace std
+
 std::ostream& operator<<(std::ostream& ostr, HDPath const& path)
 {
     ostr << "m";
@@ -51,18 +63,6 @@ std::ostream& operator<<(std::ostream& ostr, const BlockchainType& blockchain_ty
 
     return ostr;
 }
-
-} // namespace
-
-namespace std
-{
-
-void PrintTo(const std::nullptr_t&, std::ostream* out)
-{
-    *out << "<nullptr>";
-}
-
-} // namespace std
 
 void PrintTo(const Error& e, std::ostream* out)
 {

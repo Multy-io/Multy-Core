@@ -42,8 +42,8 @@ class MULTY_CORE_API EOSAccount : public AccountBase
 public:
     EOSAccount(BlockchainType blockchain_type, EOSPrivateKeyPtr key, HDPath path);
     std::string get_address() const override;
-    bool is_testnet() const;
 
+    const PrivateKey& get_private_key_ref() const override;
 private:
     const EOSPrivateKeyPtr m_private_key;
 };

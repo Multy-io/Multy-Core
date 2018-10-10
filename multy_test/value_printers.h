@@ -66,4 +66,7 @@ inline void PrintTo(const std::unique_ptr<T, D>& up, std::ostream* out)
     }
 }
 
+std::ostream& operator<<(std::ostream& ostr, Blockchain blockchain);
+std::ostream& operator<<(std::ostream& ostr, const BlockchainType& blockchain_type);
+
 #endif // MULTY_TEST_VALUE_PRINTERS_H

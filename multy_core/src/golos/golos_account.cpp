@@ -290,7 +290,7 @@ AccountPtr make_golos_account(BlockchainType blockchain_type,
 }
 
 GolosAccount::GolosAccount(BlockchainType blockchain_type, GolosPrivateKeyPtr key, HDPath path)
-    : AccountBase(blockchain_type, *key, std::move(path)),
+    : AccountBase(blockchain_type, std::move(path)),
       m_private_key(std::move(key))
 {}
 
@@ -299,6 +299,11 @@ std::string GolosAccount::get_address() const
     THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
             "Not supported: can't derive address from private key "
             "for Golos blockchain.");
+}
+
+const PrivateKey& GolosAccount::get_private_key_ref() const
+{
+    return *m_private_key;
 }
 
 } // namespace wallet_core

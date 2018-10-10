@@ -210,13 +210,18 @@ namespace internal
 BitcoinAccount::BitcoinAccount(BlockchainType blockchain_type,
         BitcoinPrivateKeyPtr key,
         HDPath path)
-    : AccountBase(blockchain_type, *key, path),
+    : AccountBase(blockchain_type, path),
       m_private_key(std::move(key))
 {
 }
 
 BitcoinAccount::~BitcoinAccount()
 {
+}
+
+const PrivateKey& BitcoinAccount::get_private_key_ref() const
+{
+    return *m_private_key;
 }
 
 void bitcoin_hash_160(const BinaryData& input, BinaryData* output)
