@@ -108,7 +108,7 @@ Error* big_int_set_int64_value(BigInt* big_int, int64_t value)
 
     try
     {
-        big_int->set_value_int64(value);
+        *big_int = BigInt(value);
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_BIG_INT);
 

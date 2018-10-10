@@ -19,6 +19,7 @@ namespace internal
 {
 
 std::string to_string(const Json::Value& value);
+Json::Value parse_json(const std::string& value);
 
 Json::Value make_json_object(std::initializer_list<std::pair<const char*, Json::Value>> object_values);
 Json::Value make_json_array(std::initializer_list<Json::Value> array_values);
@@ -27,7 +28,7 @@ Json::Value make_json_array(std::initializer_list<Json::Value> array_values);
 template <typename... Args>
 Json::Value make_json_array(Args... args)
 {
-    return make_json_array({args...});
+    return make_json_array({std::forward(args)...});
 }
 
 } // namespace internal

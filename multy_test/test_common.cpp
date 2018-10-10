@@ -105,7 +105,17 @@ GTEST_TEST(VersionTest, get_version)
     Version version;
     HANDLE_ERROR(get_version(&version));
 
-    ASSERT_NE(0, version.major + version.minor + version.build);
+
+    if (strstr("dummy", version.note) != nullptr)
+    {
+        // Not a tagged version
+        ASSERT_EQ(0, version.major + version.minor + version.build);
+    }
+    else
+    {
+        // tagged version with proper version number
+        ASSERT_NE(0, version.major + version.minor + version.build);
+    }
     ASSERT_NE(nullptr, version.note);
 }
 
@@ -115,7 +125,7 @@ GTEST_TEST(VersionTest, make_version_string)
     HANDLE_ERROR(make_version_string(reset_sp(version_string)));
 
     ASSERT_NE(nullptr, version_string);
-    std::cerr << "Library version:" << version_string.get() << std::endl;
+    std::cout << "multy_core version:" << version_string.get() << std::endl;
 }
 
 GTEST_TEST(VersionTestInvalidArgs, get_version)

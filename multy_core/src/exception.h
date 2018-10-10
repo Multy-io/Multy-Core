@@ -53,6 +53,7 @@ public:
     ErrorCode get_error_code() const;
     std::string get_message() const;
     CodeLocation get_location() const;
+    std::string get_backtrace() const;
 
 private:
     const ErrorCode m_error_code;

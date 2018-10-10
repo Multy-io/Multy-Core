@@ -335,6 +335,9 @@ EthereumTransaction::EthereumTransaction(const Account& account)
               {
                     this->on_token_transfer_set(new_token_transfer);
               }),
+      m_payload(get_transaction_properties(),
+                              "payload",
+                              Property::OPTIONAL),
       m_fee(new EthereumTransactionFee),
       m_source(),
       m_destination(),
@@ -371,7 +374,7 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
         const BinaryDataPtr call_method = m_token_transfer_data->serialize(*m_destination);
         list <<  *call_method;
     }
-    else if(m_payload && (m_payload->data != nullptr))
+    else if(*m_payload && ((*m_payload)->data != nullptr))
     {
         list << m_payload;
     }
@@ -479,7 +482,7 @@ BigInt EthereumTransaction::estimate_total_fee(size_t, size_t) const
     const uint64_t PAYLOAD_NONZERO_BYTE_GAS = 68;
     const uint64_t TX_BASE_GAS = 21000;
 
-    const BinaryData& data = m_payload ? *m_payload : BinaryData{nullptr, 0};
+    const BinaryData& data = m_payload.is_set() ? **m_payload : BinaryData{nullptr, 0};
     const uint64_t zero_bytes_count = std::count(data.data, data.data + data.len, 0);
 
     const uint64_t estimated_gas = TX_BASE_GAS
@@ -496,7 +499,7 @@ Properties& EthereumTransaction::add_source()
                 "Multiple sources are not supported.");
     }
     m_source.reset(new EthereumTransactionSource);
-    return m_source->get_properties();
+    return register_properties("Source", m_source->get_properties());
 }
 
 Properties& EthereumTransaction::add_destination()
@@ -507,7 +510,7 @@ Properties& EthereumTransaction::add_destination()
                 "Multiple destinations are not supported.");
     }
     m_destination.reset(new EthereumTransactionDestination);
-    return m_destination->get_properties();
+    return register_properties("Destination", m_destination->get_properties());
 }
 
 Properties& EthereumTransaction::get_fee()
@@ -517,7 +520,8 @@ Properties& EthereumTransaction::get_fee()
 
 void EthereumTransaction::set_message(const BinaryData& value)
 {
-    m_payload = make_clone(value);
+    m_payload.set_value(value);
+//    m_payload = make_clone(value);
 }
 } // namespace internal
 } // namespace multy_core

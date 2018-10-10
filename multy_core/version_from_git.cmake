@@ -3,7 +3,7 @@
 
 # Get the description (tag-no_of_commits-dirty)
 execute_process(
-  COMMAND git describe --tags --abbrev=0 --dirty
+  COMMAND git describe --tags --abbrev=0 --dirty --candidates=0
   WORKING_DIRECTORY ${GIT_DIR}
   OUTPUT_VARIABLE GIT_DESCRIPTION
   OUTPUT_STRIP_TRAILING_WHITESPACE
