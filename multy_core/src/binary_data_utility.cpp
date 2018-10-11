@@ -79,7 +79,7 @@ BinaryData skip_leading_zeroes(const BinaryData& source)
 
     const unsigned char* data = source.data;
     size_t len = source.len;
-    while(!data && len > 0)
+    while(!*data && len > 0)
     {
         ++data;
         --len;
