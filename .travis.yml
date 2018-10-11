@@ -73,7 +73,7 @@ matrix:
           - build-tools-${ANDROID_BUILD_TOOLS}
           - android-${ANDROID_API_LEVEL}
           - extra # ???
-          - addon # ???
+          - add-on # ???
       #    - sys-img-armeabi-v7a-addon-google_apis-google-$EMULATOR_API_LEVEL
 
       install:

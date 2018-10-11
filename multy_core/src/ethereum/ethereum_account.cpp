@@ -17,6 +17,7 @@
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/utility.h"
 #include "multy_core/src/hash.h"
+#include "multy_core/src/binary_data_utility.h"
 
 extern "C" {
 #include "ccan/str/hex/hex.h"
@@ -76,9 +77,23 @@ typedef UPtr<EthereumPublicKey> EthereumPublicKeyPtr;
 
 struct EthereumPrivateKey : public PrivateKey
 {
-    typedef std::array<uint8_t, 32> KeyData;
+    enum {KEY_SIZE = 32};
+    typedef std::vector<uint8_t> KeyData;
 
-    explicit EthereumPrivateKey(const KeyData& data) : m_data(data)
+    explicit EthereumPrivateKey(KeyData data)
+        : m_data(std::move(data))
+    {
+        if (m_data.size() != KEY_SIZE)
+        {
+            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Invalid Ethereum private key size.")
+                    << " Expected: " << KEY_SIZE
+                    << " got: " << m_data.size();
+        }
+        ec_validate_private_key(as_binary_data(m_data));
+    }
+
+    explicit EthereumPrivateKey(BinaryData data)
+        : EthereumPrivateKey(KeyData(data.data, data.data + data.len))
     {
     }
 
@@ -169,7 +184,7 @@ public:
             BlockchainType blockchain_type,
             EthereumPrivateKeyPtr private_key,
             const HDPath& path = HDPath())
-        : AccountBase(blockchain_type, *private_key, path),
+        : AccountBase(blockchain_type, path),
           m_private_key(std::move(private_key))
     {
     }
@@ -181,6 +196,29 @@ public:
                         m_private_key->make_public_key().release()));
 
         return EthereumAddress::to_string(make_address(*public_key));
+    }
+
+    const PrivateKey& get_private_key_ref() const override
+    {
+        return *m_private_key;
+    }
+
+    void change_private_key(int position, unsigned char byte) override
+    {
+        auto private_key_data = m_private_key->get_data();
+        const int size = private_key_data.size();
+        const int pos = position < 0 ? size + position : position;
+
+        if (pos < 0 || pos >= size)
+        {
+            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                    "Requested private key position is out of range.")
+                    << "position requested: " << position
+                    << "private key length: " << size << ".";
+        }
+
+        private_key_data[pos] = byte;
+        m_private_key.reset(new EthereumPrivateKey(std::move(private_key_data)));
     }
 
 private:
@@ -228,11 +266,9 @@ AccountPtr EthereumHDAccount::make_account(
     ExtendedKeyPtr address_key;
     throw_if_error(make_child_key(&parent_key, index, reset_sp(address_key)));
 
-    EthereumPrivateKey::KeyData data;
-    static_assert(sizeof(address_key->key.priv_key) == data.max_size() + 1, "");
-    memcpy(data.data(), address_key->key.priv_key + 1, data.size() - 1);
-
-    EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(data));
+    EthereumPrivateKeyPtr private_key(
+                new EthereumPrivateKey(
+                    power_slice(address_key->key.priv_key, 1, -1)));
 
     AccountPtr result(
             new EthereumAccount(
@@ -249,8 +285,8 @@ AccountPtr make_ethereum_account(BlockchainType blockchain_type,
     INVARIANT(serialized_private_key);
 
     const size_t private_key_len = strlen(serialized_private_key);
-    EthereumPrivateKey::KeyData key_data;
-    if (private_key_len != key_data.max_size() * 2)
+    EthereumPrivateKey::KeyData key_data(EthereumPrivateKey::KEY_SIZE);
+    if (private_key_len != EthereumPrivateKey::KEY_SIZE * 2)
     {
         THROW_EXCEPTION2(ERROR_KEY_INVALID_SERIALIZED_STRING,
                 "Serialized private key has invalid length.");
@@ -272,7 +308,7 @@ AccountPtr make_ethereum_account(BlockchainType blockchain_type,
             ERROR_KEY_CORRUPT,
             "Failed to verify private key.");
 
-    EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(key_data));
+    EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(std::move(key_data)));
     return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
 }
 

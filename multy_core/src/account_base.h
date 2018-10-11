@@ -34,7 +34,6 @@ class AccountBase : public Account
 public:
     AccountBase(
             BlockchainType blockchain_type,
-            const PrivateKey& private_key_ref,
             const HDPath& path = HDPath());
     virtual ~AccountBase();
 
@@ -44,11 +43,11 @@ public:
     virtual PublicKeyPtr get_public_key() const;
 
 protected:
+    virtual const PrivateKey& get_private_key_ref() const = 0;
+
+protected:
     const BlockchainType m_blockchain_type;
     const HDPath m_path;
-
-private:
-    const PrivateKey& m_private_key_ref;
 };
 
 // Base class for coin-specific HD accounts.

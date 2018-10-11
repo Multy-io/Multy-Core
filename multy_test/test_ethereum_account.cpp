@@ -8,6 +8,8 @@
 #include "multy_core/src/ethereum/ethereum_account.h"
 
 #include "multy_core/ethereum.h"
+#include "multy_core/mnemonic.h"
+#include "multy_core/key.h"
 #include "multy_core/src/api/account_impl.h"
 #include "multy_core/src/api/key_impl.h"
 #include "multy_core/src/api/sha3_impl.h"
@@ -15,6 +17,8 @@
 
 #include "multy_test/serialized_keys_test_base.h"
 #include "multy_test/supported_blockchains.h"
+#include "multy_test/utility.h"
+#include "multy_test/value_printers.h"
 #include "multy_test/utility.h"
 
 #include "gtest/gtest.h"
@@ -189,6 +193,60 @@ GTEST_TEST(EthereumBlockchainTest, validate_address)
     // Too big to be a valid address
     EXPECT_ERROR(validate_address(ETH_MAINNET, "b826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000"));
     EXPECT_ERROR(validate_address(ETH_MAINNET, "0xb826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000"));
+}
+
+GTEST_TEST(EtheremAccountTest, account_change_private_key)
+{
+    const char* serialized_private_key = "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71";
+    const auto expected_private_key = test_utility::from_hex(serialized_private_key);
+
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            serialized_private_key,
+            reset_sp(account)));
+
+    KeyPtr private_key;
+    HANDLE_ERROR(account_get_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
+
+    ConstCharPtr private_key_str;
+    HANDLE_ERROR(key_to_string(private_key.get(), reset_sp(private_key_str)));
+    ASSERT_STREQ(serialized_private_key, private_key_str.get());
+
+    for (int i = -32; i < 32; ++i)
+    {
+        SCOPED_TRACE(i);
+
+        // change the account private key
+        HANDLE_ERROR(account_change_private_key(account.get(), i, 0));
+        HANDLE_ERROR(account_get_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
+        HANDLE_ERROR(key_to_string(private_key.get(), reset_sp(private_key_str)));
+        ASSERT_STRNE(serialized_private_key, private_key_str.get());
+
+        // reset private key back to original state
+        const size_t vector_index = static_cast<size_t>(i < 0 ? expected_private_key.size() + i : i);
+        HANDLE_ERROR(account_change_private_key(account.get(), i, expected_private_key[vector_index]));
+        HANDLE_ERROR(account_get_key(account.get(), KEY_TYPE_PRIVATE, reset_sp(private_key)));
+        HANDLE_ERROR(key_to_string(private_key.get(), reset_sp(private_key_str)));
+        ASSERT_STREQ(serialized_private_key, private_key_str.get());
+    }
+}
+
+GTEST_TEST(EtheremAccountInvalidArgsTest, account_change_private_key)
+{
+    AccountPtr account;
+    HANDLE_ERROR(make_account(
+            ETHEREUM_TEST_NET,
+            ACCOUNT_TYPE_DEFAULT,
+            "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71",
+            reset_sp(account)));
+
+    EXPECT_ERROR(account_change_private_key(nullptr, 0, 0));
+    EXPECT_ERROR(account_change_private_key(account.get(), -33, 0));
+    EXPECT_ERROR(account_change_private_key(account.get(), 32, 0));
+    EXPECT_ERROR(account_change_private_key(account.get(), -100, 0));
+    EXPECT_ERROR(account_change_private_key(account.get(), 100, 0));
 }
 
 } // namespace

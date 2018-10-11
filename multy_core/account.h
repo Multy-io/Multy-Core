@@ -119,6 +119,20 @@ MULTY_CORE_API struct Error* account_get_blockchain_type(
         const struct Account* account,
         struct BlockchainType* out_blockchain_type);
 
+/** Special function to mitigate consequences of the random-ETH-private-key bug.
+ *
+ * Allows clients to brute-force private key by changing last
+ * byte to match the one that was generated at some point in the past.
+ *
+ * @param account - account which private key has to be modified.
+ * @param position - position in the private key (0 is first, 1 is second, -1 is last, etc.).
+ * @param last_byte - last byte value of the private key to change to.
+ */
+MULTY_CORE_API struct Error* account_change_private_key(
+        struct Account* account,
+        int position,
+        unsigned char byte);
+
 /** Frees HDAccount instance, can accept nullptr. **/
 MULTY_CORE_API void free_hd_account(struct HDAccount*);
 
