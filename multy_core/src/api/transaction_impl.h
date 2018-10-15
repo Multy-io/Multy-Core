@@ -20,6 +20,7 @@
 
 struct BigInt;
 struct PublicKey;
+struct Properties;
 
 struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Transaction>
 {
@@ -78,8 +79,9 @@ struct MULTY_CORE_API Transaction : public ::multy_core::internal::ObjectBase<Tr
      * @return own properties of the transaction, DO NOT DELETE/FREE.
      */
     virtual Properties& get_transaction_properties() = 0;
-
+    virtual bool validate_all_properties(std::string* not_set_properties) const = 0;
     virtual void set_message(const BinaryData& value) = 0;
+
     static const void* get_object_magic();
 };
 

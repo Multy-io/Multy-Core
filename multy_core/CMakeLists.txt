@@ -53,6 +53,8 @@ set(MULTY_CORE_SOURCES
     src/api/common.cpp
     src/api/error.cpp
     src/api/ethereum.cpp
+    src/api/json_api.cpp
+    src/api/json_api_impl.cpp
     src/api/key.cpp
     src/api/key_impl.cpp
     src/api/mnemonic.cpp

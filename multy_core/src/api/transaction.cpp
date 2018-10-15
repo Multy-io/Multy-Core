@@ -247,5 +247,6 @@ Error* transaction_serialize_encoded(
 void free_transaction(Transaction* transaction)
 {
     CHECK_OBJECT_BEFORE_FREE(transaction);
+
     delete transaction;
 }

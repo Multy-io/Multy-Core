@@ -13,7 +13,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <iostream>
 
 namespace
 {
@@ -135,11 +134,6 @@ BigInt::~BigInt()
 }
 
 void BigInt::set_value(const char* value)
-{
-    *this = BigInt(value);
-}
-
-void BigInt::set_value_int64(int64_t value)
 {
     *this = BigInt(value);
 }

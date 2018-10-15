@@ -112,6 +112,7 @@ struct TestTransaction : public Transaction
     Properties& get_fee() override;
     Properties& get_transaction_properties() override;
     void set_message(const BinaryData& value) override;
+    bool validate_all_properties(std::string* not_set_properties) const override { return true;}
 
 private:
     const BlockchainType m_blockchain = BlockchainType{BLOCKCHAIN_BITCOIN, BITCOIN_NET_TYPE_MAINNET};

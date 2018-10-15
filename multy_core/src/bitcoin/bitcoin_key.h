@@ -71,7 +71,7 @@ private:
     const KeyData m_data;    // private key data with no prefix
     const BitcoinNetType m_net_type;
     const PublicKeyFormat m_public_key_format;
-    const BitcoinAccountType m_account_type;
+//    const BitcoinAccountType m_account_type;
 };
 
 BitcoinPrivateKeyPtr make_bitcoin_private_key_from_wif(const char* wif_string, BitcoinAccountType account_type);

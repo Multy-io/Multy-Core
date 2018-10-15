@@ -116,6 +116,15 @@ public:
 
     struct MULTY_CORE_API Binder
     {
+        enum ValueType
+        {
+            VALUE_TYPE_INT32,
+            VALUE_TYPE_BIG_INT,
+            VALUE_TYPE_STRING,
+            VALUE_TYPE_BINARY_DATA,
+            VALUE_TYPE_PRIVATE_KEY,
+        };
+
         virtual ~Binder();
         virtual void set_value(const int32_t& /*value*/) = 0;
         virtual void set_value(const BigInt& /*value*/) = 0;
@@ -134,6 +143,8 @@ public:
         virtual std::string get_property_spec() const = 0;
         virtual Property::Trait get_trait() const = 0;
         virtual void set_trait(Property::Trait) = 0;
+
+        virtual ValueType get_value_type() const = 0;
 
         virtual bool is_set() const = 0;
         virtual const void* get_value() const = 0;

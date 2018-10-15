@@ -73,24 +73,24 @@ PublicKeyPtr BitcoinPublicKey::clone() const
 
 BitcoinPrivateKey::BitcoinPrivateKey(KeyData data,
         BitcoinNetType net_type,
-        BitcoinAccountType account_type,
+        BitcoinAccountType /*account_type*/,
         PublicKeyFormat public_key_format)
     : m_data(std::move(data)),
       m_net_type(net_type),
-      m_public_key_format(public_key_format),
-      m_account_type(account_type)
+      m_public_key_format(public_key_format)
+//      m_account_type(account_type)
 {
     ec_validate_private_key(as_binary_data(m_data));
 }
 
 BitcoinPrivateKey::BitcoinPrivateKey(const BinaryData& data,
         BitcoinNetType net_type,
-        BitcoinAccountType account_type,
+        BitcoinAccountType /*account_type*/,
         PublicKeyFormat public_key_format)
     : m_data(data.data, data.data + data.len),
       m_net_type(net_type),
-      m_public_key_format(public_key_format),
-      m_account_type(account_type)
+      m_public_key_format(public_key_format)
+//      m_account_type(account_type)
 {
     ec_validate_private_key(as_binary_data(m_data));
 }

@@ -33,6 +33,8 @@ public:
     value_type get_value(const char* name) const;
     value_type get_value(const std::string& name) const;
 
+    std::vector<const char*> get_all_names() const;
+
 private:
     const char* find_name(value_type value) const;
 
@@ -54,18 +56,6 @@ public:
     EnumNameMap(const char* type_name, std::initializer_list<EnumPair> values)
         : m_impl(type_name, std::move(to_storage(values)))
     {
-    }
-
-    static std::vector<EnumNameMapBase::storage_type> to_storage(std::initializer_list<EnumPair> values)
-    {
-        std::vector<EnumNameMapBase::storage_type> result;
-        result.reserve(values.size());
-        for (const auto& v : values)
-        {
-            result.emplace_back(v.value, v.name);
-        }
-
-        return result;
     }
 
     const char* get_type_name() const
@@ -92,6 +82,25 @@ public:
     {
         return get_value(name.c_str());
     }
+
+    std::vector<const char*> get_all_names() const
+    {
+        return m_impl.get_all_names();
+    }
+
+private:
+    static std::vector<EnumNameMapBase::storage_type> to_storage(std::initializer_list<EnumPair> values)
+    {
+        std::vector<EnumNameMapBase::storage_type> result;
+        result.reserve(values.size());
+        for (const auto& v : values)
+        {
+            result.emplace_back(v.value, v.name);
+        }
+
+        return result;
+    }
+
 
 private:
     EnumNameMapBase m_impl;
