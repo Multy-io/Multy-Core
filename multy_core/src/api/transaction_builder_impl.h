@@ -28,6 +28,7 @@ public:
 
     virtual TransactionPtr make_transaction() const = 0;
     virtual Properties& get_properties() = 0;
+    virtual void validate() const = 0;
 
     static const void* get_object_magic();
 };

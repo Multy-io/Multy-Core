@@ -53,9 +53,9 @@ protected:
     ~MultisigTransactionBuilderBase()
     {}
 
-    void validate(const CodeLocation& location) const
+    void validate() const override
     {
-        m_properties.validate(location);
+        m_properties.validate(MULTY_CODE_LOCATION);
     }
 
     virtual BinaryDataPtr make_message() const = 0;
@@ -97,7 +97,7 @@ public:
 
     TransactionPtr make_transaction() const override
     {
-        validate(MULTY_CODE_LOCATION);
+        validate();
 
         TransactionPtr transaction;
         ::make_transaction(&m_account, reset_sp(transaction));
@@ -213,7 +213,7 @@ public:
 
     TransactionPtr make_transaction() const override
     {
-        validate(MULTY_CODE_LOCATION);
+        validate();
 
         TransactionPtr transaction;
         ::make_transaction(&m_account, reset_sp(transaction));
@@ -313,7 +313,7 @@ public:
 
     TransactionPtr make_transaction() const override
     {
-        validate(MULTY_CODE_LOCATION);
+        validate();
 
         TransactionPtr transaction;
         ::make_transaction(&m_account, reset_sp(transaction));
@@ -366,7 +366,7 @@ private:
 };
 
 template <typename T>
-TransactionBuilder* tx_builder(const Account& account, const std::string& name)
+TransactionBuilder* new_tx_builder(const Account& account, const std::string& name)
 {
     return new T(account, name);
 }
@@ -384,9 +384,9 @@ TransactionBuilderPtr make_ethereum_multisig_transaction_builder(
     typedef TransactionBuilder* (*BuilderFunction)(const Account&, const std::string&);
     static const std::unordered_map<std::string, BuilderFunction> BUILDERS =
     {
-        {"new_wallet",  &tx_builder<MultisigNewWaletTransactionBuilder>},
-        {"new_request", &tx_builder<MultisigNewPaymentRequestTransactionBuilder>},
-        {"request",     &tx_builder<MultisigPaymentRequestActionTransactionBuilder>},
+        {"new_wallet",  &new_tx_builder<MultisigNewWaletTransactionBuilder>},
+        {"new_request", &new_tx_builder<MultisigNewPaymentRequestTransactionBuilder>},
+        {"request",     &new_tx_builder<MultisigPaymentRequestActionTransactionBuilder>},
     };
 
     const auto builder = BUILDERS.find(action);

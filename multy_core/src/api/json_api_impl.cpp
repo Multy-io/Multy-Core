@@ -217,16 +217,14 @@ std::string make_transaction_from_json(const std::string& json_string)
             account_json["type"].asUInt(),
             account_json["private_key"].asCString());
 
-    auto builder_json = root["builder"];
+    const auto& builder_json = root["builder"];
     TransactionBuilderPtr builder = facade.make_transaction_builder(
             *account,
-            builder_json["builder_type"].asUInt(),
-            builder_json.get("builder_action", std::string()).asCString());
-    builder_json.removeMember("builder_type");
-    builder_json.removeMember("builder_action");
+            builder_json["type"].asUInt(),
+            builder_json.get("action", std::string()).asCString());
 
     // stuff builder with properties:
-    set_properties(builder_json, blockchain_type, &builder->get_properties());
+    set_properties(builder_json["payload"], blockchain_type, &builder->get_properties());
 
     TransactionPtr transaction = builder->make_transaction();
     if (const auto& tx_json = root["transaction"])

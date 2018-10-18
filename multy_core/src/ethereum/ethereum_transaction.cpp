@@ -6,7 +6,6 @@
 
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 
-#include "multy_core/src/ethereum/ethereum_token.h"
 #include "multy_core/src/ethereum/ethereum_extra_data.h"
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/api/key_impl.h"
@@ -328,21 +327,12 @@ EthereumTransaction::EthereumTransaction(const Account& account)
                     }
               }),
       m_chain_id(static_cast<EthereumChainId>(account.get_blockchain_type().net_type)),
-      m_token_transfer(
-              get_transaction_properties(),
-              "token_transfer",
-              Property::OPTIONAL,
-              [this](const std::string& new_token_transfer)
-              {
-                    this->on_token_transfer_set(new_token_transfer);
-              }),
       m_payload(get_transaction_properties(),
                               "payload",
                               Property::OPTIONAL),
       m_fee(new EthereumTransactionFee),
       m_source(),
       m_destination(),
-      m_internal_destination(),
       m_signature()
 {
 }
@@ -368,14 +358,9 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
     list << m_nonce;
     list << m_fee->gas_price;
     list << m_fee->gas_limit;
-    list << m_internal_destination->address;
-    list << m_internal_destination->amount;
-    if (m_token_transfer_data)
-    {
-        const BinaryDataPtr call_method = m_token_transfer_data->serialize(*m_destination);
-        list <<  *call_method;
-    }
-    else if(*m_payload && ((*m_payload)->data != nullptr))
+    list << m_destination->address;
+    list << m_destination->amount;
+    if(*m_payload && ((*m_payload)->data != nullptr))
     {
         list << m_payload;
     }
@@ -398,15 +383,9 @@ void EthereumTransaction::serialize_to_stream(EthereumDataStream& stream, Serial
     stream << list;
 }
 
-void EthereumTransaction::on_token_transfer_set(const std::string& value)
-{
-    EthereumSmartContractPayloadPtr new_data = parse_token_transfer_data(value);
-    m_token_transfer_data.swap(new_data);
-}
-
 BigInt EthereumTransaction::get_total_spent() const
 {
-    return (m_internal_destination ? *m_internal_destination->amount : BigInt(0))
+    return (m_destination ? *m_destination->amount : BigInt(0))
             + get_total_fee();
 }
 
@@ -442,20 +421,7 @@ void EthereumTransaction::update()
 {
     verify();
 
-    if (!m_internal_destination)
-    {
-        m_internal_destination.reset(new EthereumTransactionDestination);
-    }
-    if (!m_token_transfer_data)
-    {
-        *m_internal_destination = *m_destination;
-    }
-    else
-    {
-        m_internal_destination = m_token_transfer_data->get_destination();
-    }
-
-    BigInt diff = m_source->amount.get_value() - m_internal_destination->amount.get_value();
+    BigInt diff = m_source->amount.get_value() - m_destination->amount.get_value();
     m_fee->total_fee = *m_fee->gas_limit * *m_fee->gas_price;
 
     diff -= m_fee->total_fee;
@@ -522,7 +488,6 @@ Properties& EthereumTransaction::get_fee()
 void EthereumTransaction::set_message(const BinaryData& value)
 {
     m_payload.set_value(value);
-//    m_payload = make_clone(value);
 }
 } // namespace internal
 } // namespace multy_core

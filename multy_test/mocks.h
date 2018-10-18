@@ -127,6 +127,8 @@ struct TestTransactionBuilder : public TransactionBuilder
 
     TransactionPtr make_transaction() const override;
     Properties& get_properties() override;
+    void validate() const override;
+
 
 private:
     Properties m_properties;

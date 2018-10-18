@@ -68,15 +68,17 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "builder_type": 0,
-        "builder_action": "new_wallet",
-        "balance": "1000000000000000000",
-        "price": 0,
-        "factory_address": "0x116ffa11dd8829524767f561da5d33d3d170e17d",
-        "owners": "[0x6b4be1fc5fa05c5d959d27155694643b8af72fd8,
-                0x2b74679d2a190fd679a85ce7767c05605237f030,
-                0xbc11d8f8d741515d2696e34333a0671adb6aee34]",
-        "confirmations": 2
+        "type": 0,
+        "action": "new_wallet",
+        "payload": {
+            "balance": "1000000000000000000",
+            "price": 0,
+            "factory_address": "0x116ffa11dd8829524767f561da5d33d3d170e17d",
+            "owners": "[0x6b4be1fc5fa05c5d959d27155694643b8af72fd8,
+                    0x2b74679d2a190fd679a85ce7767c05605237f030,
+                    0xbc11d8f8d741515d2696e34333a0671adb6aee34]",
+            "confirmations": 2
+        }
     },
     "transaction": {
         "nonce": 1,
@@ -106,12 +108,14 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "builder_type": 0,
-        "builder_action": "new_request",
-        "balance": "1000000000000000000",
-        "amount": "400000000000000000",
-        "wallet_address": "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F",
-        "dest_address": "0x2B74679D2a190Fd679a85cE7767c05605237f030"
+        "type": 0,
+        "action": "new_request",
+        "payload": {
+            "balance": "1000000000000000000",
+            "amount": "400000000000000000",
+            "wallet_address": "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F",
+            "dest_address": "0x2B74679D2a190Fd679a85cE7767c05605237f030"
+        }
     },
     "transaction": {
         "nonce": 2,
@@ -139,12 +143,14 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "builder_type": 0,
-        "builder_action": "request",
-        "balance": "1000000000000000000",
-        "wallet_address": "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F",
-        "request_id": 0,
-        "action": "reject"
+        "type": 0,
+        "action": "request",
+        "payload": {
+            "balance": "1000000000000000000",
+            "wallet_address": "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F",
+            "request_id": 0,
+            "action": "reject"
+        }
     },
     "transaction": {
         "nonce": 3,
@@ -169,12 +175,14 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "builder_type": 0,
-        "builder_action": "request",
-        "balance": "1000000000000000000",
-        "wallet_address": "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F",
-        "request_id": 0,
-        "action": "confirm"
+        "type": 0,
+        "action": "request",
+        "payload": {
+            "balance": "1000000000000000000",
+            "wallet_address": "0x9b9A4102fB0F17aa2eE8e1Dbf8E8e3a62Cc01A3F",
+            "request_id": 0,
+            "action": "confirm"
+        }
     },
     "transaction": {
         "nonce": 4,
@@ -192,10 +200,124 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
     },
 };
 
+
+const JsonTransactionApiTestCase ETH_ERC20_TEST_CASES[] = {
+    // ERC20 transfer
+    {
+        R"json({
+    "blockchain": "Ethereum",
+    "net_type": 4,
+    "account": {
+        "type": 0,
+        "private_key": "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00"
+    },
+    "builder": {
+        "type": 1,
+        "action": "transfer",
+        "payload": {
+            "balance_eth": "100000000000000000",
+            "contract_address": "0xfdf88a23d6058789c6a37bd997d3ed4760feb3b2",
+            "balance_token": "1000000000000000000",
+            "transfer_amount_token": "500000000000000000",
+            "destination_address": "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8"
+        }
+    },
+    "transaction": {
+        "nonce": 0,
+        "fee": {
+            "gas_price": "1000000000",
+            "gas_limit": "153327"
+        }
+    }
+})json",
+        // TX id: 0xde7b6dac7283d46b2002f2da454a39af1ce75b3fbfdc40e0cac4ef1bd533a484
+        TX("0xf8a980843b9aca00830256ef94fdf88a23d6058789c6a37bd997d3ed4760feb3b280b844a9059cbb0000"
+        "000000000000000000006b4be1fc5fa05c5d959d27155694643b8af72fd800000000000000000000000000"
+        "000000000000000000000006f05b59d3b200002ba0f85db5aacaea5a50d2761b9b6f52939c21848116b187"
+        "c8c05da800011a963860a027e9189fdee28faac1092441903d59371c84a0cd5cacea0410bcc2ab000646d0")
+    },
+    // ERC20 Approve
+    {
+        R"json({
+    "blockchain": "Ethereum",
+    "net_type": 4,
+    "account": {
+        "type": 0,
+        "private_key": "942116b87f5846cd23737cc3d668606872a64b9db2e8e55e8c6a2dbdeeb52800"
+    },
+    "builder": {
+        "type": 1,
+        "action": "approve",
+        "payload": {
+            "balance_eth": "100000000000000000",
+            "contract_address": "0x9e75dfAaC3d5Ae972DD26c65eC247d8E6916D0ef",
+            "balance_token": "100000",
+            "address_for_approve": "0xd97ca3b0ab9e2d110f48c7902456dfcf0cc9e092",
+            "approve_amount_token": "1000"
+        }
+    },
+    "transaction": {
+        "nonce": 12,
+        "fee": {
+            "gas_price": "6000000000",
+            "gas_limit": "43472"
+        }
+    }
+})json",
+        // TX id: 0xec5022503d57cbf963f0280e85f6bd943bbd5a7bdd5fc6e6a454383895cc3c47
+        TX("0xf8a90c850165a0bc0082a9d0949e75dfaac3d5ae972dd26c65ec247d8e6916d0ef80b844095ea7b"
+        "3000000000000000000000000d97ca3b0ab9e2d110f48c7902456dfcf0cc9e0920000000000000000000"
+        "0000000000000000000000000000000000000000003e82ca065f5df2c685134e14025403f9c87281c452"
+        "2b0414724a0a592fc01f2606f5c9aa05c86e11d4cc70ae54fbc9584687e69f960f928773d4710facaf18"
+        "cd891d0f4a0")
+    },
+    // ERC20 Transfer from
+    {
+        R"json({
+    "blockchain": "Ethereum",
+    "net_type": 4,
+    "account": {
+        "type": 0,
+        "private_key": "c27577172f62f399ec3104ddbe2d53341d4db6ca03a808f1574906ccaa51b8d0"
+    },
+    "builder": {
+        "type": 1,
+        "action": "transfer_from",
+        "payload": {
+            "balance_eth": "100000000000000000",
+            "contract_address": "0x9e75dfAaC3d5Ae972DD26c65eC247d8E6916D0ef",
+            "available_token_from": "1000",
+            "from": "0x2f2e3598fb63f9512352d5ddf8b3a82871418628",
+            "to": "0xD1210b6CC27dE74e820349efAa1f9f8E1ec2186B",
+            "transfer_amount_token": "500"
+        }
+    },
+    "transaction": {
+        "nonce": 3,
+        "fee": {
+            "gas_price": "6000000000",
+            "gas_limit": "59835"
+        }
+    }
+})json",
+        // TX id: 0x01e4894a2882b0b3dcc060d944d2df19f450e3408767cf145bda5d793317e3de
+        TX("0xf8c903850165a0bc0082e9bb949e75dfaac3d5ae972dd26c65ec247d8e6916d0ef80b86423b872dd0000"
+        "000000000000000000002f2e3598fb63f9512352d5ddf8b3a82871418628000000000000000000000000d1210"
+        "b6cc27de74e820349efaa1f9f8e1ec2186b000000000000000000000000000000000000000000000000000000"
+        "00000001f42ca09449499acc8281fdbfe32fd69961bc27d121952d926515d10aab53ab3761d1f7a0037fdfd99"
+        "77bc10c66300453864af524469d7dfc4cf9dc10908786980b8798b9")
+    },
+};
+
 INSTANTIATE_TEST_CASE_P(
         JsonEthMultisig,
         JsonTransactionApiTestP,
         ::testing::ValuesIn(ETH_MULTISIG_TEST_CASES));
+
+INSTANTIATE_TEST_CASE_P(
+        JsonEthERC20,
+        JsonTransactionApiTestP,
+        ::testing::ValuesIn(ETH_ERC20_TEST_CASES));
 
 
 const int ANY_ERROR = -1;
