@@ -309,6 +309,77 @@ const JsonTransactionApiTestCase ETH_ERC20_TEST_CASES[] = {
     },
 };
 
+
+const JsonTransactionApiTestCase ETH_TEST_CASES[] = {
+    {
+        R"json({
+    "blockchain": "Ethereum",
+    "net_type": 4,
+    "account": {
+        "type": 0,
+        "private_key": "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71"
+    },
+    "builder": {
+        "type": 2,
+        "action": "normal_transfer",
+        "payload":{
+            "balance": "7500000000000000000",
+            "destination_address": "0xd1b48a11e2251555c3c6d8b93e13f9aa2f51ea19",
+            "destination_amount": "2305843009213693952"
+        }
+    },
+    "transaction": {
+        "nonce": 4,
+        "fee": {
+            "gas_price": "64424509440",
+            "gas_limit": "21001"
+        }
+    }
+})json",
+        TX("0xf86c04850f0000000082520994d1b48a11e2251555c3c6d8b93e13f9aa2f51ea19882"
+        "000000000000000802ba0098ee502619d5ba29d66b6c510265142f46ee0399456be7afb6"
+        "3ceefac0bd17ea07c19cc4145471b31f90af07f554611ac535cd006f64fb2141f1ed7bea"
+        "7150386")
+    },
+    {
+        R"json({
+    "blockchain": "Ethereum",
+    "net_type": 1,
+    "account": {
+        "type": 0,
+        "private_key": "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00"
+    },
+    "builder": {
+        "type": 2,
+        "action": "normal_transfer",
+        "payload":{
+            "balance": "79160000000000000",
+            "destination_address": "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8",
+            "destination_amount": "002000000000000000",
+            "payload": "hex:4d554c5459207468652062657374"
+        }
+    },
+    "transaction": {
+        "nonce": 1,
+        "fee": {
+            "gas_price": "4000000000",
+            "gas_limit": "121000"
+        }
+    }
+})json",
+         // TXid: 0x5e52cf6ea1796558671051964ffde971a430182c5966f0d9a0aba5946bc1e55e
+        TX("0xf8790184ee6b28008301d8a8946b4be1fc5fa05c5d959d27155694643b8af72fd8870"
+        "71afd498d00008e4d554c545920746865206265737426a03ae3469ccf47aaccfd8beb2c4f0"
+        "b84e9db60aae7fd3b27aeae85c928e8f56131a00ff0b0db2532b40782640aad46cbd2bc7e3"
+        "911af0547fcd7272ae801cc98cc4d")
+    },
+};
+
+INSTANTIATE_TEST_CASE_P(
+        JsonEthereum,
+        JsonTransactionApiTestP,
+        ::testing::ValuesIn(ETH_TEST_CASES));
+
 INSTANTIATE_TEST_CASE_P(
         JsonEthMultisig,
         JsonTransactionApiTestP,

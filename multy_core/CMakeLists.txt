@@ -101,6 +101,7 @@ set(MULTY_CORE_SOURCES
     src/ethereum/ethereum_account.cpp
     src/ethereum/ethereum_address.cpp
     src/ethereum/ethereum_transaction.cpp
+    src/ethereum/ethereum_transaction_builder.cpp
     src/ethereum/ethereum_transaction_builder_multisig.cpp
     src/ethereum/ethereum_transaction_builder_erc20.cpp
     src/ethereum/ethereum_stream.cpp

@@ -12,6 +12,7 @@
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 #include "multy_core/src/ethereum/ethereum_transaction_builder_multisig.h"
 #include "multy_core/src/ethereum/ethereum_transaction_builder_erc20.h"
+#include "multy_core/src/ethereum/ethereum_transaction_builder.h"
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
@@ -87,6 +88,10 @@ TransactionBuilderPtr EthereumFacade::make_transaction_builder(
         {
             ETHEREUM_TRANSACTION_BUILDER_ERC20,
             &make_ethereum_ERC20_transaction_builder
+        },
+        {
+            ETHEREUM_TRANSACTION_BUILDER,
+            &make_ethereum_transaction_builder
         },
     };
 
