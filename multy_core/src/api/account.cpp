@@ -112,7 +112,7 @@ Error* account_get_key(const Account* account, KeyType key_type, Key** out_key)
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 
-    OUT_CHECK(*out_key);
+    OUT_CHECK_OBJECT(*out_key);
 
     return nullptr;
 }
@@ -161,6 +161,22 @@ Error* account_get_blockchain_type(
     try
     {
         *out_blockchain_type = account->get_blockchain_type();
+    }
+    CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
+
+    return nullptr;
+}
+
+Error* account_change_private_key(
+        Account* account,
+        int position,
+        unsigned char byte)
+{
+    ARG_CHECK_OBJECT(account);
+
+    try
+    {
+        account->change_private_key(position, byte);
     }
     CATCH_EXCEPTION_RETURN_ERROR(ERROR_SCOPE_ACCOUNT);
 

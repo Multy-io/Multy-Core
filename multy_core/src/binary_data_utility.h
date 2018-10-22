@@ -124,6 +124,8 @@ BinaryData power_slice(const T& data, int32_t offset, int32_t size)
     return power_slice(as_binary_data(data), offset, size);
 }
 
+BinaryData skip_leading_zeroes(const BinaryData& data);
+
 } // namespace internal
 } // namespace multy_core
 

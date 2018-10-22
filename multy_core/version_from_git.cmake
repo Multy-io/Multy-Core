@@ -25,7 +25,7 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-string(REGEX MATCH "^release-([0-9]+)\\.([0-9]+)\\.([0-9]+)-?([^-]*)-?([^-]*)$" MULTY_CORE_VERSION_STRING "${GIT_DESCRIPTION}")
+string(REGEX MATCH "^release-([0-9]+)\\.([0-9]+)\\.([0-9]+)-?([^-]*)?-?([^-]*)?$" MULTY_CORE_VERSION_STRING "${GIT_DESCRIPTION}")
 if (CMAKE_MATCH_COUNT)
     set(MULTY_CORE_VERSION_MAJOR ${CMAKE_MATCH_1})
     set(MULTY_CORE_VERSION_MINOR ${CMAKE_MATCH_2})

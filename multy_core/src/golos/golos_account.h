@@ -42,7 +42,8 @@ class MULTY_CORE_API GolosAccount : public AccountBase
 public:
     GolosAccount(BlockchainType blockchain_type, GolosPrivateKeyPtr key, HDPath path);
     std::string get_address() const override;
-    bool is_testnet() const;
+
+    const PrivateKey& get_private_key_ref() const override;
 
 private:
     const GolosPrivateKeyPtr m_private_key;
