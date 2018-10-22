@@ -160,14 +160,6 @@ const TransactionBuilderSmokeTestCase ETHEREUM_SUPPORTED_TX_BUILDERS[] =
     },
 };
 
-const TransactionBuilderSmokeTestCase EOS_SUPPORTED_TX_BUILDERS[] =
-{
-    {
-        EOS_TRANSACTION_BUILDER_UPDATEAUTH,
-        ""
-    }
-};
-
 class TransactionBuilderSmokeTestP : public ::testing::TestWithParam<std::tuple<BlockchainType, TransactionBuilderSmokeTestCase>>
 {};
 
@@ -180,6 +172,15 @@ INSTANTIATE_TEST_CASE_P(
        )
 );
 
+#ifdef MULTY_WITH_EOS
+const TransactionBuilderSmokeTestCase EOS_SUPPORTED_TX_BUILDERS[] =
+{
+    {
+        EOS_TRANSACTION_BUILDER_UPDATEAUTH,
+        ""
+    }
+};
+
 INSTANTIATE_TEST_CASE_P(
         EosTxBuilderSmokeTest,
         TransactionBuilderSmokeTestP,
@@ -188,6 +189,7 @@ INSTANTIATE_TEST_CASE_P(
             ::testing::ValuesIn(EOS_SUPPORTED_TX_BUILDERS)
        )
 );
+#endif // MULTY_WITH_EOS
 
 TEST_P(TransactionBuilderSmokeTestP, builder)
 {

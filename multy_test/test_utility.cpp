@@ -260,3 +260,12 @@ INSTANTIATE_TEST_CASE_P(
                     1032010100
                 }
         ));
+
+GTEST_TEST(UtilityTest, skip_leading_zeroes)
+{
+    const BinaryData null_binary_data{nullptr, 0};
+
+    ASSERT_EQ(null_binary_data, as_binary_data("\0"));
+    ASSERT_EQ(null_binary_data, as_binary_data("\0\0"));
+    ASSERT_EQ(null_binary_data, as_binary_data("\0test\0"));
+}

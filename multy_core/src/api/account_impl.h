@@ -34,6 +34,8 @@ public:
     virtual PrivateKeyPtr get_private_key() const = 0;
     virtual PublicKeyPtr get_public_key() const = 0;
 
+    virtual void change_private_key(int position, unsigned char byte);
+
     static const void* get_object_magic();
 };
 

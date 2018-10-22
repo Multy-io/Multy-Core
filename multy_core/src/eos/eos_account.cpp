@@ -300,7 +300,7 @@ AccountPtr make_EOS_account(BlockchainType blockchain_type,
 }
 
 EosAccount::EosAccount(BlockchainType blockchain_type, EosPrivateKeyPtr key, HDPath path)
-    : AccountBase(blockchain_type, *key, std::move(path)),
+    : AccountBase(blockchain_type, std::move(path)),
       m_private_key(std::move(key))
 {}
 
@@ -309,6 +309,11 @@ std::string EosAccount::get_address() const
     THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
             "Not supported: can't derive address from private key "
             "for EOS blockchain.");
+}
+
+const PrivateKey& EosAccount::get_private_key_ref() const
+{
+    return *m_private_key;
 }
 
 } // namespace wallet_core

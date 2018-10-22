@@ -75,10 +75,9 @@ public:
 
     ~BitcoinAccount();
 
-    virtual std::string get_address() const = 0;
 
-    static std::string get_address_from_private_key(const PrivateKey& key);
-    BitcoinAccountType get_account_type() const;
+private:
+    const PrivateKey& get_private_key_ref() const override;
 
 protected:
     const BitcoinPrivateKeyPtr m_private_key;

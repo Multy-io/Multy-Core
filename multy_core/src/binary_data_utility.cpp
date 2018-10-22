@@ -85,6 +85,21 @@ BinaryDataPtr new_binary_data(size_t size)
     return result;
 }
 
+BinaryData skip_leading_zeroes(const BinaryData& source)
+{
+    INVARIANT(source.data != nullptr);
+
+    const unsigned char* data = source.data;
+    size_t len = source.len;
+    while(!data && len > 0)
+    {
+        ++data;
+        --len;
+    }
+
+    return BinaryData{data, len};
+}
+
 } // namespace internal
 
 } // namespace multy_core
