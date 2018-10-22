@@ -40,11 +40,9 @@ namespace internal
 {
 AccountBase::AccountBase(
         BlockchainType blockchain_type,
-        const PrivateKey& private_key_ref,
         const HDPath& path)
     : m_blockchain_type(blockchain_type),
-      m_path(path),
-      m_private_key_ref(private_key_ref)
+      m_path(path)
 {
 }
 
@@ -59,12 +57,12 @@ HDPath AccountBase::get_path() const
 
 PrivateKeyPtr AccountBase::get_private_key() const
 {
-    return m_private_key_ref.clone();
+    return get_private_key_ref().clone();
 }
 
 PublicKeyPtr AccountBase::get_public_key() const
 {
-    return m_private_key_ref.make_public_key();
+    return get_private_key_ref().make_public_key();
 }
 
 BlockchainType AccountBase::get_blockchain_type() const
