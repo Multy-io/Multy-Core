@@ -204,3 +204,7 @@ Properties& TestTransactionBuilder::get_properties()
 {
     return m_properties;
 }
+
+void TestTransactionBuilder::validate() const
+{
+}

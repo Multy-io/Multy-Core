@@ -41,13 +41,18 @@ struct EosTransactionBuilderUpdateAuth : public TransactionBuilder
           m_new_private_key(m_properties, "new_active_key", Property::REQUIRED)
     {}
 
-    TransactionPtr make_transaction() const
+    TransactionPtr make_transaction() const override
     {
-        m_properties.validate(MULTY_CODE_LOCATION);
+        validate();
         return TransactionPtr{nullptr};
     }
 
-    Properties& get_properties()
+    void validate() const override
+    {
+        m_properties.validate(MULTY_CODE_LOCATION);
+    }
+
+    Properties& get_properties() override
     {
         return m_properties;
     }

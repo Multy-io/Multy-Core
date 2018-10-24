@@ -58,25 +58,17 @@ private:
         SERIALIZE_WITH_CHAIN_ID,
     };
     void serialize_to_stream(EthereumDataStream& stream, SerializationMode mode) const;
-    void on_token_transfer_set(const std::string& value);
 
 private:
     const Account& m_account;
 
     PropertyT<BigInt> m_nonce;
     const EthereumChainId m_chain_id;
-    PropertyT<std::string> m_token_transfer;
     PropertyT<BinaryDataPtr> m_payload;
 
     EthereumTransactionFeePtr m_fee;
     EthereumTransactionSourcePtr m_source;
-    // User-visible destination, where all values are explicitly set by user,
-    // including token receiver address and token transfer amount.
     EthereumTransactionDestinationPtr m_destination;
-    // A destination used only to simplify transaction serialization, can be generated
-    // from token transfer info or just a receiver info (in case of plain Ether transfer).
-    EthereumTransactionDestinationPtr m_internal_destination;
-    EthereumSmartContractPayloadPtr m_token_transfer_data;
     EthereumTransactionSignaturePtr m_signature;
 //    BinaryDataPtr m_payload;
 };
