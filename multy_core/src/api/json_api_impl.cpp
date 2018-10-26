@@ -84,7 +84,7 @@ void from_json(const Json::Value& value, const BlockchainType&, BinaryDataPtr* b
     const CodecType* codec_ptr = &codec;
     for (const auto& prefix : prefixes)
     {
-        if (strncmp(encoded, prefix.str, prefix.length))
+        if (strncmp(encoded, prefix.str, prefix.length) == 0)
         {
             codec_ptr = &prefix.codec;
             encoded += prefix.length;
@@ -130,6 +130,8 @@ void set_value(const Json::Value& value, const BlockchainType& blockchain_type, 
     T read_value;
     from_json(value, blockchain_type, &read_value);
     binder->set_value(to_binder_argument(read_value));
+
+    INVARIANT(binder->is_set());
 }
 
 void set_properties(const Json::Value& values, const BlockchainType& blockchain_type, Properties* properties)
@@ -179,6 +181,7 @@ void set_properties(const Json::Value& values, const BlockchainType& blockchain_
         {
             e << " Setting properties to: " << properties->get_name() << ", "
                     << " Value name:" << i.name() << ", type: " << i->type();
+            throw;
         }
         catch(const std::exception& e)
         {
@@ -227,13 +230,14 @@ std::string make_transaction_from_json(const std::string& json_string)
     set_properties(builder_json["payload"], blockchain_type, &builder->get_properties());
 
     TransactionPtr transaction = builder->make_transaction();
-    if (const auto& tx_json = root["transaction"])
+    if (auto tx_json = root["transaction"])
     {
-        set_properties(tx_json, blockchain_type, &transaction->get_transaction_properties());
         if (const auto& fee_json = tx_json["fee"])
         {
             set_properties(fee_json, blockchain_type, &transaction->get_fee());
         }
+        tx_json.removeMember("fee");
+        set_properties(tx_json, blockchain_type, &transaction->get_transaction_properties());
     }
 
     return R"json({"transaction":{"serialized":")json" + facade.encode_serialized_transaction(transaction.get()) + "\"}}";
