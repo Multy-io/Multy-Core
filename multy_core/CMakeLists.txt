@@ -94,6 +94,8 @@ set(MULTY_CORE_SOURCES
     src/bitcoin/bitcoin_account.cpp
     src/bitcoin/bitcoin_key.cpp
     src/bitcoin/bitcoin_transaction.cpp
+    src/bitcoin/bitcoin_stream.cpp
+    src/bitcoin/bitocin_transaction_segwit.cpp
 
     # Ethereum
     ethereum.h

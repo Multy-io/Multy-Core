@@ -7,6 +7,8 @@
 #ifndef MULTY_CORE_BITCOIN_OP_CODE_H
 #define MULTY_CORE_BITCOIN_OP_CODE_H
 
+#include <stdint.h>
+
 namespace multy_core
 {
 namespace internal
