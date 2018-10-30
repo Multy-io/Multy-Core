@@ -24,10 +24,49 @@ enum DestinationsToUse
     WITH_NONPOSITIVE_CHANGE_AMOUNT
 };
 
+class BitcoinTransactionDestination : public TransactionDestinationBase
+{
+public:
+    explicit BitcoinTransactionDestination(BitcoinNetType net_type);
+    void on_change_set(bool new_value);
+
+public:
+    PropertyT<BigInt> amount;
+    PropertyT<std::string> address;
+    PropertyT<int32_t> is_change;
+
+    BinaryDataPtr sig_script;
+    const BitcoinNetType m_net_type;
+    bool m_is_segwit_destination;
+};
+
+class BitcoinTransactionSource : public TransactionSourceBase
+{
+public:
+    BitcoinTransactionSource();
+
+    ~BitcoinTransactionSource()
+    {
+    }
+
+public:
+    PropertyT<BinaryDataPtr> prev_transaction_hash;
+    PropertyT<int32_t> prev_transaction_out_index;
+    PropertyT<BinaryDataPtr> prev_transaction_out_script_pubkey;
+    PropertyT<PrivateKeyPtr> private_key;
+
+    // not a property since set by Transaction or Source itself.
+    int32_t segwit = 0;
+    uint32_t seq;
+    BinaryDataPtr script_signature;
+    BinaryDataPtr script_witness; // serialized separately.
+
+    PropertyT<BigInt> amount; // Not serialized:
+
+};
+
 class BitcoinAccount;
-class BitcoinTransactionDestination;
 class BitcoinTransactionFee;
-class BitcoinTransactionSource;
 class BitcoinStream;
 
 typedef std::unique_ptr<BitcoinTransactionDestination> BitcoinTransactionDestinationPtr;
