@@ -196,6 +196,36 @@ void set_properties(const Json::Value& values, const BlockchainType& blockchain_
     }
 }
 
+TransactionBuilderPtr make_transaction_builder_from_json(
+        const BlockchainFacadeBase& facade,
+        const Account& account,
+        const Json::Value& builder_json)
+{
+    const auto& type_json = builder_json["type"];
+    const auto& action = builder_json.get("action", std::string());
+    TransactionBuilderPtr builder;
+
+    if (type_json.isString())
+    {
+         builder = facade.make_transaction_builder_by_name(
+                account,
+                type_json.asCString(),
+                action.asCString());
+    }
+    else
+    {
+        builder = facade.make_transaction_builder(
+                account,
+                type_json.asUInt(),
+                action.asCString());
+    }
+
+    // stuff builder with properties:
+    set_properties(builder_json["payload"], account.get_blockchain_type(), &builder->get_properties());
+
+    return builder;
+}
+
 } // namespace
 
 namespace multy_core
@@ -220,16 +250,8 @@ std::string make_transaction_from_json(const std::string& json_string)
             account_json["type"].asUInt(),
             account_json["private_key"].asCString());
 
-    const auto& builder_json = root["builder"];
-    TransactionBuilderPtr builder = facade.make_transaction_builder(
-            *account,
-            builder_json["type"].asUInt(),
-            builder_json.get("action", std::string()).asCString());
-
-    // stuff builder with properties:
-    set_properties(builder_json["payload"], blockchain_type, &builder->get_properties());
-
-    TransactionPtr transaction = builder->make_transaction();
+    TransactionPtr transaction = make_transaction_builder_from_json(
+                facade, *account, root["builder"])->make_transaction();
     if (auto tx_json = root["transaction"])
     {
         if (const auto& fee_json = tx_json["fee"])

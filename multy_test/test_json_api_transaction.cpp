@@ -68,7 +68,7 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "type": 0,
+        "type": "multisig",
         "action": "new_wallet",
         "payload": {
             "balance": "1000000000000000000",
@@ -108,7 +108,7 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "type": 0,
+        "type": "multisig",
         "action": "new_request",
         "payload": {
             "balance": "1000000000000000000",
@@ -143,7 +143,7 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "type": 0,
+        "type": "multisig",
         "action": "request",
         "payload": {
             "balance": "1000000000000000000",
@@ -175,7 +175,7 @@ const JsonTransactionApiTestCase ETH_MULTISIG_TEST_CASES[] = {
         "private_key": "d92c7ed86831ee78e76a9acbb91219ab1a7a399f69db20f04da8478e11a51900"
     },
     "builder": {
-        "type": 0,
+        "type": "multisig",
         "action": "request",
         "payload": {
             "balance": "1000000000000000000",
@@ -212,7 +212,7 @@ const JsonTransactionApiTestCase ETH_ERC20_TEST_CASES[] = {
         "private_key": "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00"
     },
     "builder": {
-        "type": 1,
+        "type": "erc20",
         "action": "transfer",
         "payload": {
             "balance_eth": "100000000000000000",
@@ -246,7 +246,7 @@ const JsonTransactionApiTestCase ETH_ERC20_TEST_CASES[] = {
         "private_key": "942116b87f5846cd23737cc3d668606872a64b9db2e8e55e8c6a2dbdeeb52800"
     },
     "builder": {
-        "type": 1,
+        "type": "erc20",
         "action": "approve",
         "payload": {
             "balance_eth": "100000000000000000",
@@ -281,7 +281,7 @@ const JsonTransactionApiTestCase ETH_ERC20_TEST_CASES[] = {
         "private_key": "c27577172f62f399ec3104ddbe2d53341d4db6ca03a808f1574906ccaa51b8d0"
     },
     "builder": {
-        "type": 1,
+        "type": "erc20",
         "action": "transfer_from",
         "payload": {
             "balance_eth": "100000000000000000",
@@ -320,8 +320,7 @@ const JsonTransactionApiTestCase ETH_TEST_CASES[] = {
         "private_key": "5a37680b86fabdec299fa02bdfba8c9dfad08d796dc58c1d07527a751905bf71"
     },
     "builder": {
-        "type": 2,
-        "action": "normal_transfer",
+        "type": "basic",
         "payload":{
             "balance": "7500000000000000000",
             "destination_address": "0xd1b48a11e2251555c3c6d8b93e13f9aa2f51ea19",
@@ -350,8 +349,7 @@ const JsonTransactionApiTestCase ETH_TEST_CASES[] = {
         "private_key": "b81b3c491e397cbb4939787a81bd049d7a8c5ee819fd4e03afdab94813b06a00"
     },
     "builder": {
-        "type": 2,
-        "action": "normal_transfer",
+        "type": "basic",
         "payload":{
             "balance": "79160000000000000",
             "destination_address": "0x6b4be1fc5fa05c5d959d27155694643b8af72fd8",

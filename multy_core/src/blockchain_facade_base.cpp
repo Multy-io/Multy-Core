@@ -56,6 +56,17 @@ TransactionBuilderPtr BlockchainFacadeBase::make_transaction_builder(
     return nullptr;
 }
 
+TransactionBuilderPtr BlockchainFacadeBase::make_transaction_builder_by_name(
+        const Account& /*account*/,
+        const char* /*name*/,
+        const char* /*action*/) const
+{
+    THROW_EXCEPTION2(ERROR_FEATURE_NOT_SUPPORTED,
+            "TransactionBuilder is not supported.");
+
+    return nullptr;
+}
+
 BlockchainFacadeRegistry::BlockchainFacadeRegistry()
     : m_instances(),
       m_factory_functions()

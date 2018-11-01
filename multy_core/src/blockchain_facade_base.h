@@ -48,6 +48,11 @@ public:
             uint32_t type,
             const char* action) const;
 
+    virtual TransactionBuilderPtr make_transaction_builder_by_name(
+            const Account& account,
+            const char* name,
+            const char* action) const;
+
     virtual void validate_address(BlockchainType, const char*) const = 0;
 
     virtual std::string encode_serialized_transaction(Transaction* transaction) const = 0;

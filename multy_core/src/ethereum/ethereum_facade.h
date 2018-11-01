@@ -47,6 +47,11 @@ public:
             uint32_t type,
             const char* action) const override;
 
+    TransactionBuilderPtr make_transaction_builder_by_name(
+            const Account& account,
+            const char* name,
+            const char* action) const override;
+
     void validate_address(BlockchainType blockchain_type,
             const char* address) const override;
 

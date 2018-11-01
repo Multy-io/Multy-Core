@@ -31,7 +31,6 @@ public:
     std::string get_name_or_dummy(const value_type value) const;
 
     value_type get_value(const char* name) const;
-    value_type get_value(const std::string& name) const;
 
     std::vector<const char*> get_all_names() const;
 
