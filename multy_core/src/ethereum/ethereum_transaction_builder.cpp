@@ -115,13 +115,6 @@ namespace internal
 TransactionBuilderPtr make_ethereum_transaction_builder(
         const Account& account, const std::string& action)
 {
-    if (action != "normal_transfer")
-    {
-        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
-                "Invalid EthereumTransactionBuilderMultisig action.")
-                << " action: \"" << action << "\".";
-    }
-
     return TransactionBuilderPtr(new EthereumTransactionBuilder(account, action));
 }
 

@@ -94,11 +94,6 @@ value_type EnumNameMapBase::get_value(const char* name) const
             << " : \"" << (name ? name : "") << "\".";
 }
 
-value_type EnumNameMapBase::get_value(const std::string& name) const
-{
-    return get_value(name.c_str());
-}
-
 std::vector<const char*> EnumNameMapBase::get_all_names() const
 {
     std::vector<const char*> result;

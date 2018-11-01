@@ -16,6 +16,7 @@
 
 #include "multy_core/src/exception.h"
 #include "multy_core/src/exception_stream.h"
+#include "multy_core/src/enum_name_map.h"
 
 #include "multy_core/src/codec.h"
 
@@ -90,7 +91,7 @@ TransactionBuilderPtr EthereumFacade::make_transaction_builder(
             &make_ethereum_ERC20_transaction_builder
         },
         {
-            ETHEREUM_TRANSACTION_BUILDER,
+            ETHEREUM_TRANSACTION_BUILDER_BASIC,
             &make_ethereum_transaction_builder
         },
     };
@@ -105,6 +106,24 @@ TransactionBuilderPtr EthereumFacade::make_transaction_builder(
     }
 
     return builder->second(account, std::string(action ? action : ""));
+}
+
+TransactionBuilderPtr EthereumFacade::make_transaction_builder_by_name(
+        const Account& account,
+        const char* name,
+        const char* action) const
+{
+    static const EnumNameMap<EthereumTransactionBuilderType> Builders =
+    {
+        "Ethereum transaction builder",
+        {
+            { ETHEREUM_TRANSACTION_BUILDER_ERC20, "erc20" },
+            { ETHEREUM_TRANSACTION_BUILDER_MULTISIG, "multisig" },
+            { ETHEREUM_TRANSACTION_BUILDER_BASIC, "basic" },
+        }
+    };
+
+    return make_transaction_builder(account, Builders.get_value(name), action);
 }
 
 void EthereumFacade::validate_address(
