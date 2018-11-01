@@ -13,6 +13,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <stdio.h>
 
 namespace
 {
@@ -105,18 +106,19 @@ GTEST_TEST(VersionTest, get_version)
     Version version;
     HANDLE_ERROR(get_version(&version));
 
-
-    if (strstr("dummy", version.note) != nullptr)
-    {
-        // Not a tagged version
-        ASSERT_EQ(0, version.major + version.minor + version.build);
-    }
-    else
-    {
-        // tagged version with proper version number
-        ASSERT_NE(0, version.major + version.minor + version.build);
-    }
+    ASSERT_NE(nullptr, version.commit);
     ASSERT_NE(nullptr, version.note);
+
+    // Builds in version branch should be properly versioned.
+    uint32_t major = 0;
+    uint32_t minor = 0;
+    const int result = std::sscanf("version.commit", "v%u.%u", &major, &minor);
+    if (result != 0 && result != EOF)
+    {
+        ASSERT_NE(0, version.major + version.minor + version.build);
+        ASSERT_EQ(major, version.major);
+        ASSERT_EQ(minor, version.minor);
+    }
 }
 
 GTEST_TEST(VersionTest, make_version_string)
