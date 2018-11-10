@@ -42,6 +42,7 @@ enum HasherType
     SHA3, // 224, 256, 384, 512
     KECCAK, // 256 only
     RIPEMD, // 160 only
+    BITCOIN_HASH, // 160 only
 };
 
 MULTY_CORE_API HasherPtr make_hasher(HasherType hasher_type, size_t size);
@@ -56,6 +57,19 @@ inline hash<N> do_hash(const T& input)
     hashser->hash(as_binary_data(input), &result_data);
 
     return result;
+}
+
+// Hash given data and write a result into provided buffer starting from given offset.
+// Please note that that buffer should be bigger than offset + N.
+template <HasherType HasherT, typename T, typename U>
+inline void do_hash(size_t N, const T& input, int offset, U* destination)
+{
+    INVARIANT(destination);
+    INVARIANT(destination->len >= N);
+
+    HasherPtr hashser = make_hasher(HasherT, N);
+    BinaryData result_data = power_slice(as_binary_data(*destination), offset, N);
+    hashser->hash(as_binary_data(input), &result_data);
 }
 
 } // namespace internal

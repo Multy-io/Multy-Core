@@ -17,22 +17,50 @@ extern "C" {
 
 #include "wally_crypto.h"
 
+#include <array>
+#include <initializer_list>
 #include <string.h>
 
 namespace
 {
 using namespace multy_core::internal;
 
-class Sha2Hasher : public Hasher
+class HasherBase : public Hasher
+{
+protected:
+    explicit HasherBase(const char* hash_name, size_t hash_size, const std::initializer_list<size_t>& supported_sizes)
+        : m_hash_size(hash_size)
+    {
+        if ( !contains(supported_sizes, hash_size) )
+        {
+            THROW_EXCEPTION("Unsupported hash size.")
+                    << " For hash type: " << hash_name
+                    << " Requested hash size in bytes: " << hash_size
+                    << " Supported hash sizes: " << join(", ", supported_sizes) << ".";
+        }
+    }
+
+    ~HasherBase() {}
+
+    const size_t m_hash_size;
+};
+
+class Sha2Hasher : public HasherBase
 {
     typedef int (*HashFunction)(const unsigned char *, size_t, unsigned char *, size_t);
 
 public:
+    Sha2Hasher(size_t hash_size)
+        : HasherBase("SHA2", hash_size, {256, 512})
+    {}
+
     void hash(const BinaryData& input, BinaryData* output) const override
     {
-        assert(output);
-        const HashFunction hash_function = get_hash_function(output->len * 8);
-        assert(hash_function != nullptr);
+        INVARIANT(output);
+        INVARIANT(output->len * 8 >= m_hash_size);
+
+        const HashFunction hash_function = get_hash_function(m_hash_size);
+        INVARIANT(hash_function != nullptr);
 
         THROW_IF_WALLY_ERROR(
                 hash_function(input.data, input.len,
@@ -56,37 +84,52 @@ public:
     }
 };
 
-class KeccakHasher : public Hasher
+class KeccakHasher : public HasherBase
 {
 public:
+    KeccakHasher(size_t hash_size)
+        : HasherBase("Keccak", hash_size, {256})
+    {}
+
     void hash(const BinaryData& input, BinaryData* output) const override
     {
-        assert(output);
+        INVARIANT(output);
+        INVARIANT(output->len * 8 >= m_hash_size);
+
         keccak_256(input, output);
     }
 };
 
-class Sha3Hasher : public Hasher
+class Sha3Hasher : public HasherBase
 {
 public:
+//    static const char* name = "Keccak";
+//    static const std::array<size_t, 4> supported_sizes = {224, 256, 384, 512}
+
+    explicit Sha3Hasher(size_t hash_size)
+        : HasherBase("Keccak", hash_size, {224, 256, 384, 512})
+    {}
+
     void hash(const BinaryData& input, BinaryData* output) const override
     {
-        assert(output);
+        INVARIANT(output != nullptr);
+        INVARIANT(output->len * 8 >= m_hash_size);
+
         sha3(input, output);
     }
 };
 
-class RipemdHasher : public Hasher
+class RipemdHasher : public HasherBase
 {
 public:
+    explicit RipemdHasher(size_t hash_size)
+        : HasherBase("RIPEMD", hash_size, {160})
+    {}
+
     void hash(const BinaryData& input, BinaryData* output) const override
     {
-        assert(output);
-        if (output->len != 160 / 8)
-        {
-            THROW_EXCEPTION("Unsupported Ripemd hash size.")
-                    << " Requested hash size: " << output->len;
-        }
+        INVARIANT(output != nullptr);
+        INVARIANT(output->len * 8 >= m_hash_size);
 
         struct ripemd160 ripemd;
         ripemd160(&ripemd, input.data, input.len);
@@ -94,30 +137,35 @@ public:
     }
 };
 
+//template <typename HasherT>
+//class DoubleHasher : public HasherBase
+//{
+//    using HasherBase::HasherBase;
+
+//    void hash(const BinaryData& input, BinaryData* output) const override
+//    {
+//        INVARIANT(output != nullptr);
+//        INVARIANT(output->len * 8 >= m_hash_size);
+
+//        // Writing first hash into large enough tmp buffer
+//        // to avoid modifying output if exception is thrown in the middle.
+
+//        multy_core::internal::hash<1024> tmp_buffer;
+//        BinaryData tmp_buffer_binary_data = as_binary_data(tmp_buffer);
+//        INVARIANT(tmp_buffer_binary_data.len >= output->len);
+
+//        tmp_buffer_binary_data.len = output->len;
+
+//        HasherT hasher;
+//        hasher.hash(input, &tmp_buffer_binary_data);
+//        hasher.hash(tmp_buffer_binary_data, output);
+//    }
+//};
+
 template <typename HasherT>
-class DoubleHasher : public Hasher
+HasherPtr make_hasher(size_t hash_size)
 {
-    void hash(const BinaryData& input, BinaryData* output) const override
-    {
-        assert(output);
-        // Writing first hash into large enough tmp buffer
-        // to avoid modifying output if exception is thrown in the middle.
-
-        multy_core::internal::hash<1024> tmp_buffer;
-        BinaryData tmp_buffer_binary_data = as_binary_data(tmp_buffer);
-        assert(tmp_buffer_binary_data.len >= output->len);
-        tmp_buffer_binary_data.len = output->len;
-
-        HasherT hasher;
-        hasher.hash(input, &tmp_buffer_binary_data);
-        hasher.hash(tmp_buffer_binary_data, output);
-    }
-};
-
-template <typename HasherT>
-HasherPtr make_hasher()
-{
-    return HasherPtr(new HasherT);
+    return HasherPtr(new HasherT(hash_size));
 }
 
 } // namespace
@@ -130,20 +178,20 @@ namespace internal
 Hasher::~Hasher()
 {}
 
-HasherPtr make_hasher(HasherType hasher_type, size_t /*size*/)
+HasherPtr make_hasher(HasherType hasher_type, size_t hash_size)
 {
     switch(hasher_type)
     {
         case SHA2:
-            return ::make_hasher<::Sha2Hasher>();
-        case SHA2_DOUBLE:
-            return ::make_hasher<::DoubleHasher<::Sha2Hasher>>();
+            return ::make_hasher<::Sha2Hasher>(hash_size);
+//        case SHA2_DOUBLE:
+//            return ::make_hasher<::DoubleHasher<::Sha2Hasher>>(hash_size);
         case SHA3:
-            return ::make_hasher<::Sha3Hasher>();
+            return ::make_hasher<::Sha3Hasher>(hash_size);
         case KECCAK:
-            return ::make_hasher<::KeccakHasher>();
+            return ::make_hasher<::KeccakHasher>(hash_size);
         case RIPEMD:
-            return ::make_hasher<::RipemdHasher>();
+            return ::make_hasher<::RipemdHasher>(hash_size);
         default:
             THROW_EXCEPTION("Unknown hasher type.")
                     << hasher_type;
