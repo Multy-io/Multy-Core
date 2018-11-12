@@ -19,55 +19,39 @@ extern "C" {
 
 #include <algorithm>
 #include <iterator>
-#include <sstream>
+#include <unordered_map>
 
 namespace
 {
 using namespace multy_core::internal;
 
 // Byte-size.
-static const size_t HASH_SIZES[] = {
+static const size_t SHA3_HASH_BYTE_SIZES[] = {
     SHA3_224, SHA3_256, SHA3_384, SHA3_512
 };
 
-#define DO_SHA3(size, in, out)                                                 \
-    THROW_IF_WALLY_ERROR(                                                      \
-            ::sha3_##size(                                                     \
-                    const_cast<uint8_t*>(output->data), output->len,           \
-                    input.data, input.len),                                    \
-            "Failed to SHA3-" #size " input data.");
-
-void do_sha3(const BinaryData& input, BinaryData* output)
+void do_sha3(size_t hash_bit_size, const BinaryData& input, BinaryData* output)
 {
-    switch (output->len * 8)
+    static const std::unordered_map<size_t, decltype(&sha3_224)> SHA3_FUNCTIONS =
     {
-        case 224:
-        {
-            DO_SHA3(224, input, output);
-            break;
-        }
-        case 256:
-        {
-            DO_SHA3(256, input, output);
-            break;
-        }
-        case 384:
-        {
-            DO_SHA3(384, input, output);
-            break;
-        }
-        case 512:
-        {
-            DO_SHA3(512, input, output);
-            break;
-        }
-        default:
-        {
-            THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
-                    "Unsupported hash size for SHA3.")
-                    << " Size:" << output->len;
-        }
+        {224, &sha3_224},
+        {256, &sha3_256},
+        {384, &sha3_384},
+        {512, &sha3_512},
+    };
+
+    const auto sha3_function = SHA3_FUNCTIONS.find(hash_bit_size);
+    if (sha3_function == SHA3_FUNCTIONS.end())
+    {
+        THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT,
+                "Unsupported hash size for SHA3.")
+                << " Size:" << hash_bit_size << ".";
     }
+
+    THROW_IF_WALLY_ERROR(sha3_function->second(
+                    const_cast<uint8_t*>(output->data), output->len,
+                    input.data, input.len),
+            "Failed to SHA3 input data.");
 }
 
 template <size_t N>
@@ -82,6 +66,7 @@ size_t get_biggest_of_supported_sizes(size_t size, const size_t (&supported_size
                 "Output BinaryData has not enough space available.")
                 << " Need at least " << supported_sizes[0] << " bytes.";
     }
+
     return hash_size;
 }
 
@@ -92,18 +77,17 @@ namespace multy_core
 namespace internal
 {
 
-BinaryDataPtr sha3(const size_t hash_size, const BinaryData& input)
+BinaryDataPtr sha3(const size_t hash_bit_size, const BinaryData& input)
 {
-    if (std::find(std::begin(HASH_SIZES), std::end(HASH_SIZES), hash_size/8)
-                    == std::end(HASH_SIZES))
+    if (!contains(SHA3_HASH_BYTE_SIZES, hash_bit_size/8))
     {
         THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Unsupported hash_size.");
     }
 
     BinaryDataPtr result;
 
-    throw_if_error(make_binary_data(hash_size / 8, reset_sp(result)));
-    do_sha3(input, result.get());
+    throw_if_error(make_binary_data(hash_bit_size / 8, reset_sp(result)));
+    do_sha3(hash_bit_size, input, result.get());
 
     return result;
 }
@@ -113,20 +97,26 @@ BinaryDataPtr keccak_256(const BinaryData& input)
     BinaryDataPtr result;
     throw_if_error(make_binary_data(256 / 8, reset_sp(result)));
     keccak_256(input, result.get());
+
     return result;
 }
 
 void sha3(const BinaryData& input, BinaryData* output)
 {
-    INVARIANT(output != nullptr);
     INVARIANT(input.data != nullptr);
+    INVARIANT(output != nullptr);
 
-    // Copy to keep output intact in case of exception.
-    BinaryData tmp = *output;
-    tmp.len = get_biggest_of_supported_sizes(output->len , HASH_SIZES);
+    const size_t hash_bit_size = get_biggest_of_supported_sizes(output->len , SHA3_HASH_BYTE_SIZES);
+    do_sha3(hash_bit_size * 8, input, output);
+    output->len = hash_bit_size;
+}
 
-    do_sha3(input, &tmp);
-    *output = tmp;
+void sha3(size_t hash_bit_size, const BinaryData& input, BinaryData* output)
+{
+    INVARIANT(input.data != nullptr);
+    INVARIANT(output != nullptr);
+
+    do_sha3(hash_bit_size, input, output);
 }
 
 void keccak_256(const BinaryData& input, BinaryData* output)

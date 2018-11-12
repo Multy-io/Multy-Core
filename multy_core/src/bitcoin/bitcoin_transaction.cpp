@@ -694,11 +694,8 @@ void BitcoinTransaction::verify() const
     for (const auto& s : m_sources)
     {
         const auto& public_key = s->private_key->make_public_key();
-        std::array<uint8_t, HASH160_LEN> public_key_hash;
-        BinaryData public_key_hash_data = as_binary_data(public_key_hash);
-
-        bitcoin_hash_160(public_key->get_content(), &public_key_hash_data);
-        BinaryDataPtr sig_script = make_script_pub_key(public_key_hash_data, BITCOIN_ADDRESS_P2PKH);
+        const auto public_key_hash = do_hash<BITCOIN_HASH, 160>(public_key->get_content());
+        BinaryDataPtr sig_script = make_script_pub_key(as_binary_data(public_key_hash), BITCOIN_ADDRESS_P2PKH);
 
         if (*sig_script != **s->prev_transaction_out_script_pubkey)
         {
