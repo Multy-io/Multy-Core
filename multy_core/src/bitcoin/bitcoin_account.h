@@ -25,8 +25,6 @@ typedef UPtr<BitcoinAccount> BitcoinAccountPtr;
 typedef UPtr<BitcoinPrivateKey> BitcoinPrivateKeyPtr;
 typedef UPtr<BitcoinPublicKey> BitcoinPublicKeyPtr;
 
-void bitcoin_hash_160(const BinaryData& input, BinaryData* output);
-
 AccountPtr make_bitcoin_account(
         const char* private_key,
         BitcoinAccountType account_type);

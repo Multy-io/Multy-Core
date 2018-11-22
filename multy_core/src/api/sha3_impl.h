@@ -27,7 +27,16 @@ namespace internal
  * @return hash of the input, len is equal to hash_size/8.
  * @throws Exception if input.data is null or hash_size is not
  */
-MULTY_CORE_API BinaryDataPtr sha3(size_t hash_size, const BinaryData& input);
+MULTY_CORE_API BinaryDataPtr sha3(size_t hash_bit_size, const BinaryData& input);
+
+// inplace, size of hash is set explicitly with hash_size.
+MULTY_CORE_API void sha3(size_t hash_bit_size, const BinaryData& input, BinaryData* output);
+
+// inplace, size of the hash is dictated by the output->len,
+// the maximum size that would fit in the output is taken,
+// and then output->len is updated to reflect acutal size.
+MULTY_CORE_API void sha3(const BinaryData& input, BinaryData* output);
+
 
 /** Ethereum SHA-3 variant.
  *
@@ -38,10 +47,6 @@ MULTY_CORE_API BinaryDataPtr sha3(size_t hash_size, const BinaryData& input);
  */
 MULTY_CORE_API BinaryDataPtr keccak_256(const BinaryData& input);
 
-// inplace, size of the hash is dictated by the output->len,
-// the maximum size that would fit in the output is taken,
-// and then output->len is updated to reflect acutal size.
-MULTY_CORE_API void sha3(const BinaryData& input, BinaryData* output);
 MULTY_CORE_API void keccak_256(const BinaryData& input, BinaryData* output);
 
 } // namespace internale

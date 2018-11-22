@@ -13,9 +13,9 @@
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/hd_path.h"
 #include "multy_core/src/utility.h"
+#include "multy_core/src/hash.h"
 
 #include "wally_core.h"
-#include "wally_crypto.h"
 
 #include <sstream>
 #include <string.h>
@@ -24,6 +24,8 @@
 namespace
 {
 using namespace multy_core::internal;
+
+const size_t HASH160_BYTE_LEN = 160/8;
 
 const uint8_t ADDRESS_PREFIXES[2][2] = {
     // Main net:
@@ -78,7 +80,7 @@ public:
         // P2PKH address generated from public key.
         // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
 
-        unsigned char pub_hash[HASH160_LEN + 1] = {'\0'};
+        unsigned char pub_hash[HASH160_BYTE_LEN + 1] = {'\0'};
 
         // 1 - Take the corresponding public key generated with it (33 or 65
         // bytes)
@@ -89,8 +91,8 @@ public:
         // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
         {
             // Leave the first byte intact for prefix.
-            BinaryData hash_data = power_slice(as_binary_data(pub_hash), 1, -1);
-            bitcoin_hash_160(key_data, &hash_data);
+            auto data = power_slice(as_binary_data(pub_hash), 1, -1);
+            do_hash_inplace<BITCOIN_HASH, 160>(key_data, &data);
         }
 
         // 4 - Add version byte in front of RIPEMD-160 hash
@@ -124,29 +126,29 @@ public:
 
     std::string get_address() const override
     {
-        unsigned char pub_hash[HASH160_LEN + 1] = {'\0'};
+        unsigned char pub_hash[HASH160_BYTE_LEN + 1] = {'\0'};
 
         // 1 - Take the corresponding public key generated with it (33 or 65
         // bytes)
         {
-            unsigned char segwit_script[HASH160_LEN + 2] = {'\0'};
-           // Leave the first two bytes intact for script opcode
+            unsigned char segwit_script[HASH160_BYTE_LEN + 2] = {'\0'};
+            // Leave the first two bytes intact for script opcode
             BinaryData hash_pub_key = power_slice(as_binary_data(segwit_script), 2, -2);
 
             PublicKeyPtr public_key(m_private_key->make_public_key());
             BinaryData key_data = public_key->get_content();
             // 2 - Perform SHA-256 hashing on the public key
             // 3 - Perform RIPEMD-160 hashing on the result of SHA-256
-            bitcoin_hash_160(key_data, &hash_pub_key);
+            do_hash_inplace<BITCOIN_HASH, 160>(key_data, &hash_pub_key);
             // 4 - Perform make script segWit for lock bitcoins
             segwit_script[0] = 0x00; // Version byte witness
-            segwit_script[1] = HASH160_LEN; // Witness program is 20 bytes
+            segwit_script[1] = HASH160_BYTE_LEN; // Witness program is 20 bytes
 
             // Leave the first byte intact for prefix.
             BinaryData hash_data = power_slice(as_binary_data(pub_hash), 1, -1);
             // 5 - Perform SHA-256 hashing on the segWit script
             // 6 - Perform RIPEMD-160 hashing on the result of SHA-256
-            bitcoin_hash_160(as_binary_data(segwit_script), &hash_data);
+            do_hash_inplace<BITCOIN_HASH, 160>(segwit_script, &hash_data);
         }
 
         // 7 - Add version byte in front of RIPEMD-160 hash
@@ -222,17 +224,6 @@ BitcoinAccount::~BitcoinAccount()
 const PrivateKey& BitcoinAccount::get_private_key_ref() const
 {
     return *m_private_key;
-}
-
-void bitcoin_hash_160(const BinaryData& input, BinaryData* output)
-{
-    INVARIANT(output != nullptr);
-
-    THROW_IF_WALLY_ERROR(
-            wally_hash160(
-                    input.data, input.len,
-                    const_cast<unsigned char*>(output->data), output->len),
-            "hash160 failed.");
 }
 
 BitcoinHDAccount::BitcoinHDAccount(

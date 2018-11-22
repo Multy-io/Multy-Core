@@ -114,7 +114,6 @@ std::string user_id_from_seed(const bytes& data)
     ConstCharPtr user_id;
     error.reset(make_user_id_from_master_key(key.get(), reset_sp(user_id)));
     EXPECT_EQ(nullptr, error);
-    EXPECT_NE(nullptr, user_id);
 
     return std::string(user_id ? user_id.get() : "");
 }

@@ -11,9 +11,12 @@
 
 Error* sha3(const BinaryData* input, BinaryData* output)
 {
-    ARG_CHECK(input);
-    ARG_CHECK(output);
-    ARG_CHECK(output->len);
+    ARG_CHECK(input != nullptr);
+    ARG_CHECK(input->data != nullptr);
+
+    ARG_CHECK(output != nullptr);
+    ARG_CHECK(output->len != 0);
+
     try
     {
         multy_core::internal::sha3(*input, output);
