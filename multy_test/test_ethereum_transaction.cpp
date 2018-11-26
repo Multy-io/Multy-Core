@@ -977,63 +977,52 @@ GTEST_TEST(EthereumTransactionTest, transfer_more_than_18ETH)
             *serialied);
 }
 
-GTEST_TEST(EthereumTransactionBuilderTest, Create_multisig_wallet_sign_bug)
+GTEST_TEST(EthereumTransactionBuilderTest, Transaction_with_signature_bug)
 {
     AccountPtr account;
     HANDLE_ERROR(make_account(
             ETHEREUM_TEST_NET,
             ACCOUNT_TYPE_DEFAULT,
-            "ffbb9b81317591d885f40e6e31c5ce1f998c6b46d9f57c4f2c72f37055004500",
+            "50df95f9f707b0dbd405456b2cbd7bf877322dd8a2fb58c4dd9255aad8f2183f",
             reset_sp(account)));
     ASSERT_NE(nullptr, account);
-    ASSERT_EQ("0x7ebc184b7af2e4e93a0572704bbaf0ff0b752722", account->get_address());
+    ASSERT_EQ("0xdfff086409e56e0b23f8e648993c54c639798571", account->get_address());
 
-    TransactionBuilderPtr builder;
-    HANDLE_ERROR(
-            make_transaction_builder(
-                    account.get(),
-                    ETHEREUM_TRANSACTION_BUILDER_MULTISIG,
-                    "new_wallet",
-                    reset_sp(builder)));
-    EXPECT_NE(nullptr, builder);
+    TransactionPtr transaction;
+    HANDLE_ERROR(make_transaction(account.get(), reset_sp(transaction)));
+    ASSERT_NE(nullptr, transaction);
 
-
-    {
-        Properties* builder_propertie;
-        BigIntPtr balance;
-        BigIntPtr price;
-        HANDLE_ERROR(make_big_int("1000000000000000000", reset_sp(balance)));
-        HANDLE_ERROR(make_big_int("100000000000000000", reset_sp(price)));
-        HANDLE_ERROR(transaction_builder_get_properties(builder.get(), &builder_propertie));
-        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "price", price.get()));
-        HANDLE_ERROR(properties_set_big_int_value(builder_propertie, "balance", balance.get()));
-        HANDLE_ERROR(properties_set_string_value(builder_propertie, "factory_address", "04f68589f53cfdf408025cd7cea8a40dbf488e49"));
-        HANDLE_ERROR(properties_set_string_value(builder_propertie, "owners", "[0x7ebc184b7af2e4e93a0572704bbaf0ff0b752722, 0x479ce7fb73dd636ff6efe2c11cde5965ca1d6fef]"));
-        HANDLE_ERROR(properties_set_int32_value(builder_propertie, "confirmations", 2));
-    }
-
-    TransactionPtr transaction = builder->make_transaction();
+    const BigInt balance(1.07916_ETH);
+    const BigInt value(0.12_ETH);
+    const BigInt gas_limit(42000);
+    const BigInt gas_price(3.0_GWEI);
 
     {
-        Properties* transaction_properties = nullptr;
-        const BigInt nonce("3");
-        HANDLE_ERROR(transaction_get_properties(transaction.get(), &transaction_properties));
-        HANDLE_ERROR(properties_set_big_int_value(transaction_properties, "nonce", &nonce));
+        Properties& properties = transaction->get_transaction_properties();
+        properties.set_property_value("nonce", BigInt(5));
     }
 
     {
-        Properties* fee = nullptr;
-        HANDLE_ERROR(transaction_get_fee(transaction.get(), &fee));
-
-        BigIntPtr amount_gas_price;
-        HANDLE_ERROR(make_big_int("4000000000", reset_sp(amount_gas_price)));
-        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_price", amount_gas_price.get()));
-
-        BigIntPtr amount_gas_limit;
-        HANDLE_ERROR(make_big_int("5000000", reset_sp(amount_gas_limit)));
-        HANDLE_ERROR(properties_set_big_int_value(fee, "gas_limit", amount_gas_limit.get()));
+        Properties& source = transaction->add_source();
+        source.set_property_value("amount", balance);
     }
+
+    {
+        Properties& destination = transaction->add_destination();
+        destination.set_property_value("address", "0xd64de22d36e736198338f42631f2edd9c5aaa9a2");
+        destination.set_property_value("amount", value);
+    }
+
+    {
+        Properties& fee = transaction->get_fee();
+        fee.set_property_value("gas_price", gas_price);
+        fee.set_property_value("gas_limit", gas_limit);
+    }
+
 
     const BinaryDataPtr serialied = transaction->serialize();
-    ASSERT_EQ(as_binary_data(from_hex("f901110384ee6b2800834c4b409404f68589f53cfdf408025cd7cea8a40dbf488e4988016345785d8a0000b8a4f8f738080000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000007ebc184b7af2e4e93a0572704bbaf0ff0b752722000000000000000000000000479ce7fb73dd636ff6efe2c11cde5965ca1d6fef2ba00093cf261eec56b16cdc69cd7cf454d8fe76800e011c3525f14f4ea4f5d2a6d1a02dcee51e773072dc54382d6527c0dc0410ac67dc331fc330504f8fb950d40525")), *serialied);
+
+    // TXid: 0x2430c0040f7383d8a24ce34b251db8adc15d9397fb1269564c26baf13311e9aa
+    ASSERT_EQ(as_binary_data(from_hex(
+            "f86a0584b2d05e0082a41094d64de22d36e736198338f42631f2edd9c5aaa9a28801aa535d3d0c0000802ca0377c5e87b81305d060cce4243e0041969252b72ee78817c48bffb34a55ddef249f98b61f69a0ecf8ba3d5b8e378a4eb4ccad3cd231a619f6c95314cf023e3f05")), *serialied);
 }
