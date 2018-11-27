@@ -20,6 +20,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
         - BUILD_TYPE=Debug
+        - DISTRIBUTION_VARIANT=linux_gcc5_debug
 
     - os: linux
       addons:
@@ -31,6 +32,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
         - BUILD_TYPE=Release
+        - DISTRIBUTION_VARIANT=linux_gcc5_release
 
     - os: linux
       addons:
@@ -42,6 +44,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang && CXX=clang++"
         - BUILD_TYPE=Debug
+        - DISTRIBUTION_VARIANT=linux_clang_debug
 
     - os: linux
       addons:
@@ -53,6 +56,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang && CXX=clang++"
         - BUILD_TYPE=Release
+        - DISTRIBUTION_VARIANT=linux_clang_release
 
     - language: android
       jdk: oraclejdk8
@@ -65,6 +69,7 @@ matrix:
           - EMULATOR_API_LEVEL=21
           - ANDROID_BUILD_TOOLS=26.1.1
           - ADB_INSTALL_TIMEOUT=5 # minutes
+          - DISTRIBUTION_VARIANT=android_release
 
       android:
         components:
@@ -121,6 +126,8 @@ matrix:
 
         # Update Headers: Rename Error to MultyError due to name clash.
         - sed -i '' -E 's/Error/MultyError/g' ../samples/iOS_run_tests/Headers/error.h
+      env:
+        - DISTRIBUTION_VARIANT=osx_release
 
         # Build the sample app with updated libs and headers
         #  - xcodebuild -list -project ../samples/iOS_run_tests/iOS_run_tests.xcodeproj
@@ -137,11 +144,14 @@ script:
   - ./multy
 
 before_deploy:
-  - echo 'ABOUT TO DEPLOY!!!! WOOOHOOO!!!' && find . -iname '*multy*'
+  - echo 'ABOUT TO DEPLOY!!!! WOOOHOOO!!!' && pwd
+  - export DISTRIBUTION_VARIANT=${DISTRIBUTION_VARIANT:+${TRAVIS_OS_NAME}_${BUILD_TYPE}}
+  - export DISTRIBUTION_VERSION=${TRAVIS_TAG:+${TRAVIS_COMMIT}}
+  - export DISTRIBUTION_NAME=distribution_${DISTRIBUTION_VARIANT}_${DISTRIBUTION_VERSION}.zip
   - mkdir -p ./distribution ./distribution/bin ./distribution/include
   - find . -iname '*multy_core*' -iname '*ccan*' -iname '*keccak*' -iname '*mini-gmp*' -iname '*jsoncpp*' -not -name '*.o' -not -path '*google*' -exec cp {} ./distribution/bin \;
   - cp ../multy_core/*.h ./distribution/include
-  - tar czf distribution.zip ./distribution
+  - tar czf ${DISTRIBUTION_NAME} ./distribution
 
 deploy:
   skip_cleanup: true
@@ -149,7 +159,7 @@ deploy:
   provider: releases
   api_key:
     secure: ODD5Q6V4qVdv96IgaS+pBVRKtNFih905Uv9IoWE1JCfuc2bOz2zqUbhD4+z6KMLJvD0QLlWBMWl+pDsAE+iOKAwQ7TnwjXoE79D3eSqk83WGraBej5Jlh6qiMoqcjBdAAkUr9BBDe4XS906dD65wEaVxZi9yHOkoK2gRhP6JwLrA1WaNVYtdvF+wR15537D0OvnttV4b8s3eaiTWwsG/lznyZ3EyeaLK+pdPCDsbvgPZsKilkEp6REimwAdr1Y4Pq99mLLq41Y42rOIu2hxehmnt9hrDPvXj1FHH1cr8/Loba6MNDW4AxvPY1Lez8Sjinhx0KeicqJwXTjqkNI2jgbwJ21phzfEf0Ts2b01OBVFraqEMdP7vW8hXyuXJv4lmZuER4uP7yzYLKX99yHpyyBkUcoB/DV61mAZcoJxHkNq2HTwNlQh35LT/I0lio5WGmDb8FEIieiYkaxQAYeMQpVrIVaX6ADoJGhiERyQ5zyfe4HIVcAmL5ishZZcDrcdAmZf9f0D7l9Dfo4t/mt22BN5kA8VnxEnutb4H9IgNNWlTKSj87nI8Yu+mm36za/g2GtB1eGyHXZ2f5Dv292lpEXL1Aly4AK91YDMtxOjfXTpqrpkFoGgMxJKroR5V6xt4ZwbwAv8KTJvbwE6qgwojgDVH7DQanYDe2ekqE30Fktg=
-  file: ''
+  file: ${DISTRIBUTION_NAME}
   on:
 #    tags: true
 #    repo: Multy-io/Multy-back
