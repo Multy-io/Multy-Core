@@ -136,7 +136,13 @@ script:
   - cmake --build . --target all
   - ./multy
 
-before_deploy: "echo 'ABOUT TO DEPLOY!!!! WOOOHOOO!!!' && find . -iname '*multy*'"
+before_deploy:
+  - echo 'ABOUT TO DEPLOY!!!! WOOOHOOO!!!' && find . -iname '*multy*'
+  - mkdir -p ./distribution ./distribution/bin ./distribution/include
+  - find . -iname '*multy_core*' -iname '*ccan*' -iname '*keccak*' -iname '*mini-gmp*' -iname '*jsoncpp*' -not -name '*.o' -not -path '*google*' -exec cp {} ./distribution/bin \;
+  - cp ../multy_core/*.h ./distribution/include
+  - tar czf distribution.zip ./distribution
+
 deploy:
   skip_cleanup: true
   draft: true
@@ -145,7 +151,7 @@ deploy:
     secure: ODD5Q6V4qVdv96IgaS+pBVRKtNFih905Uv9IoWE1JCfuc2bOz2zqUbhD4+z6KMLJvD0QLlWBMWl+pDsAE+iOKAwQ7TnwjXoE79D3eSqk83WGraBej5Jlh6qiMoqcjBdAAkUr9BBDe4XS906dD65wEaVxZi9yHOkoK2gRhP6JwLrA1WaNVYtdvF+wR15537D0OvnttV4b8s3eaiTWwsG/lznyZ3EyeaLK+pdPCDsbvgPZsKilkEp6REimwAdr1Y4Pq99mLLq41Y42rOIu2hxehmnt9hrDPvXj1FHH1cr8/Loba6MNDW4AxvPY1Lez8Sjinhx0KeicqJwXTjqkNI2jgbwJ21phzfEf0Ts2b01OBVFraqEMdP7vW8hXyuXJv4lmZuER4uP7yzYLKX99yHpyyBkUcoB/DV61mAZcoJxHkNq2HTwNlQh35LT/I0lio5WGmDb8FEIieiYkaxQAYeMQpVrIVaX6ADoJGhiERyQ5zyfe4HIVcAmL5ishZZcDrcdAmZf9f0D7l9Dfo4t/mt22BN5kA8VnxEnutb4H9IgNNWlTKSj87nI8Yu+mm36za/g2GtB1eGyHXZ2f5Dv292lpEXL1Aly4AK91YDMtxOjfXTpqrpkFoGgMxJKroR5V6xt4ZwbwAv8KTJvbwE6qgwojgDVH7DQanYDe2ekqE30Fktg=
   file: ''
   on:
-    tags: true
+#    tags: true
 #    repo: Multy-io/Multy-back
     all_branches: true
 #    condition: $TRAVIS_BRANCH =~ ^v\d+.\d+$
