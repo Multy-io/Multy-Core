@@ -149,12 +149,11 @@ before_deploy:
   - export DISTRIBUTION_VERSION=${TRAVIS_TAG:+${TRAVIS_COMMIT}}
   - export DISTRIBUTION_NAME=distribution_${DISTRIBUTION_VARIANT}_${DISTRIBUTION_VERSION}.zip
   - mkdir -p ./distribution ./distribution/bin ./distribution/include
-  - find . -iname '*multy_core*' -iname '*ccan*' -iname '*keccak*' -iname '*mini-gmp*' -iname '*jsoncpp*' -not -name '*.o' -not -path '*google*' -exec cp {} ./distribution/bin \;
+  - find . \( -iname '*.a' -o -iname '*.so' -o -iname '*.dlyb' \) -a \( -iname '*multy_core*' -o -iname '*ccan*' -o -iname '*keccak*' -o -iname '*mini-gmp*' -o -iname '*jsoncpp*' -not -name '*.o' \) -not -path '*google*' -type f -exec cp {} ./distribution/bin \;
   - cp ../multy_core/*.h ./distribution/include
   - cp ../LICENSE ./distribution
   - printf "Branch: $(git rev-parse --abbrev-ref HEAD)\nCommit: $(git log -1 --format=%h)\nTag: $(git describe --tags --abbrev=0 --dirty --candidates=0)" > ./distribution/VERSION
   - tar czf ${DISTRIBUTION_NAME} ./distribution
-  - export DISTRIBUTION_NAME=$(realpath ${DISTRIBUTION_NAME})
   - pwd && echo ${DISTRIBUTION_NAME}
   - tar -tf ${DISTRIBUTION_NAME}
 
