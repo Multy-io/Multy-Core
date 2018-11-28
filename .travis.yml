@@ -152,6 +152,9 @@ before_deploy:
   - find . -iname '*multy_core*' -iname '*ccan*' -iname '*keccak*' -iname '*mini-gmp*' -iname '*jsoncpp*' -not -name '*.o' -not -path '*google*' -exec cp {} ./distribution/bin \;
   - cp ../multy_core/*.h ./distribution/include
   - tar czf ${DISTRIBUTION_NAME} ./distribution
+  - export DISTRIBUTION_NAME=$(realpath ${DISTRIBUTION_NAME})
+  - echo ${DISTRIBUTION_NAME}
+  - tar -tf ${DISTRIBUTION_NAME}
 
 deploy:
   provider: releases
