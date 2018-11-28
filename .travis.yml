@@ -143,9 +143,12 @@ script:
   - cmake --build . --target all
   - ./multy
 
+# TODO: due to the lack of explicit tag, multiple releases are created, test that when a tag is pushed.
 before_deploy:
   - echo 'ABOUT TO DEPLOY!!!! WOOOHOOO!!!' && pwd
-  - export DISTRIBUTION_VARIANT=${DISTRIBUTION_VARIANT:+${TRAVIS_OS_NAME}_${BUILD_TYPE}}
+  - echo 'DISTRIBUTION_VARIANT ${DISTRIBUTION_VARIANT}'
+  - export DISTRIBUTION_VARIANT=${DISTRIBUTION_VARIANT:-${TRAVIS_OS_NAME}_${BUILD_TYPE}}
+  - echo 'DISTRIBUTION_VARIANT ${DISTRIBUTION_VARIANT}'
   - export DISTRIBUTION_VERSION=${TRAVIS_TAG:+${TRAVIS_COMMIT}}
   - export DISTRIBUTION_NAME=distribution_${DISTRIBUTION_VARIANT}_${DISTRIBUTION_VERSION}.zip
   - mkdir -p ./distribution ./distribution/bin ./distribution/include
