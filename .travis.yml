@@ -154,11 +154,13 @@ before_deploy:
   - tar czf ${DISTRIBUTION_NAME} ./distribution
 
 deploy:
+  provider: releases
   skip_cleanup: true
   draft: true
-  provider: releases
+  overwrite: true
+  # do as Enmk
   api_key:
-      secure: QFTzxRCvm2jmVZChRRNjl9BSlptMc1bFCpZJU+sVNY7cuukyWKkgVVDr/1R3oZosU0Y6fxsfZPWvKPnUThNjMOQB+CcTd5YArhtb8et3ovAUQ6xvZ/OGz+s5LLhjS8nK50DwQVrlLqQdt27Y3zcAccOe7Zox4q6C9BjxtlwPgUsrN/O/Pdz+sRD4lWkC460PoTZSVzBLMs7gLbI8HhhDMKZS8IuL3Ae+YlScDC/OhmnoTUraNA3iLo4ZSzooVk1vshSUpRwyL0U/+pYVxE/okUdxq1+b7EO38QfRSCLsbfv8KReDArPqKNhvV3HUFHLe05j8PCNtRFswImMwatyy1ZJKcNGcLzohmgHod6KZ6bVwUvKOiD3QsfpR4RO3AFJnwr7nsamCp0T6VxuxL6W4HAkRqhewOST+Sdt5s9spoyG6AqUKEomd3zRtVg8z5fdRZTTXf+7yI+6RZJ+KNHlKANxj7sVlXq0dZLPxP++U6rw48fYftLJt1em+mUQq4y5Qj955LUUGCBDNqrMWBZ0hWHCDUfEg8PVT/EpjZUn7/wDlBwHqn6XxygzPbJMwgDGQY8hY8dHYVZW4KTTyuDCVDTNdfm2UNGO8hOOL8oW6wwuCxdOJHZUxGYOvmpqk1MfLx5JifFi+CCysy9pXb6/3VlbeiCnhwuT0o2/Jnhc9Ap4=
+    secure: P+O8nk+6+YMJQkfqLdSXo4aImhyDQZOaXRE7s5e5+Jo4ig+Fm4DVIRUQ+LqMe0iI95Mfnl1FXp4HoANwm2GaGAqeJNLmeobAXZ0izvwUvuTAv/cDSLPjEqL493C0/BTrabzv5qXWn1PFOiKluTLPC5fxdLIDO0gj1rIro/YmHM/4QV7RCxDD3vXoHqocfKjjwKjom/FvFKZoGuvv895fdGzkUoUKxeYKDsVG9ShVWWOv6HVNthlBrFrkqAKyNYIRIH+yMR8JfoVIs4hKRRCM8bYEiExpb+ufwVAbFMbdmJNAAdChucNeavAShpXeAafXKhII3YlCvWbYhXK7m/9lg8cXVeiWdm6piqORSOgbDhCuziTblLt0+QdH7PKEpcViBYSqR17V1z4pIKDf3a6jvzxqnfndhuEEW3XO83Ey0+UvOZytmlvzUk3X8zY3j0cXZD9O0TXZraSqMDS8he/cHYdppCPVao4771s+GvdxpfCl1Kl8/J5K+FxqXLfgoNFv3JsmBlFwcCe2ISTbGoc5Md5SKUVRZ23m/6/YjVcYegtf+RzSPj4SdLW7j2RKZxCGm+C14O9vjfvkzxI9mO87nDq1ZsQi2tZk34U115BNVrgForBo4Ur1NcCnzmXaTuFF9C7xbJV79h95CsvUL2600dIW9btThK45jW5QHEaYjUU=
   file: ${DISTRIBUTION_NAME}
   on:
 #    tags: true
