@@ -7,6 +7,8 @@
 #ifndef MULTY_CORE_BITCOIN_OP_CODE_H
 #define MULTY_CORE_BITCOIN_OP_CODE_H
 
+#include <stdint.h>
+
 namespace multy_core
 {
 namespace internal
@@ -14,6 +16,7 @@ namespace internal
 enum OP_CODE : uint8_t
 {
     OP_FALSE = 0x00,
+    OP_0 = 0x00,
     OP_RETURN = 0x6A,
     OP_DUP = 0x76,
     OP_HASH160 = 0xA9,

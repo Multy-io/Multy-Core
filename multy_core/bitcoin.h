@@ -7,9 +7,13 @@
 #ifndef MULTY_CORE_BITCOIN_H
 #define MULTY_CORE_BITCOIN_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+const uint32_t BITCOIN_INPUT_SEQ_FINAL = 0xFFFFFFFF;
 
 enum BitcoinNetType
 {

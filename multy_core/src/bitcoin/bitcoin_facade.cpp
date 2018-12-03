@@ -13,6 +13,7 @@
 #include "multy_core/src/exception_stream.h"
 #include "multy_core/src/bitcoin/bitcoin_account.h"
 #include "multy_core/src/bitcoin/bitcoin_transaction.h"
+#include "multy_core/src/bitcoin/bitcoin_transaction_segwit.h"
 #include "multy_core/src/utility.h"
 
 #include "multy_core/src/codec.h"
@@ -85,7 +86,19 @@ AccountPtr BitcoinFacade::make_account(
 
 TransactionPtr BitcoinFacade::make_transaction(const Account& account) const
 {
-    return TransactionPtr(new BitcoinTransaction(account.get_blockchain_type()));
+    const BitcoinAccount& bitcoin_account = static_cast<const BitcoinAccount&>(account);
+    if (bitcoin_account.get_account_type() == BITCOIN_ACCOUNT_SEGWIT)
+    {
+        return TransactionPtr(new BitcoinTransactionSegWit(account.get_blockchain_type()));
+    }
+    else if (bitcoin_account.get_account_type() == BITCOIN_ACCOUNT_DEFAULT)
+    {
+        return TransactionPtr(new BitcoinTransaction(account.get_blockchain_type()));
+    }
+    else
+    {
+        THROW_EXCEPTION("Unknown account type");
+    }
 }
 
 void BitcoinFacade::validate_address(BlockchainType blockchain_type, const char* address) const
