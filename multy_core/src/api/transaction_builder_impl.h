@@ -33,4 +33,11 @@ public:
     static const void* get_object_magic();
 };
 
+// Helper function to simplify creating new TransactionBuilder with type maps.
+template <typename T, typename AccountType = Account>
+TransactionBuilder* new_tx_builder(const AccountType& account, const std::string& name)
+{
+    return new T(account, name);
+}
+
 #endif // MULTY_CORE_SRC_API_TRANSACTION_BUILDER_IMPL_H

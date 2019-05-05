@@ -10,6 +10,7 @@
 #include "multy_core/src/account_base.h"
 
 #include <string>
+#include <memory>
 
 namespace multy_core
 {
@@ -26,7 +27,22 @@ protected:
             const ExtendedKey& parent_key, AddressType type, uint32_t index) const override;
 };
 
-AccountPtr make_ethereum_account(BlockchainType blockchain_type,
+class EthereumAddress;
+
+class EthereumAccount : public AccountBase
+{
+protected:
+    using AccountBase::AccountBase;
+
+public:
+    ~EthereumAccount();
+
+    virtual EthereumAddress get_ethereum_address() const = 0;
+};
+
+typedef std::unique_ptr<EthereumAccount> EthereumAccountPtr;
+
+EthereumAccountPtr make_ethereum_account(BlockchainType blockchain_type,
         const char* serialized_private_key);
 
 } // namespace internal

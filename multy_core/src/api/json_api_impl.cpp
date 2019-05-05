@@ -55,7 +55,17 @@ void from_json(const Json::Value& value, const BlockchainType&, BigInt* big_int_
     }
     else if (value.type() == Json::stringValue)
     {
-        big_int_value->set_value(value.asCString());
+        const char* v = value.asCString();
+        if (v && v[0] == '0' && v[1] == 'x')
+        {
+            v += 2;
+            const auto binary = decode(v, strlen(v), CODEC_HEX);
+            big_int_value->set_value_as_binary_data(BigInt::EXPORT_BIG_ENDIAN, *binary);
+        }
+        else
+        {
+            big_int_value->set_value(v);
+        }
     }
     else
     {
@@ -179,8 +189,8 @@ void set_properties(const Json::Value& values, const BlockchainType& blockchain_
         }
         catch(const Exception& e)
         {
-            e << " Setting properties to: " << properties->get_name() << ", "
-                    << " Value name:" << i.name() << ", type: " << i->type();
+            // Just re-throw, this section is to avoid re-wrapping Exception
+            // in another Exception in a block below.
             throw;
         }
         catch(const std::exception& e)
@@ -192,6 +202,12 @@ void set_properties(const Json::Value& values, const BlockchainType& blockchain_
 
             THROW_EXCEPTION2(ERROR_INVALID_ARGUMENT, "Invalid input JSON.")
                     << message.str();
+        }
+        catch(...)
+        {
+            THROW_EXCEPTION2(ERROR_GENERAL_ERROR, "Unknown error.")
+                    << " Setting properties to: " << properties->get_name() << ", "
+                    << " Value name:" << i.name() << ", type: " << i->type() << ".";
         }
     }
 }

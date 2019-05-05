@@ -812,3 +812,107 @@ TEST_P(P_uint64_t, initialization)
 
 INSTANTIATE_TEST_CASE_P(BigIntTest, P_int64_t, ::testing::ValuesIn(INT64_INIT_TEST_CASES));
 INSTANTIATE_TEST_CASE_P(BigIntTest, P_uint64_t, ::testing::ValuesIn(UINT64_INIT_TEST_CASES));
+
+struct BinaryExportTestCase
+{
+    const char* amount_string;
+    const test_utility::bytes expected_data;
+};
+
+std::ostream& operator<<(std::ostream& ostr, const BinaryExportTestCase& test_case)
+{
+    return ostr << "BinaryExportTestCase{"
+                << "\n\tstring: \"" << test_case.amount_string << "\""
+                << "\n\tbinary: \"" << as_binary_data(test_case.expected_data)
+                << "}";
+}
+
+const BinaryExportTestCase SIMPLE_CASES[] =
+{
+    {
+        "0",
+        {0x0}
+    },
+    {
+        "21001",
+        {0x52, 0x09}
+    },
+    {
+        "11259375",
+        {0xab, 0xcd, 0xef}
+    },
+    {
+        "81985529216486895",
+        {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}
+    },
+    {
+        "16069380442589902755419620",
+        {
+            0x0d, 0x4a, 0xd2, 0xdb, 0xfc, 0x3d, 0x07, 0x78,
+            0x79, 0x55, 0xe4
+        }
+    },
+    {
+        "1606938044258990275541962092341162602522202993782792835302712",
+        {
+            0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x05, 0x38
+        }
+    },
+    {
+        "255",
+        {0xff}
+    },
+    {
+        "65535",
+        {0xff, 0xff}
+    },
+    {
+        "16777215",
+        {0xff, 0xff, 0xff}
+    },
+    {
+        "4294967295",
+        {0xff, 0xff, 0xff, 0xff}
+    },
+    {
+        "1606938044258990275541962092341162602522202993782792835301375",
+        {
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff
+        }
+    },
+};
+
+class BigIntBinaryTestP: public ::testing::TestWithParam<BinaryExportTestCase>
+{};
+
+INSTANTIATE_TEST_CASE_P(Simple, BigIntBinaryTestP,
+        ::testing::ValuesIn(SIMPLE_CASES));
+
+TEST_P(BigIntBinaryTestP, export_as_binary_data)
+{
+    const auto& param = GetParam();
+    const BinaryData expected = as_binary_data(param.expected_data);
+
+    BigInt amount(param.amount_string);
+    BinaryDataPtr exported = amount.export_as_binary_data(BigInt::EXPORT_BIG_ENDIAN);
+
+    EXPECT_EQ(expected, *exported);
+}
+
+TEST_P(BigIntBinaryTestP, import_as_binary_data)
+{
+    const auto& param = GetParam();
+
+    const BigInt expected(param.amount_string);
+
+    BigInt actual;
+    actual.set_value_as_binary_data(BigInt::EXPORT_BIG_ENDIAN, as_binary_data(param.expected_data));
+
+    EXPECT_EQ(expected, actual);
+}

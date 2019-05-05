@@ -71,6 +71,7 @@ struct MULTY_CORE_API BigInt : public ::multy_core::internal::ObjectBase<BigInt>
     typedef multy_core::internal::BinaryDataPtr BinaryDataPtr;
     enum ExportFormat {EXPORT_BIG_ENDIAN, EXPORT_LITTLE_ENDIAN};
     BinaryDataPtr export_as_binary_data(ExportFormat format) const;
+    void set_value_as_binary_data(ExportFormat format, const BinaryData& data);
 
     BigInt& operator+=(const BigInt& other);
     BigInt& operator-=(const BigInt& other);

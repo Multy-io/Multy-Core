@@ -34,6 +34,8 @@ public:
     virtual PrivateKeyPtr get_private_key() const = 0;
     virtual PublicKeyPtr get_public_key() const = 0;
 
+    // Rewrites any bit of the private key with given value.
+    // This is a special method used to fix broken (non-determenistic) private keys.
     virtual void change_private_key(int position, unsigned char byte);
 
     static const void* get_object_magic();

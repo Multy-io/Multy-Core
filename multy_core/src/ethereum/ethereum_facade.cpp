@@ -12,6 +12,7 @@
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 #include "multy_core/src/ethereum/ethereum_transaction_builder_multisig.h"
 #include "multy_core/src/ethereum/ethereum_transaction_builder_erc20.h"
+#include "multy_core/src/ethereum/ethereum_transaction_builder_erc721.h"
 #include "multy_core/src/ethereum/ethereum_transaction_builder.h"
 
 #include "multy_core/src/exception.h"
@@ -68,7 +69,7 @@ AccountPtr EthereumFacade::make_account(
 {
     validate_ethereum_account_type(account_type);
 
-    return make_ethereum_account(blockchain_type, serialized_private_key);
+    return AccountPtr(make_ethereum_account(blockchain_type, serialized_private_key).release());
 }
 
 TransactionPtr EthereumFacade::make_transaction(const Account& account) const
@@ -79,7 +80,7 @@ TransactionPtr EthereumFacade::make_transaction(const Account& account) const
 TransactionBuilderPtr EthereumFacade::make_transaction_builder(
         const Account& account, uint32_t type, const char* action) const
 {
-    typedef TransactionBuilderPtr (*BuilderFactoryFunction)(const Account&, const std::string&);
+    typedef TransactionBuilderPtr (*BuilderFactoryFunction)(const EthereumAccount&, const std::string&);
     static const std::unordered_map<size_t, BuilderFactoryFunction> BUILDERS =
     {
         {
@@ -94,6 +95,10 @@ TransactionBuilderPtr EthereumFacade::make_transaction_builder(
             ETHEREUM_TRANSACTION_BUILDER_BASIC,
             &make_ethereum_transaction_builder
         },
+        {
+            ETHEREUM_TRANSACTION_BUILDER_ERC721,
+            &make_ethereum_ERC721_transaction_builder
+        },
     };
 
     const auto builder = BUILDERS.find(type);
@@ -105,7 +110,10 @@ TransactionBuilderPtr EthereumFacade::make_transaction_builder(
                 << ", action: \"" << (action ? action : "") << "\".";
     }
 
-    return builder->second(account, std::string(action ? action : ""));
+    INVARIANT(account.get_blockchain_type().blockchain == BLOCKCHAIN_ETHEREUM);
+    const auto& ethereum_account = dynamic_cast<const EthereumAccount&>(account);
+
+    return builder->second(ethereum_account, std::string(action ? action : ""));
 }
 
 TransactionBuilderPtr EthereumFacade::make_transaction_builder_by_name(
@@ -120,6 +128,7 @@ TransactionBuilderPtr EthereumFacade::make_transaction_builder_by_name(
             { ETHEREUM_TRANSACTION_BUILDER_ERC20, "erc20" },
             { ETHEREUM_TRANSACTION_BUILDER_MULTISIG, "multisig" },
             { ETHEREUM_TRANSACTION_BUILDER_BASIC, "basic" },
+            { ETHEREUM_TRANSACTION_BUILDER_ERC721, "erc721" },
         }
     };
 

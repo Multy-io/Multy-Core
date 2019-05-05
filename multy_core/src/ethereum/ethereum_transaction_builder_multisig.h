@@ -14,9 +14,10 @@ namespace multy_core
 {
 namespace internal
 {
+class EthereumAccount;
 
 TransactionBuilderPtr make_ethereum_multisig_transaction_builder(
-        const Account& account,
+        const EthereumAccount& account,
         const std::string& action);
 
 } // namespace internal

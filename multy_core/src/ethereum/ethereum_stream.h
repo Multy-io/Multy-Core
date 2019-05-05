@@ -21,6 +21,8 @@ class EthereumAddress;
 const size_t ETH_METHOD_HASH_SIZE = 4;
 typedef std::array<uint8_t, ETH_METHOD_HASH_SIZE> EthereumContractMethodHash;
 
+EthereumContractMethodHash make_method_hash(const char* methodSignature);
+
 struct EthereumPayloadDataStream
 {
     EthereumPayloadDataStream();

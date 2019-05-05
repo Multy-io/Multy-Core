@@ -176,25 +176,21 @@ EthereumAddress make_address(const EthereumPublicKey& key)
 typedef UPtr<EthereumPrivateKey> EthereumPrivateKeyPtr;
 typedef UPtr<EthereumPublicKey> EthereumPublicKeyPtr;
 
-class EthereumAccount : public AccountBase
+class EthereumAccountImpl : public EthereumAccount
 {
 public:
-    EthereumAccount(
+    EthereumAccountImpl(
             BlockchainType blockchain_type,
             EthereumPrivateKeyPtr private_key,
             const HDPath& path = HDPath())
-        : AccountBase(blockchain_type, path),
+        : EthereumAccount(blockchain_type, path),
           m_private_key(std::move(private_key))
     {
     }
 
     std::string get_address() const override
     {
-        EthereumPublicKeyPtr public_key(
-                reinterpret_cast<EthereumPublicKey*>(
-                        m_private_key->make_public_key().release()));
-
-        return EthereumAddress::to_string(make_address(*public_key));
+        return EthereumAddress::to_string(get_ethereum_address());
     }
 
     const PrivateKey& get_private_key_ref() const override
@@ -218,6 +214,15 @@ public:
 
         private_key_data[pos] = byte;
         m_private_key.reset(new EthereumPrivateKey(std::move(private_key_data)));
+    }
+
+    EthereumAddress get_ethereum_address() const override
+    {
+        EthereumPublicKeyPtr public_key(
+                reinterpret_cast<EthereumPublicKey*>(
+                        m_private_key->make_public_key().release()));
+
+        return make_address(*public_key);
     }
 
 private:
@@ -251,6 +256,9 @@ namespace multy_core
 namespace internal
 {
 
+EthereumAccount::~EthereumAccount()
+{}
+
 EthereumHDAccount::EthereumHDAccount(
         BlockchainType blockchain_type,
         const ExtendedKey& bip44_master_key,
@@ -270,7 +278,7 @@ AccountPtr EthereumHDAccount::make_account(
                     power_slice(address_key->key.priv_key, 1, -1)));
 
     AccountPtr result(
-            new EthereumAccount(
+            new EthereumAccountImpl(
                     get_blockchain_type(),
                     std::move(private_key),
                     make_child_path(make_child_path(get_path(), type), index)));
@@ -278,7 +286,7 @@ AccountPtr EthereumHDAccount::make_account(
     return result;
 }
 
-AccountPtr make_ethereum_account(BlockchainType blockchain_type,
+EthereumAccountPtr make_ethereum_account(BlockchainType blockchain_type,
         const char* serialized_private_key)
 {
     INVARIANT(serialized_private_key);
@@ -308,7 +316,7 @@ AccountPtr make_ethereum_account(BlockchainType blockchain_type,
             "Failed to verify private key.");
 
     EthereumPrivateKeyPtr private_key(new EthereumPrivateKey(std::move(key_data)));
-    return AccountPtr(new EthereumAccount(blockchain_type, std::move(private_key)));
+    return EthereumAccountPtr(new EthereumAccountImpl(blockchain_type, std::move(private_key)));
 }
 
 } // namespace internal

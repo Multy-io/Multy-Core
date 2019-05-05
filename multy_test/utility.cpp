@@ -19,6 +19,7 @@
 
 #include <memory.h>
 #include <string.h>
+#include <regex>
 
 namespace
 {
@@ -42,6 +43,27 @@ size_t dummy_fill_entropy(void*, size_t size, void* dest)
 
 namespace test_utility
 {
+const ExpectedError ExpectedError::ANY = ExpectedError{nullptr, ExpectedError::ANY_CODE};
+
+::testing::AssertionResult ExpectedError::is_match(const char* /*expected*/, const char* actual, const Error* e) const
+{
+    if (e == nullptr)
+    {
+        return ::testing::AssertionFailure() << actual << " is null";
+    }
+
+    if (error_code != ANY_CODE && error_code != e->code)
+    {
+        return ::testing::AssertionFailure() << "Invalid error code, expected: " << error_code << " actual: " << e->code;
+    }
+    if (message_re != nullptr && e->message != nullptr
+            && !std::regex_match(e->message, std::regex(message_re)))
+    {
+        return ::testing::AssertionFailure() << "Invalid error message, expected to match following re: \"" << message_re << "\" actual message: \"" << e->message << "\".";
+    }
+
+    return ::testing::AssertionSuccess();
+}
 
 const uint64_t SATOSHIS_IN_BTC = 100L*1000*1000;
 const uint64_t WEIS_IN_ETH = 1000L*1000*1000*1000*1000*1000;
