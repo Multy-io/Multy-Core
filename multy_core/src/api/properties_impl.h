@@ -403,7 +403,7 @@ public:
         return m_value;
     }
 
-    const T& get_default_value(const T& default_value) const
+    const T& get_value_or_default(const T& default_value) const
     {
         if (!Property::is_set())
         {
@@ -456,7 +456,6 @@ public:
     }
 };
 
-// TODO: move code common to PropertyT and FunctionalPropertyT to base class.
 template <typename T, typename Argument>
 class FunctionalPropertyT : public PropertyTBase<T>
 {

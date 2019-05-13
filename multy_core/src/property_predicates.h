@@ -43,6 +43,75 @@ void verify_smaller_than(const T& new_value)
                 << "actual : " << new_value << ".";
     }
 }
+
+struct ValueRangeChecker
+{
+    static constexpr auto NoBound = nullptr;
+};
+
+template <typename MinValueType, typename MaxValueType>
+struct ValueRangeCheckerImpl
+{
+    MinValueType min_value;
+    MaxValueType max_value;
+    ErrorCode error_code;
+
+    template <typename T>
+    void operator()(const T& new_value) const {
+        if (new_value < min_value || new_value > max_value)
+        {
+            THROW_EXCEPTION2(error_code, "Value is outside of range.")
+                    << " Expected to be in [" << min_value << ", " << max_value << "] range, "
+                    << " actual: " << new_value << ".";
+        }
+    }
+};
+
+template <typename MaxValueType>
+struct ValueRangeCheckerImpl<std::nullptr_t, MaxValueType>
+{
+    std::nullptr_t min_value;
+    MaxValueType max_value;
+    ErrorCode error_code;
+
+    template <typename T>
+    void operator()(const T& new_value) const {
+        if (new_value > max_value)
+        {
+            THROW_EXCEPTION2(error_code, "Value is outside of range.")
+                    << " Expected to be less than " << max_value << ", "
+                    << " actual: " << new_value << ".";
+        }
+    }
+};
+
+template <typename MinValueType>
+struct ValueRangeCheckerImpl<MinValueType, std::nullptr_t>
+{
+    MinValueType min_value;
+    std::nullptr_t max_value;
+    ErrorCode error_code;
+
+    template <typename T>
+    void operator()(const T& new_value) const {
+        if (new_value < min_value)
+        {
+            THROW_EXCEPTION2(error_code, "Value is outside of range.")
+                    << " Expected to be bigger than " << min_value << ", "
+                    << " actual: " << new_value << ".";
+        }
+    }
+};
+
+template <typename MinValueType, typename MaxValueType>
+ValueRangeCheckerImpl<MinValueType, MaxValueType> verify_in_range(
+        MinValueType min_value,
+        MaxValueType max_value,
+        ErrorCode error_code = ERROR_INVALID_ARGUMENT)
+{
+    return ValueRangeCheckerImpl<MinValueType, MaxValueType>{min_value, max_value, error_code};
+}
+
 } // namespace internal
 } // namespace multy_core
 

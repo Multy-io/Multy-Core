@@ -20,6 +20,13 @@ class EthereumAddress
 {
 public:
     EthereumAddress();
+    ~EthereumAddress();
+
+    EthereumAddress(const EthereumAddress& other);
+    EthereumAddress& operator=(const EthereumAddress& other);
+
+    EthereumAddress(EthereumAddress&& other) = default;
+    EthereumAddress& operator=(EthereumAddress&& other) = default;
 
     explicit EthereumAddress(const std::string& address);
     explicit EthereumAddress(const BinaryData& data);

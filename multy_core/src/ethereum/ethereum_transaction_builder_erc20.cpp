@@ -8,6 +8,7 @@
 
 #include "multy_core/error.h"
 
+#include "multy_core/src/ethereum/ethereum_account.h"
 #include "multy_core/src/ethereum/ethereum_address.h"
 #include "multy_core/src/ethereum/ethereum_transaction.h"
 #include "multy_core/src/ethereum/ethereum_stream.h"
@@ -252,12 +253,6 @@ private:
     FunctionalPropertyT<EthereumAddress, std::string> m_address_for_approve;
 };
 
-template <typename T>
-TransactionBuilder* new_tx_builder(const Account& account, const std::string& name)
-{
-    return new T(account, name);
-}
-
 } // namespace
 
 namespace multy_core
@@ -266,7 +261,7 @@ namespace internal
 {
 
 TransactionBuilderPtr make_ethereum_ERC20_transaction_builder(
-        const Account& account, const std::string& action)
+        const EthereumAccount& account, const std::string& action)
 {
     typedef TransactionBuilder* (*BuilderFunction)(const Account&, const std::string&);
     static const std::unordered_map<std::string, BuilderFunction> BUILDERS =

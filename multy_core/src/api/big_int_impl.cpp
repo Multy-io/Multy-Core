@@ -202,18 +202,27 @@ size_t BigInt::get_exported_size_in_bytes() const
 
 BinaryDataPtr BigInt::export_as_binary_data(BigInt::ExportFormat format) const
 {
-    const size_t size = get_exported_size_in_bytes();
+    const size_t estimated_size = get_exported_size_in_bytes();
 
     BinaryDataPtr result;
-    throw_if_error(make_binary_data(size, reset_sp(result)));
+    throw_if_error(make_binary_data(estimated_size, reset_sp(result)));
 
     const int word_order = (format == EXPORT_BIG_ENDIAN) ? 1 : -1;
     const int byte_order = word_order;
     size_t result_size = 0;
     mpz_export(const_cast<uint8_t*>(result->data), &result_size, word_order,
             result->len, byte_order, 0, m_value);
+    INVARIANT(result_size <= estimated_size); // TODO, ideally, those should be equal.
 
     return result;
+}
+
+void BigInt::set_value_as_binary_data(ExportFormat format, const BinaryData& data)
+{
+    const int word_order = (format == EXPORT_BIG_ENDIAN) ? 1 : -1;
+    const int byte_order = word_order;
+
+    mpz_import(m_value, data.len, word_order, 1, byte_order, 0, data.data);
 }
 
 BigInt& BigInt::operator+=(const BigInt& other)

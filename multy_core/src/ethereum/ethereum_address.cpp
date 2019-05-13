@@ -35,6 +35,22 @@ EthereumAddress::EthereumAddress()
       m_data(as_binary_data(""))
 {}
 
+EthereumAddress::~EthereumAddress()
+{}
+
+EthereumAddress::EthereumAddress(const EthereumAddress& other)
+    : m_owned_data(make_clone(other.m_data)),
+      m_data(*m_owned_data)
+{}
+
+EthereumAddress& EthereumAddress::operator=(const EthereumAddress& other)
+{
+    m_owned_data = make_clone(other.m_data);
+    m_data = *m_owned_data;
+
+    return *this;
+}
+
 EthereumAddress::EthereumAddress(const std::string& address)
     : EthereumAddress(from_string(address.c_str()))
 {}

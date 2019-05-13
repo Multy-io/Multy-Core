@@ -113,7 +113,7 @@ namespace internal
 {
 
 TransactionBuilderPtr make_ethereum_transaction_builder(
-        const Account& account, const std::string& action)
+        const EthereumAccount& account, const std::string& action)
 {
     return TransactionBuilderPtr(new EthereumTransactionBuilder(account, action));
 }

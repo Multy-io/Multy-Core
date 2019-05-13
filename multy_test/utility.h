@@ -62,6 +62,13 @@
         test_utility::throw_exception("ERROR IN TEST CODE: " #statement);      \
     }
 
+#define ASSERT_SPECIFIC_ERROR(error, expected_error) \
+    ASSERT_PRED_FORMAT2(ExpectedError::is_matching, expected_error, error)
+
+#define EXPECT_SPECIFIC_ERROR(error, expected_error) \
+    EXPECT_PRED_FORMAT2(ExpectedError::is_matching, expected_error, error)
+
+
 struct BinaryData;
 struct ExtendedKey;
 struct BlockchainType;
@@ -70,6 +77,32 @@ struct Error;
 namespace test_utility
 {
 typedef std::vector<unsigned char> bytes;
+
+struct ExpectedError
+{
+    const char *const message_re;
+    const int error_code;
+
+    static const int ANY_CODE = -1;
+    static const ExpectedError ANY;
+
+    ::testing::AssertionResult is_match(const char* expected, const char* actual, const ::Error* e) const;
+
+    inline ::testing::AssertionResult is_match(const char* expected, const char* actual, const ::Error& e) const
+    {
+        return is_match(expected, actual, &e);
+    }
+    inline ::testing::AssertionResult is_match(const char* expected, const char* actual, const multy_core::internal::ErrorPtr& e) const
+    {
+        return is_match(expected, actual, e.get());
+    }
+
+    template <typename ErrorT>
+    static inline ::testing::AssertionResult is_matching(const char* expected, const char* actual, const ExpectedError& expected_error, ErrorT && e)
+    {
+        return expected_error.is_match(expected, actual, e);
+    }
+};
 
 bytes from_hex(const char* hex_str);
 std::string to_hex(const bytes& bytes);
@@ -109,5 +142,10 @@ inline bool operator!=(const PrivateKey& lhs, const PrivateKey& rhs)
 
 using multy_core::internal::operator==;
 using multy_core::internal::operator!=;
+
+inline const char* string_or_default(const char* str, const char* default_str)
+{
+    return str != nullptr ? str : default_str;
+}
 
 #endif // MULTY_TEST_UTILITY_H

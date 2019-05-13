@@ -365,12 +365,6 @@ private:
     PropertyT<BigInt> m_request_id;
 };
 
-template <typename T>
-TransactionBuilder* new_tx_builder(const Account& account, const std::string& name)
-{
-    return new T(account, name);
-}
-
 } // namespace
 
 namespace multy_core
@@ -379,7 +373,7 @@ namespace internal
 {
 
 TransactionBuilderPtr make_ethereum_multisig_transaction_builder(
-        const Account& account, const std::string& action)
+        const EthereumAccount& account, const std::string& action)
 {
     typedef TransactionBuilder* (*BuilderFunction)(const Account&, const std::string&);
     static const std::unordered_map<std::string, BuilderFunction> BUILDERS =

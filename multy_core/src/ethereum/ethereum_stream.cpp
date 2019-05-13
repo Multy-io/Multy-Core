@@ -9,6 +9,7 @@
 #include "multy_core/src/ethereum/ethereum_extra_data.h"
 
 #include "multy_core/src/exception_stream.h"
+#include "multy_core/src/hash.h"
 #include "multy_core/src/utility.h"
 #include "multy_core/binary_data.h"
 
@@ -30,6 +31,12 @@ namespace multy_core
 {
 namespace internal
 {
+
+EthereumContractMethodHash make_method_hash(const char* methodSignature)
+{
+    const auto hash = do_hash<KECCAK, 256>(methodSignature);
+    return EthereumContractMethodHash{hash[0], hash[1], hash[2], hash[3]};
+}
 
 EthereumPayloadDataStream::EthereumPayloadDataStream()
         :m_data()

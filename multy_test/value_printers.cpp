@@ -159,3 +159,15 @@ void PrintTo(const BigInt& a, std::ostream* out)
 {
     *out << "BigInt {" << a.get_value() << "}";
 }
+
+namespace test_utility
+{
+
+void PrintTo(const ExpectedError& e, std::ostream* out)
+{
+    *out << "ExpectedError{ message_re:\""
+    << string_or_default(e.message_re, "<EMPTY>") << "\","
+    << " error_code: " << e.error_code << "}";
+}
+
+} // test_utility

@@ -763,13 +763,13 @@ TYPED_TEST_P(PropertyT_TestP, operator_star)
     EXPECT_EQ(NEW_VALUE, strip_unique_ptr(*property));
 }
 
-TYPED_TEST_P(PropertyT_TestP, get_default_value)
+TYPED_TEST_P(PropertyT_TestP, get_value_or_default)
 {
     const auto& DATA = this->DATA;
     auto& property = *this->property;
 
     EXPECT_FALSE(property.is_set());
-    EXPECT_EQ(DATA, property.get_default_value(DATA));
+    EXPECT_EQ(DATA, property.get_value_or_default(DATA));
     EXPECT_FALSE(property.is_set());
 }
 
@@ -780,7 +780,7 @@ REGISTER_TYPED_TEST_CASE_P(PropertyT_TestP,
         set_value,
         get_value,
         operator_star,
-        get_default_value);
+        get_value_or_default);
 
 typedef ::testing::Types<int32_t, std::string, BigInt, BinaryDataPtr, PrivateKeyPtr> PropertyT_Types;
 INSTANTIATE_TYPED_TEST_CASE_P(PropertiesTest, PropertyT_TestP, PropertyT_Types);
@@ -857,7 +857,7 @@ TYPED_TEST_P(FunctionalPropertyT_TestP, FunctionalPropertyT_SmokeTest)
     ASSERT_THROW(property.get_value(), Exception);
     ASSERT_THROW(*property, Exception);
 
-    ASSERT_EQ(PROPERTY_SET, property.get_default_value(PROPERTY_SET));
+    ASSERT_EQ(PROPERTY_SET, property.get_value_or_default(PROPERTY_SET));
 
     ASSERT_NO_THROW(property.set_value(NEW_VALUE));
     ASSERT_TRUE(property.is_set());
@@ -865,7 +865,7 @@ TYPED_TEST_P(FunctionalPropertyT_TestP, FunctionalPropertyT_SmokeTest)
     ASSERT_EQ(PROPERTY_SET, *property);
 
     // Actually returns stored value.
-    ASSERT_EQ(&property.get_value(), &property.get_default_value(PROPERTY_SET));
+    ASSERT_EQ(&property.get_value(), &property.get_value_or_default(PROPERTY_SET));
 }
 
 REGISTER_TYPED_TEST_CASE_P(FunctionalPropertyT_TestP,
