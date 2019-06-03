@@ -50,10 +50,17 @@ public:
     Properties& add_source() override;
     Properties& add_destination() override;
     Properties& get_fee() override;
-    void set_message(const BinaryData& payload) override;
+    void set_message(const BinaryData& /*payload*/) override;
+    void add_action();
 
     // Ownership is transferred from caller to EosTransaction.
+    void set_ref_block_num(const uint16_t ref_block_num);
+    void set_ref_block_prefix(const BigInt ref_block_prefix);
     void set_action(EosTransactionActionPtr action);
+    void set_max_net_usage(const uint64_t max_net_usage_words);
+    void set_max_cpu_usage(const uint64_t max_cpu_usage_ms);
+    void set_delay_seconds(const uint64_t delay_seconds);
+    void set_expiration(const std::string& new_expiration);
 
 private:
     enum SerializationMode
@@ -62,23 +69,28 @@ private:
         SERIALIZE_FOR_SIGN
     };
     void verify();
-    void set_expiration(const std::string&);
     void serialize_to_stream(EosBinaryStream& stream, SerializationMode mode) const;
 
 private:
     const Account& m_account;
 
-    BinaryDataPtr m_message;
-    EosTransactionSourcePtr m_source;
-    EosTransactionDestinationPtr m_destination;
+    std::string m_explicit_expiration;
+    uint16_t m_ref_block_num;
+    BigInt m_ref_block_prefix;
+
+    uint64_t m_max_net_usage_words;
+    uint64_t m_max_cpu_usage_ms;
+    uint64_t m_delay_seconds;
+
+    std::vector<EosTransactionActionPtr> context_free_action;
+
+//    BinaryDataPtr m_message;
+//    EosTransactionSourcePtr m_source;
+//    EosTransactionDestinationPtr m_destination;
     std::vector<EosTransactionActionPtr> m_external_actions;
     // TODO: make a TxBuilder for transfer operation and get rid of this,
     // since it is going to be set from TX builder as external_action.
     std::vector<EosTransactionActionPtr> m_actions;
-
-    PropertyT<std::string> m_explicit_expiration;
-    PropertyT<int32_t> m_ref_block_num;
-    PropertyT<BigInt> m_ref_block_prefix;
 
     std::time_t m_expiration;
     BinaryDataPtr m_signature;

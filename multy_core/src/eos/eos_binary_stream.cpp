@@ -29,14 +29,6 @@ EosBinaryStream::EosBinaryStream()
 EosBinaryStream::~EosBinaryStream()
 {}
 
-template <typename T>
-EosBinaryStream& write_as_data(const T& data, EosBinaryStream& stream)
-{
-    stream.write_data(
-                reinterpret_cast<const uint8_t*>(&data), sizeof(data));
-    return stream;
-}
-
 EosBinaryStream& operator<<(EosBinaryStream& stream, const EosTransactionAction& op)
 {
     op.write_to_stream(&stream);
@@ -54,7 +46,9 @@ EosBinaryStream& operator<<(EosBinaryStream& stream, const BinaryData& value)
 
 EosBinaryStream& operator<<(EosBinaryStream& stream, const uint8_t& value)
 {
-     return write_as_data(value, stream);
+    stream.write_data(&value, 1);
+
+    return stream;
 }
 
 EosBinaryStream& operator<<(EosBinaryStream& stream, const uint16_t& value)

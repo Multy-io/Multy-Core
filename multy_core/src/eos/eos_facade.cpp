@@ -17,6 +17,7 @@
 #include "multy_core/src/eos/eos_account.h"
 #include "multy_core/src/eos/eos_transaction.h"
 #include "multy_core/src/eos/eos_transaction_builder_updateauth.h"
+#include "multy_core/src/eos/eos_transaction_builder_transfer.h"
 
 #include <cstring>
 
@@ -86,6 +87,10 @@ TransactionBuilderPtr EosFacade::make_transaction_builder(
             EOS_TRANSACTION_BUILDER_UPDATEAUTH,
             &make_eos_transaction_builder_updateauth
         },
+        {
+            EOS_TRANSACTION_BUILDER_TRANSFER,
+            &make_eos_transaction_builder_transfer
+        }
     };
 
     const auto builder = BUILDERS.find(type);
