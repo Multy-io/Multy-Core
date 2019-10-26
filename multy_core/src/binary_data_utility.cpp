@@ -87,11 +87,12 @@ BinaryDataPtr new_binary_data(size_t size)
 
 BinaryData skip_leading_zeroes(const BinaryData& source)
 {
-    INVARIANT(source.data != nullptr);
+    INVARIANT((source.data != nullptr) ||
+              (source.data == nullptr && source.len == 0));
 
     const unsigned char* data = source.data;
     size_t len = source.len;
-    while(!data && len > 0)
+    while(len > 0 && !*data)
     {
         ++data;
         --len;
